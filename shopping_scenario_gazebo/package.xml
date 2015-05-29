@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <package>
-  <name>shopping_scenario</name>
+  <name>shopping_scenario_gazebo</name>
   <version>0.0.1</version>
   <description>
     
-    Metapackage for shopping_scenario related code, models, and meta
-    data.
+    Shopping Scenario related Gazebo setup and resource files.
     
   </description>
   
@@ -16,12 +15,6 @@
   
   <buildtool_depend>catkin</buildtool_depend>
   
-  <run_depend>shopping_scenario_models</run_depend>
-  <run_depend>shopping_scenario_maps</run_depend>
-  <run_depend>shopping_scenario_executive</run_depend>
-  <run_depend>shopping_scenario_gazebo</run_depend>
-  
   <export>
-    <metapackage/>
   </export>
 </package>
