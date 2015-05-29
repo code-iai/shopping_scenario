@@ -10,7 +10,7 @@
     <param name="tf_prefix" value="/" />
   </node>
   
-  <node pkg="tf" type="static_transform_publisher" name="shopping_area_broadcaster" args="0 0 0 0 0 0 /map /shopping_area 100" />
+  <node pkg="tf" type="static_transform_publisher" name="shopping_area_broadcaster" args="2.72 0.295 0 -1.57 0 0 /map /shopping_area 100" />
   
   
   <!-- ==== -->
