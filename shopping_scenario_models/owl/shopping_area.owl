@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY knowrob "http://knowrob.org/kb/knowrob.owl#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+<rdf:RDF xmlns="http://knowrob.org/kb/ias_semantic_map.owl#"
+    xml:base="http://knowrob.org/kb/ias_semantic_map.owl"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:map="http://knowrob.org/kb/ias_semantic_map.owl#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:knowrob="http://knowrob.org/kb/knowrob.owl#">
+    <owl:Ontology rdf:about="http://knowrob.org/kb/shopping_area.owl#">
+        <owl:imports rdf:resource="package://knowrob_common/owl/knowrob.owl"/>
+    </owl:Ontology>
+    
+    <!-- Object Properties -->
+    <owl:ObjectProperty rdf:about="&knowrob;describedInMap"/>
+    <owl:ObjectProperty rdf:about="&knowrob;eventOccursAt"/>
+    <owl:ObjectProperty rdf:about="&knowrob;objectActedOn"/>
+    <owl:ObjectProperty rdf:about="&knowrob;properPhysicalParts"/>
+    <owl:ObjectProperty rdf:about="&knowrob;startTime"/>
+    <owl:ObjectProperty rdf:about="&knowrob;prismaticallyConnectedTo"/>
+    <owl:ObjectProperty rdf:about="&knowrob;hingedTo"/>
+    <owl:ObjectProperty rdf:about="&knowrob;connectedTo-Rigidly"/>
+    
+    <!-- New Object Properties -->
+    <owl:ObjectProperty rdf:about="&knowrob;semanticHandle"/>
+    <owl:ObjectProperty rdf:about="&knowrob;productCategory"/>
+    <owl:ObjectProperty rdf:about="&knowrob;rackLevel"/>
+    
+    <!-- Data Properties -->
+    <owl:DatatypeProperty rdf:about="&knowrob;depthOfObject"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;heightOfObject"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m00"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m01"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m02"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m03"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m10"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m11"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m12"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m13"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m20"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m21"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m22"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m23"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m30"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m31"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m32"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;m33"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;widthOfObject"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;maxJointValue"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;minJointValue"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;turnRadius"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;vectorX"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;vectorY"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;vectorZ"/>
+    
+    <!-- New Data Properties -->
+    <owl:DatatypeProperty rdf:about="&knowrob;level"/>
+    
+    <!-- Classes -->
+    <owl:Class rdf:about="&knowrob;Cupboard"/>
+    <owl:Class rdf:about="&knowrob;Drawer"/>
+    <owl:Class rdf:about="&knowrob;Handle"/>
+    <owl:Class rdf:about="&knowrob;Wall"/>
+    <owl:Class rdf:about="&knowrob;Door"/>
+    <owl:Class rdf:about="&knowrob;RotationMatrix3D"/>
+    <owl:Class rdf:about="&knowrob;SemanticEnvironmentMap"/>
+    <owl:Class rdf:about="&knowrob;SemanticMapPerception"/>
+    <owl:Class rdf:about="&knowrob;TimePoint"/>
+    <owl:Class rdf:about="&knowrob;PrismaticJoint"/>
+    <owl:Class rdf:about="&knowrob;HingedJoint"/>
+    <owl:Class rdf:about="&knowrob;Vector"/>
+    
+    <!-- New Classes -->
+    <owl:Class rdf:about="&knowrob;Rack"/>
+    <owl:Class rdf:about="&knowrob;RackLevel"/>
+    
+    <!-- Individuals -->
+    
+    <!-- Map Individual -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98">
+        <rdf:type rdf:resource="&knowrob;SemanticEnvironmentMap"/>
+    </owl:NamedIndividual>
+    
+    <!-- Single Perception Time Point Individual -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#timepoint_1361536619">
+        <rdf:type rdf:resource="&knowrob;TimePoint"/>
+    </owl:NamedIndividual>
+    
+    <!-- TODO: Add individuals for walls and the rack here and populate them with properties. -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Rack_f238ry42gj">
+      <rdf:type rdf:resource="&knowrob;Rack"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel0_f32ry932fw"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel1_fh28hepgfq"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel2_oihroihow8"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel3_ah08yh2o4h"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel0_f32ry932fw">
+      <rdf:type rdf:resource="&knowrob;RackLevel"/>
+      <knowrob:level rdf:datatype="&xsd;integer">0</knowrob:level>
+      <!-- TODO: Add dimensions and pose here. -->
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel1_fh28hepgfq">
+      <rdf:type rdf:resource="&knowrob;RackLevel"/>
+      <knowrob:level rdf:datatype="&xsd;integer">1</knowrob:level>
+      <!-- TODO: Add dimensions and pose here. -->
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel2_oihroihow8">
+      <rdf:type rdf:resource="&knowrob;RackLevel"/>
+      <knowrob:level rdf:datatype="&xsd;integer">2</knowrob:level>
+      <!-- TODO: Add dimensions and pose here. -->
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h">
+      <rdf:type rdf:resource="&knowrob;RackLevel"/>
+      <knowrob:level rdf:datatype="&xsd;integer">3</knowrob:level>
+      <!-- TODO: Add dimensions and pose here. -->
+    </owl:NamedIndividual>
+    
+    <!-- TODO: Add classes for objects and their properties (e.g., handles, ...) here. -->
+    
+</rdf:RDF>
