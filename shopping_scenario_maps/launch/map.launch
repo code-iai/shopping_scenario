@@ -1,0 +1,5 @@
+<launch>
+  
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find shopping_scenario_maps)/maps/map_shopping_area.yaml" />
+  
+</launch>

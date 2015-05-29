@@ -1,0 +1,8 @@
+<launch>
+  
+  <include file="$(find shopping_scenario_maps)/launch/descriptions.launch" />
+  <include file="$(find shopping_scenario_maps)/launch/transformations.launch" />
+  <include file="$(find shopping_scenario_maps)/launch/map.launch" />
+  <include file="$(find shopping_scenario_maps)/launch/json.launch" />
+  
+</launch>
