@@ -17,4 +17,6 @@
   <buildtool_depend>catkin</buildtool_depend>
   
   <run_depend>shopping_scenario_models</run_depend>
+  <run_depend>shopping_scenario_maps</run_depend>
+  <run_depend>shopping_scenario_executive</run_depend>
 </package>
