@@ -141,25 +141,21 @@
     <!-- NOTE(winkler): I hackily added the super class 'Cupboard' to
          all classes here. -->
     <owl:Class rdf:about="&knowrob;Rack">
-      <rdfs:subClassOf rdf:resource="&knowrob;Cupboard" />
       <rdfs:subClassOf rdf:resource="&knowrob;StorageConstruct" />
       <rdfs:subClassOf rdf:resource="&knowrob;FurniturePiece" />
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;RackLevel">
-      <rdfs:subClassOf rdf:resource="&knowrob;Cupboard" />
       <rdfs:subClassOf rdf:resource="&knowrob;CounterTop" />
       <rdfs:subClassOf rdf:resource="&knowrob;FurniturePiece" />
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;RackBack">
-      <rdfs:subClassOf rdf:resource="&knowrob;Cupboard" />
-       <rdfs:subClassOf rdf:resource="&knowrob;WallOfAConstruction" />
-       <rdfs:subClassOf rdf:resource="&knowrob;StorageConstruct" />
+      <rdfs:subClassOf rdf:resource="&knowrob;WallOfAConstruction" />
+      <rdfs:subClassOf rdf:resource="&knowrob;StorageConstruct" />
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;ShoppingAreaWall">
-      <rdfs:subClassOf rdf:resource="&knowrob;Cupboard" />
       <rdfs:subClassOf rdf:resource="&knowrob;WallOfAConstruction" />
       <rdfs:subClassOf rdf:resource="&knowrob;StorageConstruct" />
     </owl:Class>
@@ -375,7 +371,6 @@
     
     <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel3_ah08yh2o4h">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
-        <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
         <knowrob:m02 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m02>
@@ -430,6 +425,151 @@
     </owl:NamedIndividual>
     
     
-    <!-- TODO: Add individuals for walls here and populate them with properties. -->
+    <!-- Wall Back -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#WallBack_ialkhrg3">
+      <rdf:type rdf:resource="&knowrob;ShoppingAreaWall"/>
+      <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
+      <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">2.0</knowrob:heightOfObject>
+      <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">2.0</knowrob:depthOfObject>
+      <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.2</knowrob:widthOfObject>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_WallBack_ialkhrg3">
+        <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
+        <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
+        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallBack_ialkhrg3"/>
+        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#WallBack_ialkhrg3"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallBack_ialkhrg3">
+        <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
+        <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
+        <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.9999996829318347</knowrob:m01>
+        <knowrob:m02 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m02>
+        <knowrob:m03 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.7200003170681655</knowrob:m03>
+        <knowrob:m10 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.9999996829318347</knowrob:m10>
+        <knowrob:m11 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m11>
+        <knowrob:m12 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m12>
+        <knowrob:m13 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.29420367328926667</knowrob:m13>
+        <knowrob:m20 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m20>
+        <knowrob:m21 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m21>
+        <knowrob:m22 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m22>
+        <knowrob:m23 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m23>
+        <knowrob:m30 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m30>
+        <knowrob:m31 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m31>
+        <knowrob:m32 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m32>
+        <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m33>
+    </owl:NamedIndividual>
+    
+    
+    <!-- Wall Left -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#WallLeft_aalkd8u9">
+      <rdf:type rdf:resource="&knowrob;ShoppingAreaWall"/>
+      <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
+      <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">2.0</knowrob:heightOfObject>
+      <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.2</knowrob:depthOfObject>
+      <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:widthOfObject>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_WallLeft_aalkd8u9">
+        <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
+        <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
+        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallLeft_aalkd8u9"/>
+        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#WallLeft_aalkd8u9"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallLeft_aalkd8u9">
+        <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
+        <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
+        <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
+        <knowrob:m02 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m02>
+        <knowrob:m03 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.1192838132694045</knowrob:m03>
+        <knowrob:m10 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.9999996829318347</knowrob:m10>
+        <knowrob:m11 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m11>
+        <knowrob:m12 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m12>
+        <knowrob:m13 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.1937255919014778</knowrob:m13>
+        <knowrob:m20 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m20>
+        <knowrob:m21 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m21>
+        <knowrob:m22 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m22>
+        <knowrob:m23 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m23>
+        <knowrob:m30 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m30>
+        <knowrob:m31 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m31>
+        <knowrob:m32 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m32>
+        <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m33>
+    </owl:NamedIndividual>
+    
+    
+    <!-- Wall Right -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#WallRight_hay76d5x">
+      <rdf:type rdf:resource="&knowrob;ShoppingAreaWall"/>
+      <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
+      <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">2.0</knowrob:heightOfObject>
+      <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.2</knowrob:depthOfObject>
+      <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.43</knowrob:widthOfObject>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_WallRight_hay76d5x">
+        <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
+        <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
+        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallRight_hay76d5x"/>
+        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#WallRight_hay76d5x"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallRight_hay76d5x">
+        <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
+        <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
+        <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
+        <knowrob:m02 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m02>
+        <knowrob:m03 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.4057171109842976</knowrob:m03>
+        <knowrob:m10 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.9999996829318347</knowrob:m10>
+        <knowrob:m11 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m11>
+        <knowrob:m12 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m12>
+        <knowrob:m13 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.6060468842632654</knowrob:m13>
+        <knowrob:m20 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m20>
+        <knowrob:m21 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m21>
+        <knowrob:m22 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m22>
+        <knowrob:m23 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m23>
+        <knowrob:m30 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m30>
+        <knowrob:m31 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m31>
+        <knowrob:m32 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m32>
+        <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m33>
+    </owl:NamedIndividual>
+    
+    
+    <!-- Wall Far Right -->
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#WallFarRight_oalkh7h1">
+      <rdf:type rdf:resource="&knowrob;ShoppingAreaWall"/>
+      <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
+      <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">2.0</knowrob:heightOfObject>
+      <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:depthOfObject>
+      <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.2</knowrob:widthOfObject>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_WallFarRight_oalkh7h1">
+        <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
+        <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
+        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallFarRight_oalkh7h1"/>
+        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#WallFarRight_oalkh7h1"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_WallFarRight_oalkh7h1">
+        <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
+        <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
+        <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
+        <knowrob:m02 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m02>
+        <knowrob:m03 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.291194943473577</knowrob:m03>
+        <knowrob:m10 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1</knowrob:m10>
+        <knowrob:m11 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m11>
+        <knowrob:m12 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m12>
+        <knowrob:m13 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.2061382715941007</knowrob:m13>
+        <knowrob:m20 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0</knowrob:m20>
+        <knowrob:m21 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m21>
+        <knowrob:m22 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m22>
+        <knowrob:m23 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m23>
+        <knowrob:m30 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m30>
+        <knowrob:m31 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m31>
+        <knowrob:m32 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m32>
+        <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m33>
+    </owl:NamedIndividual>
     
 </rdf:RDF>
