@@ -1,5 +1,7 @@
 <launch>
   
-  <node name="json_prolog" pkg="json_prolog" type="json_prolog_node" args="shopping_scenario_reasoning" />
+  <param name="initial_package" type="string" value="shopping_scenario_reasoning" />
+  
+  <node name="json_prolog" pkg="json_prolog" type="json_prolog_node"/>
   
 </launch>

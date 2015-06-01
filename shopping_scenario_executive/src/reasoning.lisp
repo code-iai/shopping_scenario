@@ -28,20 +28,19 @@
 
 (in-package :shopping-scenario-executive)
 
-;;;
-;;; Infrastructure Utilities
-;;;
 
-(defmacro with-process-modules (&body body)
-  "Implicitly runs process modules necessary for operating the PR2 robot. The started (and after finishing the body code also automatically evaporated) process modules are:
+(defun json-symbol->string (symbol)
+  (let* ((string-symbol (write-to-string symbol)))
+    (subseq string-symbol 2 (- (length string-symbol) 2))))
 
- - pr2-manipulation-process-module
- - pr2-navigation-process-module
- - point-head-process-module
- - robosherlock-process-module"
-  `(cpm:with-process-modules-running
-       (pr2-manipulation-process-module:pr2-manipulation-process-module
-        pr2-navigation-process-module:pr2-navigation-process-module
-        point-head-process-module:point-head-process-module
-        robosherlock-process-module:robosherlock-process-module)
-     ,@body))
+(defun get-shopping-items ()
+  (force-ll
+   (lazy-mapcar
+    (lambda (bdgs)
+      (with-vars-bound (?item) bdgs
+        (json-symbol->string ?item)))
+    (json-prolog:prolog `("shopping_item" ?item)))))
+
+(defun is-stackable (item)
+  (not (not (json-prolog:prolog
+             `("is_stackable" ,item)))))

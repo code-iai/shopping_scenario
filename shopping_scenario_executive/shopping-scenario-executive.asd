@@ -64,8 +64,10 @@
     ((:file "package")
      (:file "costmap-metadata" :depends-on ("package"))
      (:file "sem-map-config" :depends-on ("package"))
-     (:file "utils" :depends-on ("package"))
+     (:file "reasoning" :depends-on ("package"))
+     (:file "utils" :depends-on ("package" "reasoning"))
      (:file "plans" :depends-on ("package"
                                  "utils"
+                                 "reasoning"
                                  "costmap-metadata"
                                  "sem-map-config"))))))
