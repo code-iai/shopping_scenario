@@ -1,4 +1,16 @@
 <?xml version="1.0"?>
+
+<!--
+  
+  Shopping Scenario OWL definitions
+  
+  This file is part of the larger shopping_scenario package for autonomous object shopping related tasks as performed by humanoid robots (such as the PR2).
+  
+  Copyright 2015, Jan Winkler <winkler@cs.uni-bremen.de>
+  
+-->
+
+
 <!DOCTYPE rdf:RDF [
     <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
     <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
@@ -19,6 +31,7 @@
         <owl:imports rdf:resource="package://knowrob_common/owl/knowrob.owl"/>
     </owl:Ontology>
     
+    
     <!-- Object Properties -->
     <owl:ObjectProperty rdf:about="&knowrob;describedInMap"/>
     <owl:ObjectProperty rdf:about="&knowrob;eventOccursAt"/>
@@ -29,11 +42,13 @@
     <owl:ObjectProperty rdf:about="&knowrob;hingedTo"/>
     <owl:ObjectProperty rdf:about="&knowrob;connectedTo-Rigidly"/>
     
+    
     <!-- New Object Properties -->
     <owl:ObjectProperty rdf:about="&knowrob;semanticHandle"/>
     <owl:ObjectProperty rdf:about="&knowrob;productCategory"/>
     <owl:ObjectProperty rdf:about="&knowrob;rackLevel"/>
     <owl:ObjectProperty rdf:about="&knowrob;rackBack"/>
+    
     
     <!-- Data Properties -->
     <owl:DatatypeProperty rdf:about="&knowrob;depthOfObject"/>
@@ -61,11 +76,14 @@
     <owl:DatatypeProperty rdf:about="&knowrob;vectorX"/>
     <owl:DatatypeProperty rdf:about="&knowrob;vectorY"/>
     <owl:DatatypeProperty rdf:about="&knowrob;vectorZ"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;stackable"/>
+    
     
     <!-- New Data Properties -->
     <owl:DatatypeProperty rdf:about="&knowrob;level"/>
     
-    <!-- Classes -->
+    
+    <!-- General Classes -->
     <owl:Class rdf:about="&knowrob;Cupboard"/>
     <owl:Class rdf:about="&knowrob;Drawer"/>
     <owl:Class rdf:about="&knowrob;Handle"/>
@@ -78,6 +96,7 @@
     <owl:Class rdf:about="&knowrob;PrismaticJoint"/>
     <owl:Class rdf:about="&knowrob;HingedJoint"/>
     <owl:Class rdf:about="&knowrob;Vector"/>
+    
     
     <!-- Object Classes -->
     <owl:Class rdf:about="&knowrob;ShoppingItem">
@@ -115,6 +134,7 @@
     <owl:Class rdf:about="&knowrob;Oregano">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
     </owl:Class>
+    
     
     <!-- New Classes -->
     <owl:Class rdf:about="&knowrob;Rack"/>
@@ -339,7 +359,41 @@
     </owl:NamedIndividual>
     
     
+    <!-- TODO: Add the object's properties (like handles and dimensions) here. -->
+    <owl:NamedIndividual rdf:about="&knowrob;Corn_uai8735a">
+      <rdf:type rdf:resource="&knowrob;Corn"/>
+      <knowrob:stackable rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knowrob:stackable>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_sh876app">
+      <rdf:type rdf:resource="&knowrob;Kelloggs"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;Lion_jql358ab">
+      <rdf:type rdf:resource="&knowrob;Lion"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;Salt_3djp92uc">
+      <rdf:type rdf:resource="&knowrob;Salt"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;PancakeMix_8dhu26v2">
+      <rdf:type rdf:resource="&knowrob;PancakeMix"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;TomatoSauce_p33iuf8a">
+      <rdf:type rdf:resource="&knowrob;TomatoSauce"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;SaltDispenser_j33981mn">
+      <rdf:type rdf:resource="&knowrob;SaltDispenser"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;Oregano_nmbhag32">
+      <rdf:type rdf:resource="&knowrob;Oregano"/>
+    </owl:NamedIndividual>
+    
+    
     <!-- TODO: Add individuals for walls here and populate them with properties. -->
-    <!-- TODO: Add classes for objects and their properties (e.g., handles, ...) here. -->
     
 </rdf:RDF>
