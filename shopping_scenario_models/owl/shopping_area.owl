@@ -79,6 +79,43 @@
     <owl:Class rdf:about="&knowrob;HingedJoint"/>
     <owl:Class rdf:about="&knowrob;Vector"/>
     
+    <!-- Object Classes -->
+    <owl:Class rdf:about="&knowrob;ShoppingItem">
+      <rdfs:subClassOf rdf:resource="&knowrob;HumanScaleObject"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;Corn">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;Kelloggs">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;Lion">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;Salt">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;PancakeMix">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;TomatoSauce">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;SaltDispenser">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&knowrob;Oregano">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+    </owl:Class>
+    
     <!-- New Classes -->
     <owl:Class rdf:about="&knowrob;Rack"/>
     <owl:Class rdf:about="&knowrob;RackLevel"/>
