@@ -1,0 +1,6 @@
+<launch>
+
+  <include file="$(find shopping_scenario_maps)/launch/shopping_scenario_maps.launch"/>
+  <include file="$(find shopping_scenario_reasoning)/launch/shopping_scenario_reasoning.launch"/>
+
+</launch>
