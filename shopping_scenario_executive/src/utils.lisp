@@ -76,8 +76,7 @@
      :ignore-collisions ignore-collisions
      :allowed-collision-objects allowed-collision-objects)))
 
-(defun init-ms-belief-state (&key debug-window)
-  (crs:prolog `(btr:clear-bullet-world))
+(defun init-belief-state (&key debug-window)
   (let* ((robot-pose (get-robot-pose))
          (urdf-robot
            (cl-urdf:parse-urdf
@@ -100,7 +99,6 @@
                      ,(tf:z area-rot-quaternion)
                      ,(tf:w area-rot-quaternion)))
          (area-trans `(2.720 0.295 0))
-         (robot-pose robot-pose)
          (robot-rot `(,(tf:x (tf:orientation robot-pose))
                       ,(tf:y (tf:orientation robot-pose))
                       ,(tf:z (tf:orientation robot-pose))
