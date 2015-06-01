@@ -60,6 +60,12 @@
                cram-beliefstate)
   :components
   ((:module "src"
-            :components
-            ((:file "package")
-	     (:file "plans" :depends-on ("package"))))))
+    :components
+    ((:file "package")
+     (:file "costmap-metadata" :depends-on ("package"))
+     (:file "sem-map-config" :depends-on ("package"))
+     (:file "utils" :depends-on ("package"))
+     (:file "plans" :depends-on ("package"
+                                 "utils"
+                                 "costmap-metadata"
+                                 "sem-map-config"))))))

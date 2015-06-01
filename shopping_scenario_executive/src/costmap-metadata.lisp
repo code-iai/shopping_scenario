@@ -25,7 +25,7 @@
 ;;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;; POSSIBILITY OF SUCH DAMAGE.
 
-(in-package :cram-longterm-pickandplace)
+(in-package :shopping-scenario-executive)
 
 ;; TODO(winkler): This needs refactoring for the shopping area map
 (def-fact-group costmap-metadata (desig-loc)
