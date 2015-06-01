@@ -52,7 +52,6 @@
     rack_level(r, r),
     rack_on_level(r, r, r).
 
-
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
 :- rdf_db:rdf_register_ns(owl, 'http://www.w3.org/2002/07/owl#', [keep(true)]).
 :- rdf_db:rdf_register_ns(knowrob, 'http://knowrob.org/kb/knowrob.owl#', [keep(true)]).
@@ -100,7 +99,7 @@ rack(Rack) :-
 % @param RackLevel    Rack level of the Rack
 %
 rack_level(Rack, RackLevel) :-
-    rack(Rack), !,
+    rack(Rack),
     rdf_triple(knowrob:'rackLevel', Rack, RackLevel).
 
 
@@ -113,6 +112,17 @@ rack_level(Rack, RackLevel) :-
 % @param RackLevel    Rack level of the Rack
 %
 rack_on_level(Rack, Level, RackLevel) :-
-    rack(Rack), !,
+    rack(Rack),
     rdf_triple(knowrob:'rackLevel', Rack, RackLevel),
     rdf_triple(knowrob:'level', RackLevel, LevelLiteral), strip_literal_type(LevelLiteral, LevelLiteralAtom), term_to_atom(Level, LevelLiteralAtom).
+
+
+%% pose_on_rack(Pose, Rack, RackLevel) is nondet.
+%
+%  Identify the rack and its respective level where the given pose is residing, if any.
+%
+% @Param Pose         The pose for which to identify the rack and level
+% @param Rack         The rack on which the pose is
+% @param RackLevel    The level on the identified rack on which the pose resides
+pose_on_rack_level(Pose, Rack, RackLevel) :-
+    false.
