@@ -45,3 +45,89 @@
         point-head-process-module:point-head-process-module
         robosherlock-process-module:robosherlock-process-module)
      ,@body))
+
+(defun get-robot-pose (&optional (frame-id "/base_link"))
+  (cl-tf2:ensure-pose-stamped-transformed
+   *tf2*
+   (tf:make-pose-stamped
+    frame-id
+    0.0
+    (tf:make-identity-vector)
+    (tf:make-identity-rotation))
+   "/map" :use-current-ros-time t))
+
+(defun move-arms-up (&key allowed-collision-objects side ignore-collisions)
+  (when (or (eql side :left) (not side))
+    (pr2-manip-pm::execute-move-arm-pose
+     :left
+     (tf:make-pose-stamped
+      "base_link" (roslisp:ros-time)
+      (tf:make-3d-vector 0.3 0.5 1.3)
+      (tf:euler->quaternion :ax 0));pi))
+     :ignore-collisions ignore-collisions
+     :allowed-collision-objects allowed-collision-objects))
+  (when (or (eql side :right) (not side))
+    (pr2-manip-pm::execute-move-arm-pose
+     :right
+     (tf:make-pose-stamped
+      "base_link" (roslisp:ros-time)
+      (tf:make-3d-vector 0.3 -0.5 1.3)
+      (tf:euler->quaternion :ax 0))
+     :ignore-collisions ignore-collisions
+     :allowed-collision-objects allowed-collision-objects)))
+
+(defun init-ms-belief-state (&key debug-window)
+  (crs:prolog `(btr:clear-bullet-world))
+  (let* ((robot-pose (get-robot-pose))
+         (urdf-robot
+           (cl-urdf:parse-urdf
+            (roslisp:get-param "robot_description_lowres")))
+         (urdf-rack
+           (cl-urdf:parse-urdf
+            (roslisp:get-param "shopping_rack_description")))
+         (urdf-area
+           (cl-urdf:parse-urdf
+            (roslisp:get-param "shopping_area_description")))
+         (rack-rot-quaternion (tf:euler->quaternion :az -1.57))
+         (rack-rot `(,(tf:x rack-rot-quaternion)
+                     ,(tf:y rack-rot-quaternion)
+                     ,(tf:z rack-rot-quaternion)
+                     ,(tf:w rack-rot-quaternion)))
+         (rack-trans `(1.275 0.214 0))
+         (area-rot-quaternion (tf:euler->quaternion :az -1.57))
+         (area-rot `(,(tf:x area-rot-quaternion)
+                     ,(tf:y area-rot-quaternion)
+                     ,(tf:z area-rot-quaternion)
+                     ,(tf:w area-rot-quaternion)))
+         (area-trans `(2.720 0.295 0))
+         (robot-pose robot-pose)
+         (robot-rot `(,(tf:x (tf:orientation robot-pose))
+                      ,(tf:y (tf:orientation robot-pose))
+                      ,(tf:z (tf:orientation robot-pose))
+                      ,(tf:w (tf:orientation robot-pose))))
+         (robot-trans `(,(tf:x (tf:origin robot-pose))
+                        ,(tf:y (tf:origin robot-pose))
+                        ,(tf:z (tf:origin robot-pose)))))
+    (force-ll
+     (crs:prolog
+      `(and (btr:clear-bullet-world)
+            (btr:bullet-world ?w)
+            (btr:assert (btr:object
+                         ?w btr:static-plane floor
+                         ((0 0 0) (0 0 0 1))
+                         :normal (0 0 1) :constant 0))
+            ,@(when debug-window
+                `((btr:debug-window ?w)))
+            (btr:robot ?robot)
+            (assert (btr:object
+                     ?w btr:urdf ?robot
+                     (,robot-trans ,robot-rot)
+                     :urdf ,urdf-robot))
+            (assert (btr:object
+                     ?w btr:semantic-map sem-map-rack
+                     (,rack-trans ,rack-rot)
+                     :urdf ,urdf-rack))
+            (assert (btr:object
+                     ?w btr:semantic-map sem-map-area
+                     (,area-trans ,area-rot)
+                     :urdf ,urdf-area)))))))
