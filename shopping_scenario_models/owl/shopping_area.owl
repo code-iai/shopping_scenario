@@ -181,6 +181,11 @@
       <knowrob:rackLevel rdf:resource="&knowrob;RackLevel3_ah08yh2o4h"/>
       <knowrob:rackBack rdf:resource="&knowrob;RackBack_oqiuc389ua"/>
       <srdl:urdfName rdf:datatype="&xsd;string">shopping_rack</srdl:urdfName>
+      <knowrob:properPhysicalParts rdf:resource="&knowrob;RackLevel0_f32ry932fw"/>
+      <knowrob:properPhysicalParts rdf:resource="&knowrob;RackLevel1_fh28hepgfq"/>
+      <knowrob:properPhysicalParts rdf:resource="&knowrob;RackLevel2_oihroihow8"/>
+      <knowrob:properPhysicalParts rdf:resource="&knowrob;RackLevel3_ah08yh2o4h"/>
+      <knowrob:properPhysicalParts rdf:resource="&knowrob;RackBack_oqiuc389ua"/>
     </owl:NamedIndividual>
     
     
@@ -342,6 +347,7 @@
     <!-- Rack Level 3 -->
     <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h">
       <rdf:type rdf:resource="&knowrob;RackLevel"/>
+      <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
       <knowrob:level rdf:datatype="&xsd;integer">3</knowrob:level>
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.035</knowrob:heightOfObject>
       <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.59</knowrob:depthOfObject>
