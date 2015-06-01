@@ -1,4 +1,4 @@
-# model-repository
+# Shopping Scenario -- Models Package
 
 Repository for Collaborative Object Modeling. The following folders
 will hold respective content for describing different aspects of the
@@ -12,4 +12,18 @@ models contained in this repository:
 
 The following models are available up to now:
 
- * `model-name`: A dummy model entry.
+ * `Corn`: A round, stackable corn container
+
+ * `Kelloggs`: A boxed cornflakes package
+
+ * `Lion`: A boxed sweets package
+
+ * `Salt`: A boxes salt package
+
+ * `PancakeMix`: An irregularly shaped pancake mix container
+
+ * `TomatoSauce`: A boxed, small tomato sauce package
+
+ * `SaltDispenser`: A round salt dispenser
+
+ * `Oregano`: A small round oregano dispenser
