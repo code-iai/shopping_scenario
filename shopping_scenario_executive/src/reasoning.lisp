@@ -44,3 +44,19 @@
 (defun is-stackable (item)
   (not (not (json-prolog:prolog
              `("is_stackable" ,item)))))
+
+(defun get-racks ()
+  (force-ll
+   (lazy-mapcar
+    (lambda (bdgs)
+      (with-vars-bound (?rack) bdgs
+        (json-symbol->string ?rack)))
+    (json-prolog:prolog `("rack" ?rack)))))
+
+(defun get-rack-levels (rack)
+  (force-ll
+   (lazy-mapcar
+    (lambda (bdgs)
+      (with-vars-bound (?racklevel) bdgs
+        (json-symbol->string ?racklevel)))
+    (json-prolog:prolog `("rack_level" ,rack ?racklevel)))))
