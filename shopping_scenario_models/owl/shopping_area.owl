@@ -362,7 +362,7 @@
     <!-- TODO: Add the object's properties (like handles and dimensions) here. -->
     <owl:NamedIndividual rdf:about="&knowrob;Corn_uai8735a">
       <rdf:type rdf:resource="&knowrob;Corn"/>
-      <knowrob:stackable rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knowrob:stackable>
+      <knowrob:stackable rdf:datatype="&xsd;boolean">true</knowrob:stackable>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_sh876app">
