@@ -28,3 +28,17 @@
 
 (in-package :shopping-scenario-executive)
 
+(defmacro with-process-modules (&body body)
+  "Implicitly runs process modules necessary for operating the PR2 robot. The started (and after finishing the body code also automatically evaporated) process modules are:
+
+ - pr2-manipulation-process-module
+ - pr2-navigation-process-module
+ - point-head-process-module
+ - robosherlock-process-module"
+  `(cpm:with-process-modules-running
+       (pr2-manipulation-process-module:pr2-manipulation-process-module
+        pr2-navigation-process-module:pr2-navigation-process-module
+        point-head-process-module:point-head-process-module
+        robosherlock-process-module:robosherlock-process-module)
+     ,@body))
+
