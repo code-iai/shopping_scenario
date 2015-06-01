@@ -187,12 +187,6 @@
       <knowrob:rackLevel rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel2_oihroihow8"/>
       <knowrob:rackLevel rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h"/>
       <knowrob:rackBack rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackBack_oqiuc389ua"/>
-      <srdl:urdfName rdf:datatype="&xsd;string">shopping_rack</srdl:urdfName>
-      <knowrob:properPhysicalParts rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel0_f32ry932fw"/>
-      <knowrob:properPhysicalParts rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel1_fh28hepgfq"/>
-      <knowrob:properPhysicalParts rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel2_oihroihow8"/>
-      <knowrob:properPhysicalParts rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h"/>
-      <knowrob:properPhysicalParts rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackBack_oqiuc389ua"/>
     </owl:NamedIndividual>
     
     
@@ -203,7 +197,6 @@
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.6</knowrob:heightOfObject>
       <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.28</knowrob:depthOfObject>
       <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.08</knowrob:widthOfObject>
-      <srdl:urdfName rdf:datatype="&xsd;string">rack_back</srdl:urdfName>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackBack_oqiuc389ua">
@@ -242,7 +235,6 @@
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.135</knowrob:heightOfObject>
       <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.28</knowrob:depthOfObject>
       <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.69</knowrob:widthOfObject>
-      <srdl:urdfName rdf:datatype="&xsd;string">rack_level_0</srdl:urdfName>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel0_f32ry932fw">
@@ -281,7 +273,6 @@
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.035</knowrob:heightOfObject>
       <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.28</knowrob:depthOfObject>
       <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.59</knowrob:widthOfObject>
-      <srdl:urdfName rdf:datatype="&xsd;string">rack_level_1</srdl:urdfName>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel1_fh28hepgfq">
@@ -320,7 +311,6 @@
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.035</knowrob:heightOfObject>
       <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.28</knowrob:depthOfObject>
       <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.59</knowrob:widthOfObject>
-      <srdl:urdfName rdf:datatype="&xsd;string">rack_level_2</srdl:urdfName> 
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel2_oihroihow8">
@@ -359,7 +349,6 @@
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.035</knowrob:heightOfObject>
       <knowrob:depthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.28</knowrob:depthOfObject>
       <knowrob:widthOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.59</knowrob:widthOfObject>
-      <srdl:urdfName rdf:datatype="&xsd;string">rack_level_3</srdl:urdfName> 
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel3_ah08yh2o4h">
