@@ -32,7 +32,9 @@
 :- module(shopping_scenario_reasoning,
     [
       shopping_item/1,
-      is_stackable/1
+      is_stackable/1,
+      rack/1,
+      rack_level/2
     ]).
 
 :- use_module(library('semweb/rdfs')).
@@ -43,7 +45,9 @@
 
 :-  rdf_meta
     shopping_item(r),
-    is_stackable(r, r).
+    is_stackable(r, r),
+    rack(r),
+    rack_level(r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -72,3 +76,26 @@ shopping_item(Item) :-
 is_stackable(Item) :-
     shopping_item(Item),
     rdf_has(Item, knowrob:'stackable', literal(type(xsd:boolean, true))).
+
+
+%% rack(?Rack) is nondet.
+%
+%  List all objects of type 'Rack'.
+%
+% @param Rack      Rack item identifier
+%
+rack(Rack) :-
+    rdf_has(Rack, rdf:type, A),
+    rdf_reachable(A, rdfs:subClassOf, knowrob:'Rack').
+
+
+%% rack_level(?Rack, ?RackLevel) is nondet.
+%
+%  List all levels of a rack.
+%
+% @param Rack         Rack to get the levels from
+% @param RackLevel    Rack level of the Rack
+%
+rack_level(Rack, RackLevel) :-
+    rack(Rack), !,
+    rdf_triple(knowrob:'rackLevel', Rack, RackLevel).
