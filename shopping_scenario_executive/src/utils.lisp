@@ -76,9 +76,8 @@
      :ignore-collisions ignore-collisions
      :allowed-collision-objects allowed-collision-objects)))
 
-(defun init-belief-state (&key debug-window)
-  (let* ((robot-pose (get-robot-pose))
-         (urdf-robot
+(defun init-belief-state ()
+  (let* ((urdf-robot
            (cl-urdf:parse-urdf
             (roslisp:get-param "robot_description_lowres")))
          (urdf-rack
@@ -98,14 +97,7 @@
                      ,(tf:y area-rot-quaternion)
                      ,(tf:z area-rot-quaternion)
                      ,(tf:w area-rot-quaternion)))
-         (area-trans `(2.720 0.295 0))
-         (robot-rot `(,(tf:x (tf:orientation robot-pose))
-                      ,(tf:y (tf:orientation robot-pose))
-                      ,(tf:z (tf:orientation robot-pose))
-                      ,(tf:w (tf:orientation robot-pose))))
-         (robot-trans `(,(tf:x (tf:origin robot-pose))
-                        ,(tf:y (tf:origin robot-pose))
-                        ,(tf:z (tf:origin robot-pose)))))
+         (area-trans `(2.720 0.295 0)))
     (force-ll
      (crs:prolog
       `(and (btr:clear-bullet-world)
@@ -114,12 +106,10 @@
                          ?w btr:static-plane floor
                          ((0 0 0) (0 0 0 1))
                          :normal (0 0 1) :constant 0))
-            ,@(when debug-window
-                `((btr:debug-window ?w)))
+            (btr:debug-window ?w)
             (btr:robot ?robot)
             (assert (btr:object
-                     ?w btr:urdf ?robot
-                     (,robot-trans ,robot-rot)
+                     ?w btr:urdf ?robot ,(get-robot-pose)
                      :urdf ,urdf-robot))
             (assert (btr:object
                      ?w btr:semantic-map sem-map-rack
