@@ -34,7 +34,8 @@
       shopping_item/1,
       is_stackable/1,
       rack/1,
-      rack_level/2
+      rack_level/2,
+      rack_on_level/3
     ]).
 
 :- use_module(library('semweb/rdfs')).
@@ -47,7 +48,8 @@
     shopping_item(r),
     is_stackable(r, r),
     rack(r),
-    rack_level(r, r).
+    rack_level(r, r),
+    rack_on_level(r, r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -99,3 +101,17 @@ rack(Rack) :-
 rack_level(Rack, RackLevel) :-
     rack(Rack), !,
     rdf_triple(knowrob:'rackLevel', Rack, RackLevel).
+
+
+%% rack_on_level(?Rack, ?Level, ?RackLevel) is nondet.
+%
+%  Return racklevel of rack on level ?Level.
+%
+% @param Rack         Rack to get the level from
+% @param Level        Level to acquire
+% @param RackLevel    Rack level of the Rack
+%
+rack_on_level(Rack, Level, RackLevel) :-
+    rack(Rack), !,
+    rdf_triple(knowrob:'rackLevel', Rack, RackLevel),
+    rdf_triple(knowrob:'level', RackLevel, LevelLiteral), strip_literal_type(LevelLiteral, LevelLiteralAtom), term_to_atom(Level, LevelLiteralAtom).

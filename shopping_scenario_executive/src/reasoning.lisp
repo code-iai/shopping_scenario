@@ -60,3 +60,16 @@
       (with-vars-bound (?racklevel) bdgs
         (json-symbol->string ?racklevel)))
     (json-prolog:prolog `("rack_level" ,rack ?racklevel)))))
+
+(defun get-rack-on-level (rack level)
+  (with-vars-bound (?racklevel)
+      (lazy-car
+       (json-prolog:prolog
+        `("rack_on_level" ,rack ,level ?racklevel)))
+      (json-symbol->string ?racklevel)))
+
+(defun location-on-rack-level (rack level)
+  (let ((rack-level (get-rack-on-level rack level)))
+    (make-designator 'location
+                     `((desig-props::on "RackLevel")
+                       (desig-props::name ,rack-level)))))
