@@ -49,7 +49,3 @@ The following points are to be done in the near future:
 
  * Append handle-information to the objects in
    `shopping_scenario_models`.
-
- * Complete the `pose_on_rack_level` predicate in
-   `shopping_scenario_reasoning` that allows identifycation of racks
-   and the respective level based on a three dimensional pose.
