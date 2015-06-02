@@ -1,0 +1,6 @@
+<launch>
+
+  <include file="$(find shopping_scenario_executive)/launch/shopping_scenario.launch"/>
+  <include file="$(find shopping_scenario_gazebo)/launch/shopping_scenario.launch"/>
+
+</launch>
