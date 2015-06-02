@@ -47,9 +47,6 @@ package:
 
 The following points are to be done in the near future:
 
- * Set up the Gazebo simulator on ROS Indigo and test the simulated
-   PR2 in it.
-
  * Spawn the shopping environment into Gazebo, together with the
    PR2. To be placed in the launch files inside of
    `shopping_scenario_gazebo`.
