@@ -47,10 +47,6 @@ package:
 
 The following points are to be done in the near future:
 
- * Spawn the shopping environment into Gazebo, together with the
-   PR2. To be placed in the launch files inside of
-   `shopping_scenario_gazebo`.
-
  * Append handle-information to the objects in
    `shopping_scenario_models`.
 
