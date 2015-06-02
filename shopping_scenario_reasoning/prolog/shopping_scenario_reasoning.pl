@@ -37,8 +37,9 @@
       rack/1,
       rack_level/2,
       rack_on_level/3,
-      test_rack_reasoner/1
+      pose_on_rack/6
     ]).
+
 
 :- use_module(library('semweb/rdfs')).
 :- use_module(library('owl_parser')).
@@ -46,13 +47,15 @@
 :- use_module(library('rdfs_computable')).
 :- use_module(library('knowrob_owl')).
 
+
 :-  rdf_meta
     shopping_item(r),
     is_stackable(r, r),
     rack(r),
     rack_level(r, r),
     rack_on_level(r, r, r),
-    test_rack_reasoner(r).
+    pose_on_rack(r, r, r, r, r, r).
+
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
 :- rdf_db:rdf_register_ns(owl, 'http://www.w3.org/2002/07/owl#', [keep(true)]).
@@ -119,21 +122,30 @@ rack_on_level(Rack, Level, RackLevel) :-
     rdf_triple(knowrob:'level', RackLevel, LevelLiteral), strip_literal_type(LevelLiteral, LevelLiteralAtom), term_to_atom(Level, LevelLiteralAtom).
 
 
-%% pose_on_rack(Pose, Rack, RackLevel) is nondet.
+%% pose_on_rack(?X, ?Y, ?Z, ?LevelHeight, ?Rack, ?RackLevel) is nondet.
 %
 %  Identify the rack and its respective level where the given pose is residing, if any.
 %
-% @param Pose         The pose for which to identify the rack and level
+% @param X            The X coordinate for which to identify the rack and level
+% @param Y            The Y coordinate for which to identify the rack and level
+% @param Z            The Z coordinate for which to identify the rack and level
+% @param LevelHeight  The height above a level that still counts towards it
 % @param Rack         The rack on which the pose is
 % @param RackLevel    The level on the identified rack on which the pose resides
-pose_on_rack_level(Pose, Rack, RackLevel) :-
-    false.
-
-
-%% test_rack_reasoner(Test) is nondet.
 %
-%  Test the JPL class RackReasoner.
-%
-test_rack_reasoner(Test) :-
+pose_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
+    rack(Rack),
+    rack_level(Rack, RackLevel),
+    current_object_pose(RackLevel, [_, _, _, RLX, _, _, _, RLY, _, _, _, RLZ, _, _, _, _]),
+    
+    rdf_has(RackLevel, knowrob:'widthOfObject', WidthLiteral),
+    strip_literal_type(WidthLiteral, WidthLiteralAtom),
+    term_to_atom(LevelWidth, WidthLiteralAtom),
+    
+    rdf_has(RackLevel, knowrob:'depthOfObject', DepthLiteral),
+    strip_literal_type(DepthLiteral, DepthLiteralAtom),
+    term_to_atom(LevelDepth, DepthLiteralAtom),
+    
     jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
-    jpl_call(RR, 'test', [], _).
+    jpl_call(RR, 'poseOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
+    jpl_is_true(Result).
