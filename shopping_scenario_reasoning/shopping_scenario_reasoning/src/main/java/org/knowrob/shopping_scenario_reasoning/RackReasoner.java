@@ -39,9 +39,9 @@ import java.lang.Integer;
 
 
 public class RackReasoner {
-    public boolean poseOnRackLevel(double dPoseX, double dPoseY, double dPoseZ, double dRackLevelX, double dRackLevelY, double dRackLevelZ, double dLevelWidth, double dLevelDepth, double LevelHeight) {
-	System.out.println("Implement this!");
-	
-	return true;
+    public boolean poseOnRackLevel(double dPoseX, double dPoseY, double dPoseZ, double dRackLevelX, double dRackLevelY, double dRackLevelZ, double dLevelWidth, double dLevelDepth, double dLevelHeight) {
+	return (dPoseX >= dRackLevelX - dLevelWidth / 2 && dPoseX < dRackLevelX + dLevelWidth / 2 &&
+		dPoseY >= dRackLevelY - dLevelDepth / 2 && dPoseY < dRackLevelY + dLevelDepth / 2 &&
+		dPoseZ >= dRackLevelZ && dPoseZ < dRackLevelZ + dLevelHeight);
     }
 }
