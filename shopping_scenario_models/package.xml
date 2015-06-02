@@ -17,5 +17,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   
   <export>
+    <gazebo_ros gazebo_model_path="${prefix}"
+		gazebo_media_path="${prefix}"
+		plugin_path="${prefix}/lib"/>
   </export>
 </package>

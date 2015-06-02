@@ -16,6 +16,11 @@
 	  <box size="${size_x} ${size_y} ${size_z}" />
 	</geometry>
       </collision>
+      
+      <inertial>
+        <mass value="1"/>
+        <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+      </inertial>
     </link>
   </macro>
   

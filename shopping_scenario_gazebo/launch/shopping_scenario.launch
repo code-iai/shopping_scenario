@@ -1,5 +1,7 @@
 <launch>
   
+  <env name="GAZEBO_MODEL_PATH" value="$(find shopping_scenario_models)/models" />
+  
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find shopping_scenario_gazebo)/worlds/shopping_scenario.world"/>
     <arg name="paused" value="false"/>
@@ -8,5 +10,8 @@
     <arg name="headless" value="false"/>
     <arg name="debug" value="false"/>
   </include>
+  
+  <!-- Start PR2 Robot -->
+  <include file="$(find pr2_gazebo)/launch/pr2.launch"/>
   
 </launch>
