@@ -36,7 +36,8 @@
       is_stackable/1,
       rack/1,
       rack_level/2,
-      rack_on_level/3
+      rack_on_level/3,
+      test_rack_reasoner/1
     ]).
 
 :- use_module(library('semweb/rdfs')).
@@ -50,7 +51,8 @@
     is_stackable(r, r),
     rack(r),
     rack_level(r, r),
-    rack_on_level(r, r, r).
+    rack_on_level(r, r, r),
+    test_rack_reasoner(r).
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
 :- rdf_db:rdf_register_ns(owl, 'http://www.w3.org/2002/07/owl#', [keep(true)]).
@@ -121,8 +123,17 @@ rack_on_level(Rack, Level, RackLevel) :-
 %
 %  Identify the rack and its respective level where the given pose is residing, if any.
 %
-% @Param Pose         The pose for which to identify the rack and level
+% @param Pose         The pose for which to identify the rack and level
 % @param Rack         The rack on which the pose is
 % @param RackLevel    The level on the identified rack on which the pose resides
 pose_on_rack_level(Pose, Rack, RackLevel) :-
     false.
+
+
+%% test_rack_reasoner(Test) is nondet.
+%
+%  Test the JPL class RackReasoner.
+%
+test_rack_reasoner(Test) :-
+    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
+    jpl_call(RR, 'test', [], _).
