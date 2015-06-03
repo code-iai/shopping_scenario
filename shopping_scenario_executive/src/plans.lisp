@@ -44,7 +44,7 @@
   (with-simulation-process-modules
     (let ((target-arrangement (make-target-arrangement :hints hints)))
       ;; TODO(winkler): Arrange objects here.
-      (with-designators ((obj (object `((desig-props:name "shopping_rack"))))
+      (with-designators ((obj (object `((desig-props:name "beer"))))
                          (perceive (action `((desig-props::to desig-props::perceive)
                                              (desig-props::obj ,obj)))))
         (perform perceive))

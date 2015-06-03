@@ -88,7 +88,7 @@
       (lazy-car
        (json-prolog:prolog
         `("rack_on_level" ,(add-prolog-namespace rack) ,level ?racklevel)))
-      (split-prolog-symbol (json-symbol->string ?racklevel))))
+    (split-prolog-symbol (json-symbol->string ?racklevel))))
 
 (defun location-on-rack-level (rack level)
   "Generates a location designator that describes a three dimensional pose on the two dimensional plane of the given rack level `level' on rack `rack'. `level' is an integer."
@@ -96,3 +96,13 @@
     (make-designator 'location
                      `((desig-props::on "RackLevel")
                        (desig-props::name ,(add-prolog-namespace rack-level))))))
+
+(defun get-object-rack-level (rack object)
+  (let* ((at (desig-prop-value object 'desig-props::at))
+         (pose (reference at)))
+    (with-vars-bound (?racklevel)
+        (lazy-car
+         (json-prolog:prolog
+          `("position_on_rack" ,(tf:x (tf:origin pose)) ,(tf:y (tf:origin pose)) ,(tf:z (tf:origin pose))
+                               0.3 ,(add-prolog-namespace rack) ?racklevel)))
+      (split-prolog-symbol (json-symbol->string ?racklevel)))))
