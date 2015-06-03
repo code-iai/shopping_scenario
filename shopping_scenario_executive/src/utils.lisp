@@ -46,6 +46,20 @@
         robosherlock-process-module:robosherlock-process-module)
      ,@body))
 
+(defmacro with-simulation-process-modules (&body body)
+  "Implicitly runs process modules necessary for operating the PR2 robot in a Gazebo simulation. The started (and after finishing the body code also automatically evaporated) process modules are:
+
+ - pr2-manipulation-process-module
+ - pr2-navigation-process-module
+ - point-head-process-module
+ - gazebo-perception-process-module"
+  `(cpm:with-process-modules-running
+       (pr2-manipulation-process-module:pr2-manipulation-process-module
+        pr2-navigation-process-module:pr2-navigation-process-module
+        point-head-process-module:point-head-process-module
+        gazebo-perception-process-module:gazebo-perception-process-module)
+     ,@body))
+
 (defun get-robot-pose (&optional (frame-id "/base_link"))
   (cl-tf2:ensure-pose-stamped-transformed
    *tf2*
@@ -62,7 +76,7 @@
      :left
      (tf:make-pose-stamped
       "base_link" (roslisp:ros-time)
-      (tf:make-3d-vector 0.3 0.5 1.3)
+      (tf:make-3d-vector 0.3 0.5 0.8);1.3
       (tf:euler->quaternion :ax 0));pi))
      :ignore-collisions ignore-collisions
      :allowed-collision-objects allowed-collision-objects))
@@ -71,7 +85,7 @@
      :right
      (tf:make-pose-stamped
       "base_link" (roslisp:ros-time)
-      (tf:make-3d-vector 0.3 -0.5 1.3)
+      (tf:make-3d-vector 0.3 -0.5 0.8);1.3
       (tf:euler->quaternion :ax 0))
      :ignore-collisions ignore-collisions
      :allowed-collision-objects allowed-collision-objects)))

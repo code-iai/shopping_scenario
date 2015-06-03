@@ -57,7 +57,8 @@
                cram-language
                bullet-reasoning-designators
                robosherlock-process-module
-               cram-beliefstate)
+               cram-beliefstate
+               gazebo-perception-process-module)
   :components
   ((:module "src"
     :components

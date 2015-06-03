@@ -34,6 +34,18 @@
 
 (def-top-level-cram-function arrange-rack-objects (&key hints)
   "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
-  (let ((target-arrangement (make-target-arrangement :hints hints)))
-    ;; TODO(winkler): Arrange objects here.
-    ))
+  (with-process-modules
+    (let ((target-arrangement (make-target-arrangement :hints hints)))
+      ;; TODO(winkler): Arrange objects here.
+      )))
+
+(def-top-level-cram-function arrange-rack-objects-simulated (&key hints)
+  "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
+  (with-simulation-process-modules
+    (let ((target-arrangement (make-target-arrangement :hints hints)))
+      ;; TODO(winkler): Arrange objects here.
+      (with-designators ((obj (object `((desig-props:name "shopping_rack"))))
+                         (perceive (action `((desig-props::to desig-props::perceive)
+                                             (desig-props::obj ,obj)))))
+        (perform perceive))
+      )))
