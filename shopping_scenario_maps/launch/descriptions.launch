@@ -11,6 +11,6 @@
   <!-- Rack -->
   <!-- ==== -->
   
-  <param name="shopping_rack_description" command="$(find xacro)/xacro.py '$(find shopping_scenario_models)/models/shopping_area/shopping_rack.urdf.xml'" />
+  <param name="shopping_rack_description" command="$(find xacro)/xacro.py '$(find shopping_scenario_models)/models/shopping_rack/shopping_rack.urdf.xml'" />
   
 </launch>
