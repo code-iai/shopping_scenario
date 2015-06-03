@@ -138,8 +138,6 @@
     
     
     <!-- New Classes -->
-    <!-- NOTE(winkler): I hackily added the super class 'Cupboard' to
-         all classes here. -->
     <owl:Class rdf:about="&knowrob;Rack">
       <rdfs:subClassOf rdf:resource="&knowrob;StorageConstruct" />
       <rdfs:subClassOf rdf:resource="&knowrob;FurniturePiece" />
@@ -385,7 +383,16 @@
       <knowrob:stackable rdf:datatype="&xsd;boolean">true</knowrob:stackable>
     </owl:NamedIndividual>
     
+    <owl:NamedIndividual rdf:about="&knowrob;Corn_jal987c1">
+      <rdf:type rdf:resource="&knowrob;Corn"/>
+      <knowrob:stackable rdf:datatype="&xsd;boolean">true</knowrob:stackable>
+    </owl:NamedIndividual>
+    
     <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_sh876app">
+      <rdf:type rdf:resource="&knowrob;Kelloggs"/>
+    </owl:NamedIndividual>
+    
+    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_oallp49c">
       <rdf:type rdf:resource="&knowrob;Kelloggs"/>
     </owl:NamedIndividual>
     
