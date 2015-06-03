@@ -30,46 +30,69 @@
 
 
 (defun json-symbol->string (symbol)
+  "Converts `symbol' as returned from json-prolog to a lisp-usable string by trimming `|' characters at the beginning and the end."
   (let* ((string-symbol (write-to-string symbol)))
     (subseq string-symbol 2 (- (length string-symbol) 2))))
 
+(defun split-prolog-symbol (prolog-symbol &key (delimiter '\#))
+  "Splits the namespace from the symbol of a prolog identifier symbol `prolog-symbol'. The two parts must be delimited by the delimiter `delimiter'. Returns a values list, consisting of the symbol, and the namespace."
+  (let ((delimiter-position
+          (position delimiter prolog-symbol :test #'string=)))
+    (values
+     (subseq prolog-symbol (1+ delimiter-position))
+     (subseq prolog-symbol 0 delimiter-position))))
+
+(defun add-prolog-namespace (symbol &key (namespace "http://knowrob.org/kb/ias_semantic_map.owl") (delimiter '\#))
+  "Concatenates a string that consists of the given `namespace', the `delimiter', and finally the `symbol'."
+  (concatenate
+   'string
+   namespace
+   (json-symbol->string (write-to-string delimiter))
+   symbol))
+
 (defun get-shopping-items ()
+  "Returns all shopping items known in the current semantic environment."
   (force-ll
    (lazy-mapcar
     (lambda (bdgs)
       (with-vars-bound (?item) bdgs
-        (json-symbol->string ?item)))
+        (split-prolog-symbol (json-symbol->string ?item))))
     (json-prolog:prolog `("shopping_item" ?item)))))
 
 (defun is-stackable (item)
+  "Returns whether the shopping item `item' is stackable or not."
   (not (not (json-prolog:prolog
-             `("is_stackable" ,item)))))
+             `("is_stackable" ,(add-prolog-namespace item))))))
 
 (defun get-racks ()
+  "Returns all racks known in the current semantic environment."
   (force-ll
    (lazy-mapcar
     (lambda (bdgs)
       (with-vars-bound (?rack) bdgs
-        (json-symbol->string ?rack)))
+        (split-prolog-symbol (json-symbol->string ?rack))))
     (json-prolog:prolog `("rack" ?rack)))))
 
 (defun get-rack-levels (rack)
+  "Returns all rack levels for the given rack `rack'."
   (force-ll
    (lazy-mapcar
     (lambda (bdgs)
       (with-vars-bound (?racklevel) bdgs
-        (json-symbol->string ?racklevel)))
-    (json-prolog:prolog `("rack_level" ,rack ?racklevel)))))
+        (split-prolog-symbol (json-symbol->string ?racklevel))))
+    (json-prolog:prolog `("rack_level" ,(add-prolog-namespace rack) ?racklevel)))))
 
 (defun get-rack-on-level (rack level)
+  "Returns the rack level `level' on rack `rack'. `level' is an integer."
   (with-vars-bound (?racklevel)
       (lazy-car
        (json-prolog:prolog
-        `("rack_on_level" ,rack ,level ?racklevel)))
-      (json-symbol->string ?racklevel)))
+        `("rack_on_level" ,(add-prolog-namespace rack) ,level ?racklevel)))
+      (split-prolog-symbol (json-symbol->string ?racklevel))))
 
 (defun location-on-rack-level (rack level)
+  "Generates a location designator that describes a three dimensional pose on the two dimensional plane of the given rack level `level' on rack `rack'. `level' is an integer."
   (let ((rack-level (get-rack-on-level rack level)))
     (make-designator 'location
                      `((desig-props::on "RackLevel")
-                       (desig-props::name ,rack-level)))))
+                       (desig-props::name ,(add-prolog-namespace rack-level))))))
