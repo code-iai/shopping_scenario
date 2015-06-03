@@ -32,3 +32,8 @@
 ;;; Plans
 ;;;
 
+(def-top-level-cram-function arrange-rack-objects (&key hints)
+  "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
+  (let ((target-arrangement (make-target-arrangement :hints hints)))
+    ;; TODO(winkler): Arrange objects here.
+    ))

@@ -119,3 +119,6 @@
                      ?w btr:semantic-map sem-map-area
                      (,area-trans ,area-rot)
                      :urdf ,urdf-area)))))))
+
+(defun make-target-arrangement (&key hints)
+  )
