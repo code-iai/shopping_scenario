@@ -39,7 +39,15 @@ import java.lang.Integer;
 
 
 public class RackReasoner {
-    public boolean poseOnRackLevel(double dPoseX, double dPoseY, double dPoseZ, double dRackLevelX, double dRackLevelY, double dRackLevelZ, double dLevelWidth, double dLevelDepth, double dLevelHeight) {
+    /** 
+     *  Determined whether the position [dPoseX, dPoseY, dPoseZ] is on
+     *  the rack level whose position is [dRackLevelX, dRackLevelY,
+     *  dRackLevelZ], and its two dimensional extents are
+     *  [dLevelWidth, dLevelDepth]. dLevelHeight determines the
+     *  tolerance area above the rack level's plane in which positions
+     *  are considered to be on the level.
+     */
+    public boolean positionOnRackLevel(double dPoseX, double dPoseY, double dPoseZ, double dRackLevelX, double dRackLevelY, double dRackLevelZ, double dLevelWidth, double dLevelDepth, double dLevelHeight) {
 	return (dPoseX >= dRackLevelX - dLevelWidth / 2 && dPoseX < dRackLevelX + dLevelWidth / 2 &&
 		dPoseY >= dRackLevelY - dLevelDepth / 2 && dPoseY < dRackLevelY + dLevelDepth / 2 &&
 		dPoseZ >= dRackLevelZ && dPoseZ < dRackLevelZ + dLevelHeight);

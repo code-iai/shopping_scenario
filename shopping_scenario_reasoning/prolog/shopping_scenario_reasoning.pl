@@ -37,7 +37,7 @@
       rack/1,
       rack_level/2,
       rack_on_level/3,
-      pose_on_rack/6
+      position_on_rack/6
     ]).
 
 
@@ -54,7 +54,7 @@
     rack(r),
     rack_level(r, r),
     rack_on_level(r, r, r),
-    pose_on_rack(r, r, r, r, r, r).
+    position_on_rack(r, r, r, r, r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -122,18 +122,18 @@ rack_on_level(Rack, Level, RackLevel) :-
     rdf_triple(knowrob:'level', RackLevel, LevelLiteral), strip_literal_type(LevelLiteral, LevelLiteralAtom), term_to_atom(Level, LevelLiteralAtom).
 
 
-%% pose_on_rack(?X, ?Y, ?Z, ?LevelHeight, ?Rack, ?RackLevel) is nondet.
+%% position_on_rack(?X, ?Y, ?Z, ?LevelHeight, ?Rack, ?RackLevel) is nondet.
 %
-%  Identify the rack and its respective level where the given pose is residing, if any.
+%  Identify the rack and its respective level where the given position is residing, if any.
 %
 % @param X            The X coordinate for which to identify the rack and level
 % @param Y            The Y coordinate for which to identify the rack and level
 % @param Z            The Z coordinate for which to identify the rack and level
 % @param LevelHeight  The height above a level that still counts towards it
-% @param Rack         The rack on which the pose is
+% @param Rack         The rack on which the position is
 % @param RackLevel    The level on the identified rack on which the pose resides
 %
-pose_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
+position_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
     rack(Rack),
     rack_level(Rack, RackLevel),
     current_object_pose(RackLevel, [_, _, _, RLX, _, _, _, RLY, _, _, _, RLZ, _, _, _, _]),
@@ -147,5 +147,5 @@ pose_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
     term_to_atom(LevelDepth, DepthLiteralAtom),
     
     jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
-    jpl_call(RR, 'poseOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
+    jpl_call(RR, 'positionOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
     jpl_is_true(Result).
