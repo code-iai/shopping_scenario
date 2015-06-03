@@ -54,4 +54,4 @@
   (:import-from :cram-reasoning def-fact-group <- not)
   (:import-from :cram-roslisp-common *tf2*)
   (:export)
-  (:desig-properties))
+  (:desig-properties :on :name))
