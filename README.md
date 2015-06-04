@@ -10,7 +10,17 @@ and localized), just do
 $ roslaunch shopping_scenario_executive shopping_scenario.launch
 ```
 
-and it should start all necessary components.
+and it should start all necessary components. To run the Gazebo
+simulation of the scenario (with all models spawned etc.), run
+
+```bash
+$ roslaunch shopping_scenario_executive shopping_scenario_simulated.launch
+```
+
+The simulated part requires to have a fully configured instance of
+MoveIt! running for the simulated PR2, and nodes of type `move_base`,
+`nav_pcontroller` running and configured to work with the PR2 in
+Gazebo.
 
 
 ### The Structure Explained
