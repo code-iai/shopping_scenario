@@ -44,8 +44,25 @@
   (with-simulation-process-modules
     (let ((target-arrangement (make-target-arrangement :hints hints)))
       ;; TODO(winkler): Arrange objects here.
-      (with-designators ((obj (object `((desig-props:name "beer"))))
+      (with-designators ((rack-level (location `((desig-props::on "RackLevel")
+                                                 (desig-props::name "RackLevel1_fh28hepgfq"))))
+                         (obj (object `((desig-props:name "beer")
+                                        (desig-props:at ,rack-level)
+                                        (desig-props::max-handles 1)
+                                        ,@(mapcar
+                                           (lambda (handle-object)
+                                             `(desig-props:handle ,handle-object))
+                                           (make-handles
+                                            0.04
+                                            :segments 2
+                                            :ax (/ pi 2)
+                                            :offset-angle (/ pi 2)
+                                            :center-offset
+                                            (tf:make-3d-vector 0.02 0.0 0.07))))))
                          (perceive (action `((desig-props::to desig-props::perceive)
                                              (desig-props::obj ,obj)))))
-        (perform perceive))
+        (move-torso-up)
+        (move-arms-away)
+        ;(cram-plan-library:perceive-object 'cram-plan-library:a obj))
+        (pick-object obj))
       )))
