@@ -28,6 +28,8 @@
 
 (in-package :shopping-scenario-executive)
 
+(defvar *action-client-torso* nil)
+
 ;;;
 ;;; Infrastructure Utilities
 ;;;
@@ -76,7 +78,7 @@
      :left
      (tf:make-pose-stamped
       "base_link" (roslisp:ros-time)
-      (tf:make-3d-vector 0.3 0.5 0.8);1.3
+      (tf:make-3d-vector 0.3 0.5 1.3)
       (tf:euler->quaternion :ax 0));pi))
      :ignore-collisions ignore-collisions
      :allowed-collision-objects allowed-collision-objects))
@@ -85,12 +87,16 @@
      :right
      (tf:make-pose-stamped
       "base_link" (roslisp:ros-time)
-      (tf:make-3d-vector 0.3 -0.5 0.8);1.3
+      (tf:make-3d-vector 0.3 -0.5 1.3)
       (tf:euler->quaternion :ax 0))
      :ignore-collisions ignore-collisions
      :allowed-collision-objects allowed-collision-objects)))
 
 (defun init-belief-state ()
+  (cram-designators:disable-location-validation-function
+   'bullet-reasoning-designators::check-ik-solution)
+  (cram-designators:disable-location-validation-function
+   'bullet-reasoning-designators::validate-designator-solution)
   (let* ((urdf-robot
            (cl-urdf:parse-urdf
             (roslisp:get-param "robot_description_lowres")))
@@ -134,5 +140,59 @@
                      (,area-trans ,area-rot)
                      :urdf ,urdf-area)))))))
 
+(defun move-torso-up (&optional (position 0.3))
+  (let* ((action-client (or *action-client-torso*
+                            (actionlib:make-action-client
+                             "/torso_controller/position_joint_action"
+                             "pr2_controllers_msgs/SingleJointPositionAction")))
+         (goal (actionlib:make-action-goal
+                   action-client
+                 position position)))
+    (actionlib:wait-for-server action-client)
+    (setf *action-client-torso* action-client)
+    (actionlib:send-goal-and-wait action-client goal)))
+
+(defun move-arms-away ()
+  (move-arms-up :side :left)
+  (move-arms-up :side :right))
+
 (defun make-target-arrangement (&key hints)
   )
+
+(defun pick-object (object &key stationary)
+  (cond (stationary
+         (achieve `(cram-plan-library:object-picked ,object)))
+        (t
+         (achieve `(cram-plan-library:object-in-hand ,object)))))
+
+(defun make-handles (distance-from-center
+                     &key
+                       (segments 1)
+                       (ax 0.0) (ay 0.0) (az 0.0)
+                       (offset-angle 0.0)
+                       grasp-type
+                       (center-offset
+                        (tf:make-identity-vector)))
+  (loop for i from 0 below segments
+        as current-angle = (+ (* 2 pi (float (/ i segments)))
+                              offset-angle)
+        as handle-pose = (tf:make-pose
+                          (tf:make-3d-vector
+                           (+ (* distance-from-center (cos current-angle))
+                              (tf:x center-offset))
+                           (+ (* distance-from-center (sin current-angle))
+                              (tf:y center-offset))
+                           (+ 0.0
+                              (tf:z center-offset)))
+                          (tf:euler->quaternion
+                           :ax ax :ay ay :az (+ az current-angle)))
+        as handle-object = (make-designator
+                            'cram-designators:object
+                            (append
+                             `((desig-props:type desig-props:handle)
+                               (desig-props:at
+                                ,(a location `((desig-props:pose
+                                                ,handle-pose)))))
+                             (when grasp-type
+                               `((desig-props:grasp-type ,grasp-type)))))
+        collect handle-object))
