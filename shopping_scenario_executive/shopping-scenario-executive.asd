@@ -58,7 +58,8 @@
                bullet-reasoning-designators
                robosherlock-process-module
                cram-beliefstate
-               gazebo-perception-process-module)
+               gazebo-perception-process-module
+               pr2_controllers_msgs-msg)
   :components
   ((:module "src"
     :components
