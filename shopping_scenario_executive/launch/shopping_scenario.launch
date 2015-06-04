@@ -2,5 +2,6 @@
 
   <include file="$(find shopping_scenario_maps)/launch/shopping_scenario_maps.launch"/>
   <include file="$(find shopping_scenario_reasoning)/launch/shopping_scenario_reasoning.launch"/>
+  <include file="$(find pr2_description_lowres)/robots/upload_pr2.launch"/>
 
 </launch>
