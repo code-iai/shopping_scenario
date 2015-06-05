@@ -98,6 +98,27 @@
 	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.03</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.03</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.25</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;Kelloggs">
