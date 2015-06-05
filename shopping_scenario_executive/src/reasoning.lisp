@@ -30,12 +30,14 @@
 
 
 (defmacro with-first-prolog-vars-bound (vars prolog-query &body body)
+  "Evaluates the prolog query `prolog-query' and transforms variables `vars' via `body', returning the result."
   `(with-vars-bound ,vars
        (lazy-car
         (json-prolog:prolog ,prolog-query))
      ,@body))
 
 (defmacro with-prolog-vars-bound (vars prolog-query &body body)
+  "Lists all results from the prolog query `prolog-query', each being transformed by `body'. `vars' denotes all variables to make available in `body'."
   `(force-ll
     (lazy-mapcar
      (lambda (bdgs)
@@ -103,6 +105,7 @@
                        (desig-props::name ,(add-prolog-namespace rack-level))))))
 
 (defun get-object-rack-level (rack object)
+  "Returns which level of a rack `rack' an object `object' resides on. Returns the (namespace-less) OWL identifier of the rack level."
   (let* ((at (desig-prop-value object 'desig-props::at))
          (pose (reference at))
          (origin (tf:origin pose)))
@@ -113,11 +116,13 @@
       (split-prolog-symbol (json-symbol->string ?racklevel)))))
 
 (defun get-rack-level-elevation (racklevel)
+  "Returns the z-coordinate of the surface of the rack level `racklevel'."
   (with-first-prolog-vars-bound (?elevation)
       `("rack_level_elevation" ,(add-prolog-namespace racklevel) ?elevation)
     ?elevation))
 
 (defun get-rack-level-relative-pose (racklevel x y z rotation)
+  "Returns (in absolute map coordinates) a pose stamped that describes the relative pose ((x y z) rotation) on the rack level `racklevel'."
   (with-first-prolog-vars-bound (?result)
       `("rack_level_relative_position"
         ,(add-prolog-namespace racklevel) ,x ,y ?result)
@@ -126,6 +131,7 @@
        "map" 0.0 (tf:make-3d-vector x y (+ z elevation)) rotation))))
 
 (defun get-item-urdf-path (item)
+  "Returns the absolute URDF file path for an item `item' (if set in the semantic information supplied to KnowRob)."
   (with-first-prolog-vars-bound (?urdfpath)
       `("item_urdf_path" ,(add-prolog-namespace
                            item
@@ -134,6 +140,7 @@
     (json-symbol->string ?urdfpath)))
 
 (defun get-item-dimensions (item)
+  "Returns the dimensions (with, depth, height) of an item `item'."
   (with-first-prolog-vars-bound (?width ?depth ?height)
       `("item_dimensions" ,(add-prolog-namespace
                             item
@@ -142,6 +149,7 @@
     (vector ?width ?depth ?height)))
 
 (defun get-items-by-class-type (class-type)
+  "Returns all item instances that are of class type `class-type'."
   (with-prolog-vars-bound (?item)
       `("item_class_type" ,(add-prolog-namespace
                             class-type
