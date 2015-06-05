@@ -37,7 +37,10 @@
       rack/1,
       rack_level/2,
       rack_on_level/3,
-      position_on_rack/6
+      position_on_rack/6,
+      rack_level_elevation/2,
+      rack_level_relative_position/4,
+      item_urdf_path/2
     ]).
 
 
@@ -54,7 +57,10 @@
     rack(r),
     rack_level(r, r),
     rack_on_level(r, r, r),
-    position_on_rack(r, r, r, r, r, r).
+    position_on_rack(r, r, r, r, r, r),
+    rack_level_elevation(r, r),
+    rack_level_relative_position(r, r, r, r),
+    item_urdf_path(r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -74,6 +80,21 @@ shopping_item(Item) :-
     rdf_reachable(A, rdfs:subClassOf, knowrob:'ShoppingItem').
 
 
+%% item_urdf_path(?Item, ?URDFPath) is nondet.
+%
+%  Returns the absolute path to the URDF file definition of a given item
+%
+% @param Item         The item to get the URDF of
+% @param URDFPath     The absolute path to the URDF file
+%
+item_urdf_path(Item, URDFPath) :-
+    shopping_item(Item),
+    owl_has(Item, knowrob:'urdf', literal(type(_, URDFRelative))),
+    
+    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
+    jpl_call(RR, 'resolveRelativePath', [URDFRelative], URDFPath).
+
+
 %% is_stackable(?Item) is nondet.
 %
 %  Determine whether a given shopping item is stackable, or return all stackable shopping items.
@@ -82,7 +103,7 @@ shopping_item(Item) :-
 %
 is_stackable(Item) :-
     shopping_item(Item),
-    rdf_has(Item, knowrob:'stackable', literal(type(xsd:boolean, true))).
+    owl_has(Item, knowrob:'stackable', literal(type(xsd:boolean, true))).
 
 
 %% rack(?Rack) is nondet.
@@ -149,3 +170,43 @@ position_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
     jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
     jpl_call(RR, 'positionOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
     jpl_is_true(Result).
+
+
+%% rack_level_elevation(?RackLevel, ?Elevation) is nondet.
+%
+%  Returns the elevation (z coordinate) of the given racklevel.
+%
+% @param RackLevel    The level of the rack to return the elevation of
+% @param Elevation    Z coordinate of the rack level (on its surface)
+%
+rack_level_elevation(RackLevel, Elevation) :-
+    current_object_pose(RackLevel, [_, _, _, _, _, _, _, _, _, _, _, RLZ, _, _, _, _]),
+    
+    rdf_has(RackLevel, knowrob:'heightOfObject', HeightLiteral),
+    strip_literal_type(HeightLiteral, HeightLiteralAtom),
+    term_to_atom(LevelHeight, HeightLiteralAtom),
+    
+    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
+    jpl_call(RR, 'rackLevelElevation', [RLZ, LevelHeight], Elevation).
+
+
+%% rack_level_relative_position(?RackLevel, ?RelativeX, ?RelativeY, ?AbsolutePosition) is nondet.
+%
+%  Returns the RwlativeX/RelativeY relative position on the rack level ?RackLevel.
+%
+% @param RackLevel         The level of the rack to return the relative position on
+% @param RelativeX         Relative position in X direction
+% @param RelativeY         Relative position in Y direction
+% @param AbsolutePosition  Absolute position generated
+%
+rack_level_relative_position(RackLevel, RelativeX, RelativeY, AbsolutePosition) :-
+    current_object_pose(RackLevel, [_, _, _, RLX, _, _, _, RLY, _, _, _, RLZ, _, _, _, _]),
+    
+    rdf_has(RackLevel, knowrob:'heightOfObject', HeightLiteral),
+    strip_literal_type(HeightLiteral, HeightLiteralAtom),
+    term_to_atom(LevelHeight, HeightLiteralAtom),
+    
+    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
+    jpl_call(RR, 'rackLevelElevation', [RLZ, LevelHeight], Elevation),
+    jpl_call(RR, 'rackLevelRelativePosition', [RLX, RLY, RLZ, RelativeX, RelativeY], AbsolutePositionArray),
+    jpl_array_to_list(AbsolutePositionArray, AbsolutePosition).

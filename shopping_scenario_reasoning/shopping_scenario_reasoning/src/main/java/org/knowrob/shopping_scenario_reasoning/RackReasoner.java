@@ -37,6 +37,8 @@ import java.util.*;
 import java.util.Map.*;
 import java.lang.Integer;
 
+import org.knowrob.utils.ros.RosUtilities;
+
 
 public class RackReasoner {
     /** 
@@ -51,5 +53,30 @@ public class RackReasoner {
 	return (dPoseX >= dRackLevelX - dLevelWidth / 2 && dPoseX < dRackLevelX + dLevelWidth / 2 &&
 		dPoseY >= dRackLevelY - dLevelDepth / 2 && dPoseY < dRackLevelY + dLevelDepth / 2 &&
 		dPoseZ >= dRackLevelZ && dPoseZ < dRackLevelZ + dLevelHeight);
+    }
+    
+    public double rackLevelElevation(double dZ, double dHeight) {
+	return dZ + (dHeight / 2);
+    }
+    
+    public double[] rackLevelRelativePosition(double dX, double dY, double dZ, double dRelativeX, double dRelativeY) {
+	double[] arrReturn = {dX + dRelativeX, dY + dRelativeY, dZ};
+	
+	return arrReturn;
+    }
+    
+    public String resolveRelativePath(String strRelativePath) {
+	String strReturn = strRelativePath;
+	
+	if(strRelativePath.substring(0, 10).equals("package://")) {
+	    int nNextSlash = strRelativePath.indexOf('/', 11);
+	    String strPkg = strRelativePath.substring(10, nNextSlash);
+	    
+	    String strAbs = RosUtilities.rospackFind(strPkg);
+	    
+	    strReturn = strAbs + strRelativePath.substring(nNextSlash);
+	}
+	
+	return strReturn;
     }
 }

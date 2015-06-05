@@ -62,7 +62,9 @@
 (defun is-stackable (item)
   "Returns whether the shopping item `item' is stackable or not."
   (not (not (json-prolog:prolog
-             `("is_stackable" ,(add-prolog-namespace item))))))
+             `("is_stackable" ,(add-prolog-namespace
+                                item
+                                :namespace "http://knowrob.org/kb/knowrob.owl"))))))
 
 (defun get-racks ()
   "Returns all racks known in the current semantic environment."
@@ -106,3 +108,28 @@
           `("position_on_rack" ,(tf:x (tf:origin pose)) ,(tf:y (tf:origin pose)) ,(tf:z (tf:origin pose))
                                0.3 ,(add-prolog-namespace rack) ?racklevel)))
       (split-prolog-symbol (json-symbol->string ?racklevel)))))
+
+(defun get-rack-level-elevation (racklevel)
+  (with-vars-bound (?elevation)
+      (lazy-car
+       (json-prolog:prolog
+        `("rack_level_elevation" ,(add-prolog-namespace racklevel) ?elevation)))
+    ?elevation))
+
+(defun get-rack-level-relative-pose (racklevel x y z rotation)
+  (with-vars-bound (?result)
+      (lazy-car
+       (json-prolog:prolog
+        `("rack_level_relative_position" ,(add-prolog-namespace racklevel) ,x ,y ?result)))
+    (destructuring-bind (x y elevation) ?result
+      (tf:make-pose-stamped
+       "map" 0.0 (tf:make-3d-vector x y (+ z elevation)) rotation))))
+
+(defun get-item-urdf-path (item)
+  (with-vars-bound (?urdfpath)
+      (lazy-car
+       (json-prolog:prolog
+        `("item_urdf_path" ,(add-prolog-namespace
+                             item
+                             :namespace "http://knowrob.org/kb/knowrob.owl") ?urdfpath)))
+    (json-symbol->string ?urdfpath)))

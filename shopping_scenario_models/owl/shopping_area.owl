@@ -77,11 +77,12 @@
     <owl:DatatypeProperty rdf:about="&knowrob;vectorX"/>
     <owl:DatatypeProperty rdf:about="&knowrob;vectorY"/>
     <owl:DatatypeProperty rdf:about="&knowrob;vectorZ"/>
-    <owl:DatatypeProperty rdf:about="&knowrob;stackable"/>
     
     
     <!-- New Data Properties -->
+    <owl:DatatypeProperty rdf:about="&knowrob;stackable"/>
     <owl:DatatypeProperty rdf:about="&knowrob;level"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;urdf"/>
     
     
     <!-- General Classes -->
@@ -106,6 +107,18 @@
     
     <owl:Class rdf:about="&knowrob;Corn">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;stackable"/>
+	  <owl:hasValue rdf:datatype="&xsd;boolean">true</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;Kelloggs">
@@ -380,12 +393,10 @@
     <!-- TODO: Add the object's properties (like handles and dimensions) here. -->
     <owl:NamedIndividual rdf:about="&knowrob;Corn_uai8735a">
       <rdf:type rdf:resource="&knowrob;Corn"/>
-      <knowrob:stackable rdf:datatype="&xsd;boolean">true</knowrob:stackable>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;Corn_jal987c1">
       <rdf:type rdf:resource="&knowrob;Corn"/>
-      <knowrob:stackable rdf:datatype="&xsd;boolean">true</knowrob:stackable>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_sh876app">

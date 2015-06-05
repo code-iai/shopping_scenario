@@ -196,3 +196,13 @@
                              (when grasp-type
                                `((desig-props:grasp-type ,grasp-type)))))
         collect handle-object))
+
+(defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
+  (let ((urdf (get-item-urdf-path item)))
+    (spawn-model-on-rack-level (first (get-racks)) level item urdf x y rotation)))
+
+(defun spawn-model-on-rack-level (rack level model urdf x y rotation)
+  (let* ((racklevel (get-rack-on-level rack level))
+         (elevation 0.1)
+         (pose (get-rack-level-relative-pose racklevel x y elevation rotation)))
+    (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
