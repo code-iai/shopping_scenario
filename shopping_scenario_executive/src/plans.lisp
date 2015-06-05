@@ -46,7 +46,7 @@
       ;; TODO(winkler): Arrange objects here.
       (with-designators ((rack-level (location `((desig-props::on "RackLevel")
                                                  (desig-props::name "RackLevel1_fh28hepgfq"))))
-                         (obj (object `((desig-props:name "beer")
+                         (obj (object `((desig-props:name "Corn_uai8735a")
                                         (desig-props:at ,rack-level)
                                         (desig-props::max-handles 1)
                                         ,@(mapcar
@@ -56,11 +56,12 @@
                                             0.04
                                             :segments 2
                                             :ax (/ pi 2)
-                                            :offset-angle (/ pi 2)
+                                            ;:offset-angle (/ pi 2)
                                             :center-offset
                                             (tf:make-3d-vector 0.02 0.0 0.07))))))
                          (perceive (action `((desig-props::to desig-props::perceive)
                                              (desig-props::obj ,obj)))))
+        (spawn-shopping-item "Corn_uai8735a" 2 -0.2 0.2)
         (move-torso-up)
         (move-arms-away)
         ;(cram-plan-library:perceive-object 'cram-plan-library:a obj))

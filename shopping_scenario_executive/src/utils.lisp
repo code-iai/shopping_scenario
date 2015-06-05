@@ -93,10 +93,6 @@
      :allowed-collision-objects allowed-collision-objects)))
 
 (defun init-belief-state ()
-  (cram-designators:disable-location-validation-function
-   'bullet-reasoning-designators::check-ik-solution)
-  (cram-designators:disable-location-validation-function
-   'bullet-reasoning-designators::validate-designator-solution)
   (let* ((urdf-robot
            (cl-urdf:parse-urdf
             (roslisp:get-param "robot_description_lowres")))
@@ -139,6 +135,15 @@
                      ?w btr:semantic-map sem-map-area
                      (,area-trans ,area-rot)
                      :urdf ,urdf-area)))))))
+
+(defun prepare-settings ()
+  (cram-designators:disable-location-validation-function
+   'bullet-reasoning-designators::check-ik-solution)
+  (cram-designators:disable-location-validation-function
+   'bullet-reasoning-designators::validate-designator-solution)
+  (init-belief-state)
+  (moveit:clear-collision-environment)
+  (sem-map-coll-env:publish-semantic-map-collision-objects))
 
 (defun move-torso-up (&optional (position 0.3))
   (let* ((action-client (or *action-client-torso*
@@ -197,12 +202,12 @@
                                `((desig-props:grasp-type ,grasp-type)))))
         collect handle-object))
 
-(defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
-  (let ((urdf (get-item-urdf-path item)))
-    (spawn-model-on-rack-level (first (get-racks)) level item urdf x y rotation)))
-
 (defun spawn-model-on-rack-level (rack level model urdf x y rotation)
   (let* ((racklevel (get-rack-on-level rack level))
          (elevation 0.1)
          (pose (get-rack-level-relative-pose racklevel x y elevation rotation)))
     (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
+
+(defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
+  (let ((urdf (get-item-urdf-path item)))
+    (spawn-model-on-rack-level (first (get-racks)) level item urdf x y rotation)))
