@@ -30,6 +30,8 @@
 
 (defvar *action-client-torso* nil)
 
+(defparameter *rack-level-positions-row* 4)
+
 ;;;
 ;;; Infrastructure Utilities
 ;;;
@@ -211,3 +213,40 @@
 (defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
   (let ((urdf (get-item-urdf-path item)))
     (spawn-model-on-rack-level (first (get-racks)) level item urdf x y rotation)))
+
+(defun make-empty-object-arrangement (&key map)
+  (let* ((rack (first (get-racks)))
+         (rack-levels (get-rack-levels rack)))
+    (make-array `(,(length rack-levels) ,*rack-level-positions-row*)
+                :initial-element (unless map ""))))
+
+(defun print-object-arrangement (arrangement)
+  (let ((dimensions (array-dimensions arrangement)))
+    (loop for i from 0 below (first dimensions)
+          do (loop for j from 0 below (second dimensions)
+                   do (format t "\"~a\"~t" (aref arrangement j i)))
+             (format t "~%"))))
+
+(defun make-random-object-arrangement ()
+  (let* ((arrangement (make-empty-object-arrangement))
+         (dimensions (array-dimensions arrangement))
+         (objects (get-shopping-items)))
+    (loop while objects
+          as object = (first objects)
+          as i = (random (first dimensions))
+          as j = (random (second dimensions))
+          when (string= (aref arrangement i j) "")
+            do (setf (aref arrangement i j) object)
+               (setf objects (remove object objects)))
+    arrangement))
+
+(defun make-arrangement-position-map ()
+  (let* ((rack (first (get-racks)))
+         (map (make-empty-object-arrangement :map t))
+         (dimensions (array-dimensions map)))
+    (loop for i from 0 below (first dimensions)
+          as rack-level = (get-rack-on-level rack i)
+          do (loop for j from 0 below (second dimensions)
+                   do (setf (aref map i j)
+                            `(,rack-level))))
+    map))
