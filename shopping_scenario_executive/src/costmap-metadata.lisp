@@ -36,5 +36,5 @@
   
   (<- (costmap-padding 0.5))
   (<- (costmap-manipulation-padding 0.45))
-  (<- (costmap-in-reach-distance 0.9))
+  (<- (costmap-in-reach-distance 1.2))
   (<- (costmap-reach-minimal-distance 0.3)))
