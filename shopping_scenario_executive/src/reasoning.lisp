@@ -29,6 +29,20 @@
 (in-package :shopping-scenario-executive)
 
 
+(defmacro with-first-prolog-vars-bound (vars prolog-query &body body)
+  `(with-vars-bound ,vars
+       (lazy-car
+        (json-prolog:prolog ,prolog-query))
+     ,@body))
+
+(defmacro with-prolog-vars-bound (vars prolog-query &body body)
+  `(force-ll
+    (lazy-mapcar
+     (lambda (bdgs)
+       (with-vars-bound ,vars bdgs
+         ,@body))
+     (json-prolog:prolog ,prolog-query))))
+
 (defun json-symbol->string (symbol)
   "Converts `symbol' as returned from json-prolog to a lisp-usable string by trimming `|' characters at the beginning and the end."
   (let* ((string-symbol (write-to-string symbol)))
@@ -52,12 +66,9 @@
 
 (defun get-shopping-items ()
   "Returns all shopping items known in the current semantic environment."
-  (force-ll
-   (lazy-mapcar
-    (lambda (bdgs)
-      (with-vars-bound (?item) bdgs
-        (split-prolog-symbol (json-symbol->string ?item))))
-    (json-prolog:prolog `("shopping_item" ?item)))))
+  (with-prolog-vars-bound (?item)
+      `("shopping_item" ?item)
+    (split-prolog-symbol (json-symbol->string ?item))))
 
 (defun is-stackable (item)
   "Returns whether the shopping item `item' is stackable or not."
@@ -68,28 +79,20 @@
 
 (defun get-racks ()
   "Returns all racks known in the current semantic environment."
-  (force-ll
-   (lazy-mapcar
-    (lambda (bdgs)
-      (with-vars-bound (?rack) bdgs
-        (split-prolog-symbol (json-symbol->string ?rack))))
-    (json-prolog:prolog `("rack" ?rack)))))
+  (with-prolog-vars-bound (?rack)
+      `("rack" ?rack)
+    (split-prolog-symbol (json-symbol->string ?rack))))
 
 (defun get-rack-levels (rack)
   "Returns all rack levels for the given rack `rack'."
-  (force-ll
-   (lazy-mapcar
-    (lambda (bdgs)
-      (with-vars-bound (?racklevel) bdgs
-        (split-prolog-symbol (json-symbol->string ?racklevel))))
-    (json-prolog:prolog `("rack_level" ,(add-prolog-namespace rack) ?racklevel)))))
+  (with-prolog-vars-bound (?racklevel)
+      `("rack_level" ,(add-prolog-namespace rack) ?racklevel)
+    (split-prolog-symbol (json-symbol->string ?racklevel))))
 
 (defun get-rack-on-level (rack level)
   "Returns the rack level `level' on rack `rack'. `level' is an integer."
-  (with-vars-bound (?racklevel)
-      (lazy-car
-       (json-prolog:prolog
-        `("rack_on_level" ,(add-prolog-namespace rack) ,level ?racklevel)))
+  (with-first-prolog-vars-bound (?racklevel)
+      `("rack_on_level" ,(add-prolog-namespace rack) ,level ?racklevel)
     (split-prolog-symbol (json-symbol->string ?racklevel))))
 
 (defun location-on-rack-level (rack level)
@@ -101,35 +104,47 @@
 
 (defun get-object-rack-level (rack object)
   (let* ((at (desig-prop-value object 'desig-props::at))
-         (pose (reference at)))
-    (with-vars-bound (?racklevel)
-        (lazy-car
-         (json-prolog:prolog
-          `("position_on_rack" ,(tf:x (tf:origin pose)) ,(tf:y (tf:origin pose)) ,(tf:z (tf:origin pose))
-                               0.3 ,(add-prolog-namespace rack) ?racklevel)))
+         (pose (reference at))
+         (origin (tf:origin pose)))
+    (with-first-prolog-vars-bound (?racklevel)
+        `("position_on_rack"
+          ,(tf:x origin) ,(tf:y origin) ,(tf:z origin)
+          0.3 ,(add-prolog-namespace rack) ?racklevel)
       (split-prolog-symbol (json-symbol->string ?racklevel)))))
 
 (defun get-rack-level-elevation (racklevel)
-  (with-vars-bound (?elevation)
-      (lazy-car
-       (json-prolog:prolog
-        `("rack_level_elevation" ,(add-prolog-namespace racklevel) ?elevation)))
+  (with-first-prolog-vars-bound (?elevation)
+      `("rack_level_elevation" ,(add-prolog-namespace racklevel) ?elevation)
     ?elevation))
 
 (defun get-rack-level-relative-pose (racklevel x y z rotation)
-  (with-vars-bound (?result)
-      (lazy-car
-       (json-prolog:prolog
-        `("rack_level_relative_position" ,(add-prolog-namespace racklevel) ,x ,y ?result)))
+  (with-first-prolog-vars-bound (?result)
+      `("rack_level_relative_position"
+        ,(add-prolog-namespace racklevel) ,x ,y ?result)
     (destructuring-bind (x y elevation) ?result
       (tf:make-pose-stamped
        "map" 0.0 (tf:make-3d-vector x y (+ z elevation)) rotation))))
 
 (defun get-item-urdf-path (item)
-  (with-vars-bound (?urdfpath)
-      (lazy-car
-       (json-prolog:prolog
-        `("item_urdf_path" ,(add-prolog-namespace
-                             item
-                             :namespace "http://knowrob.org/kb/knowrob.owl") ?urdfpath)))
+  (with-first-prolog-vars-bound (?urdfpath)
+      `("item_urdf_path" ,(add-prolog-namespace
+                           item
+                           :namespace "http://knowrob.org/kb/knowrob.owl")
+                         ?urdfpath)
     (json-symbol->string ?urdfpath)))
+
+(defun get-item-dimensions (item)
+  (with-first-prolog-vars-bound (?width ?depth ?height)
+      `("item_dimensions" ,(add-prolog-namespace
+                            item
+                            :namespace "http://knowrob.org/kb/knowrob.owl")
+                          ?width ?depth ?height)
+    (vector ?width ?depth ?height)))
+
+(defun get-items-by-class-type (class-type)
+  (with-prolog-vars-bound (?item)
+      `("item_class_type" ,(add-prolog-namespace
+                            class-type
+                            :namespace "http://knowrob.org/kb/knowrob.owl")
+                          ?item)
+    (split-prolog-symbol (json-symbol->string ?item))))
