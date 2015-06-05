@@ -104,15 +104,8 @@
     <owl:Class rdf:about="&knowrob;ShoppingItem">
       <rdfs:subClassOf rdf:resource="&knowrob;HumanScaleObject"/>
     </owl:Class>
-    
-    <owl:Class rdf:about="&knowrob;Corn">
-      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
-      <rdfs:subClassOf>
-	<owl:Restriction>
-	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
-	</owl:Restriction>
-      </rdfs:subClassOf>
+
+    <owl:Class rdf:about="&knowrob;Stackable">
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;stackable"/>
@@ -121,32 +114,93 @@
       </rdfs:subClassOf>
     </owl:Class>
     
+    <owl:Class rdf:about="&knowrob;Corn">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      <rdfs:subClassOf rdf:resource="&knowrob;Stackable"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+    </owl:Class>
+    
     <owl:Class rdf:about="&knowrob;Kelloggs">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;Lion">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;Salt">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;PancakeMix">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;TomatoSauce">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;SaltDispenser">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     <owl:Class rdf:about="&knowrob;Oregano">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
     </owl:Class>
     
     
