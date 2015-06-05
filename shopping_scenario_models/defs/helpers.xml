@@ -24,8 +24,28 @@
       
       <cuboid_inertia width="${size_x}" length="${size_y}" height="${size_z}" mass="1" />
     </link>
-    </macro>
-
+  </macro>
+  
+  <macro name="cylinderlink" params="name height radius">
+    <link name="${name}">
+      <visual>
+	<origin rpy="0 0 0" xyz="0 0 0" />
+	<geometry>
+	  <cylinder radius="${radius}" length="${height}" />
+	</geometry>
+      </visual>
+      
+      <collision>
+	<origin rpy="0 0 0" xyz="0 0 0" />
+	<geometry>
+	  <cylinder radius="${radius}" length="${height}" />
+	</geometry>
+      </collision>
+      
+      <cylinder_inertia radius="${radius}" length="${height}" mass="1" />
+    </link>
+  </macro>
+  
   <macro name="static_joint" params="name parent xyz">
     <joint name="${name}_joint" type="fixed">
       <origin rpy="0 0 0" xyz="${xyz}" />

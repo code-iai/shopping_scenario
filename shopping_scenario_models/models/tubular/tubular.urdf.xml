@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<robot name="tubular"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
+  
+  <cylinderlink name="tubular" radius="0.03" height="0.1" />
+  
+</robot>
