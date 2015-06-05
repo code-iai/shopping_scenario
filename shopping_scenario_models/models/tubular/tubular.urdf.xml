@@ -4,6 +4,6 @@
   
   <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
   
-  <cylinderlink name="tubular" radius="0.03" height="0.1" />
+  <cylinderlink name="tubular" radius="0.03" height="0.25" />
   
 </robot>
