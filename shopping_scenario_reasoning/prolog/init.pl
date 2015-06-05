@@ -35,11 +35,9 @@
 :- register_ros_package(shopping_scenario_reasoning).
 :- use_module(library('shopping_scenario_reasoning')).
 
-:- owl_parser:owl_parse('package://shopping_scenario_models/owl/shopping_area.owl').
-
-
 :- register_ros_package(iai_semantic_maps).
 :- owl_parser:owl_parse('package://shopping_scenario_models/owl/shopping_area.owl').
+:- owl_parser:owl_parse('package://shopping_scenario_models/owl/objects.owl').
 :- owl_parser:owl_parse('package://iai_semantic_maps/owl/iai_maps_addons.owl').
 
 :- rdf_db:rdf_register_ns(knowrob, 'http://ias.cs.tum.edu/kb/knowrob.owl#', [keep(true)]).
