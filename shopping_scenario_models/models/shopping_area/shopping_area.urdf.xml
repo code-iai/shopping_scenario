@@ -1,36 +1,8 @@
 <?xml version="1.0"?>
-<robot name="shopping_rack">
+<robot name="shopping_rack"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
   
-  <macro name="boxlink" params="name size_x size_y size_z">
-    <link name="${name}">
-      <visual>
-	<origin rpy="0 0 0" xyz="0 0 0" />
-	<geometry>
-	  <box size="${size_x} ${size_y} ${size_z}" />
-	</geometry>
-      </visual>
-      
-      <collision>
-	<origin rpy="0 0 0" xyz="0 0 0" />
-	<geometry>
-	  <box size="${size_x} ${size_y} ${size_z}" />
-	</geometry>
-      </collision>
-      
-      <inertial>
-        <mass value="1"/>
-        <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-      </inertial>
-    </link>
-  </macro>
-  
-  <macro name="static_joint" params="name parent xyz">
-    <joint name="${name}_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="${xyz}" />
-      <parent link="${parent}" />
-      <child link="${name}" />
-    </joint>
-  </macro>
+  <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
   
   <macro name="rack_floor" params="parent rack_size_x rack_size_y size_z">
     <boxlink name="rack_level_0" size_x="${rack_size_x}" size_y="${rack_size_y}" size_z="${size_z}" />
@@ -46,10 +18,14 @@
     <link name="${name}">
     </link>
     
-    <wall name="${name}_wall_back" parent="${name}" x="0" y="-1.0" size_x="2.0" size_y="0.2" size_z="${height}" />
-    <wall name="${name}_wall_left" parent="${name}" x="-0.9" y="-1.6" size_x="0.2" size_y="1.0" size_z="${height}" />
-    <wall name="${name}_wall_right" parent="${name}" x="0.9" y="-1.315" size_x="0.2" size_y="0.43" size_z="${height}" />
-    <wall name="${name}_wall_farright" parent="${name}" x="1.5" y="-1.43" size_x="1.0" size_y="0.2" size_z="${height}" />
+    <wall name="${name}_wall_back" parent="${name}"
+	  x="0" y="-1.0" size_x="2.0" size_y="0.2" size_z="${height}" />
+    <wall name="${name}_wall_left" parent="${name}"
+	  x="-0.9" y="-1.6" size_x="0.2" size_y="1.0" size_z="${height}" />
+    <wall name="${name}_wall_right" parent="${name}"
+	  x="0.9" y="-1.315" size_x="0.2" size_y="0.43" size_z="${height}" />
+    <wall name="${name}_wall_farright" parent="${name}"
+	  x="1.5" y="-1.43" size_x="1.0" size_y="0.2" size_z="${height}" />
   </macro>
   
   <shopping_area name="shopping_area" height="2.0" />

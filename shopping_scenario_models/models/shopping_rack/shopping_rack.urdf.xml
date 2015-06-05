@@ -1,36 +1,8 @@
 <?xml version="1.0"?>
-<robot name="shopping_rack">
+<robot name="shopping_rack"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
   
-  <macro name="boxlink" params="name size_x size_y size_z">
-    <link name="${name}">
-      <visual>
-	<origin rpy="0 0 0" xyz="0 0 0" />
-	<geometry>
-	  <box size="${size_x} ${size_y} ${size_z}" />
-	</geometry>
-      </visual>
-      
-      <collision>
-	<origin rpy="0 0 0" xyz="0 0 0" />
-	<geometry>
-	  <box size="${size_x} ${size_y} ${size_z}" />
-	</geometry>
-      </collision>
-      
-      <inertial>
-        <mass value="1"/>
-        <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-      </inertial>
-    </link>
-  </macro>
-  
-  <macro name="static_joint" params="name parent xyz">
-    <joint name="${name}_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="${xyz}" />
-      <parent link="${parent}" />
-      <child link="${name}" />
-    </joint>
-  </macro>
+  <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
   
   <macro name="rack_level" params="parent level rack_size_y size_x size_y size_z elevation">
     <boxlink name="rack_level_${level}" size_x="${size_x}" size_y="${size_y}" size_z="${size_z}" />

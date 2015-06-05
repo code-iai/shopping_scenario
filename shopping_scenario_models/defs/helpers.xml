@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find shopping_scenario_models)/defs/inertia.xml"/>
+  
+  <macro name="boxlink" params="name size_x size_y size_z">
+    <link name="${name}">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <geometry>
+          <box size="${size_x} ${size_y} ${size_z}" />
+        </geometry>
+      </visual>
+      
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <geometry>
+          <box size="${size_x} ${size_y} ${size_z}" />
+        </geometry>
+      </collision>
+      
+      <cuboid_inertia width="${size_x}" length="${size_y}" height="${size_z}" mass="1" />
+    </link>
+    </macro>
+
+  <macro name="static_joint" params="name parent xyz">
+    <joint name="${name}_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="${xyz}" />
+      <parent link="${parent}" />
+      <child link="${name}" />
+    </joint>
+  </macro>
+  
+</robot>
