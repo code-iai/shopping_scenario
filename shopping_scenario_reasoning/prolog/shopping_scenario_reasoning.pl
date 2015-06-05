@@ -40,7 +40,9 @@
       position_on_rack/6,
       rack_level_elevation/2,
       rack_level_relative_position/4,
-      item_urdf_path/2
+      item_urdf_path/2,
+      item_dimensions/4,
+      item_class_type/2
     ]).
 
 
@@ -60,7 +62,9 @@
     position_on_rack(r, r, r, r, r, r),
     rack_level_elevation(r, r),
     rack_level_relative_position(r, r, r, r),
-    item_urdf_path(r, r).
+    item_urdf_path(r, r),
+    item_dimensions(r, r),
+    item_class_type(r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -210,3 +214,37 @@ rack_level_relative_position(RackLevel, RelativeX, RelativeY, AbsolutePosition) 
     jpl_call(RR, 'rackLevelElevation', [RLZ, LevelHeight], Elevation),
     jpl_call(RR, 'rackLevelRelativePosition', [RLX, RLY, RLZ, RelativeX, RelativeY], AbsolutePositionArray),
     jpl_array_to_list(AbsolutePositionArray, AbsolutePosition).
+
+
+%% item_dimensions(?Item, ?Width, ?Depth, ?Height) is nondet.
+%
+%  Returns the 3D dimensions (width, depth, height) of a given item.
+%
+% @param Item         Item to get the dimensions for
+% @param Width        Width (X dimension)
+% @param Depth        Depth (Y dimension)
+% @param Height       Height (Z dimension)
+%
+item_dimensions(Item, Width, Depth, Height) :-
+    owl_has(Item, knowrob:'widthOfObject', WidthLiteral),
+    strip_literal_type(WidthLiteral, WidthLiteralAtom),
+    term_to_atom(Width, WidthLiteralAtom),
+    
+    owl_has(Item, knowrob:'depthOfObject', DepthLiteral),
+    strip_literal_type(DepthLiteral, DepthLiteralAtom),
+    term_to_atom(Depth, DepthLiteralAtom),
+    
+    owl_has(Item, knowrob:'heightOfObject', HeightLiteral),
+    strip_literal_type(HeightLiteral, HeightLiteralAtom),
+    term_to_atom(Height, HeightLiteralAtom).
+
+
+%% item_class_type(?ClassType, ?Item) is nondet.
+%
+%  Returns items that are instances of ClassType
+%
+% @param ClassType    The class type to return items for
+% @param Item         Items matching ClassType
+%
+item_class_type(ClassType, Item) :-
+    rdfs_instance_of(Item, ClassType).
