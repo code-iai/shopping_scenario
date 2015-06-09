@@ -17,10 +17,9 @@ simulation of the scenario (with all models spawned etc.), run
 $ roslaunch shopping_scenario_executive shopping_scenario_simulated.launch
 ```
 
-The simulated part requires to have a fully configured instance of
-MoveIt! running for the simulated PR2, and nodes of type `move_base`,
-`nav_pcontroller` running and configured to work with the PR2 in
-Gazebo.
+The simulated part requires to have the package
+[https://github.com/code-iai/nav_pcontroller](`nav_pcontroller`)
+present and compiled in the ROS package path.
 
 
 ### The Structure Explained
