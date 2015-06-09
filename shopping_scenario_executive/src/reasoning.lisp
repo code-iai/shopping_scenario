@@ -149,3 +149,9 @@
       `("item_class_type" ,(add-prolog-namespace class-type)
                           ?item)
     (split-prolog-symbol (json-symbol->string ?item))))
+
+(defun get-item-primitve-shape (item)
+  (with-first-prolog-vars-bound (?primitiveshape)
+      `("object_primitive_shape" ,(add-prolog-namespace item)
+                                 ?primitiveshape)
+    (json-symbol->string ?primitiveshape)))

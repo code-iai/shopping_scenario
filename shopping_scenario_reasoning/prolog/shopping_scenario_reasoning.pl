@@ -45,7 +45,8 @@
       object_position/4,
       object_literal_atom/3,
       rr_call/3,
-      object_dimensions_restricted/4
+      object_dimensions_restricted/4,
+      object_primitive_shape/2
     ]).
 
 
@@ -70,7 +71,8 @@
     object_position(r, r),
     object_literal_atom(r, r, r),
     rr_call(r, r, r),
-    object_dimensions_restricted.
+    object_dimensions_restricted(r, r, r, r),
+    object_primitive_shape(r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -258,7 +260,7 @@ item_class_type(ClassType, Item) :-
     rdfs_instance_of(Item, ClassType).
 
 
-%% object_dimensions_restricted(Object, Width, Depth, Height) is nondet.
+%% object_dimensions_restricted(?Object, ?Width, ?Depth, ?Height) is nondet.
 %
 % Gets the width, depth, and height of a given object, and can traverse into class restrictions.
 %
@@ -271,3 +273,14 @@ object_dimensions_restricted(Object, Width, Depth, Height) :-
     object_literal_atom(Object, knowrob:'widthOfObject', Width),
     object_literal_atom(Object, knowrob:'depthOfObject', Depth),
     object_literal_atom(Object, knowrob:'heightOfObject', Height).
+
+
+%% object_primitive_shape(?Object, ?PrimitiveShape) is nondet.
+%
+% Returns the primitive shape of Object.
+%
+% @param Object          The object to get the primitive shape of
+% @param PrimitiveShape  The primitive shape of Object
+%
+object_primitive_shape(Object, PrimitiveShape) :-
+    object_literal_atom(Object, knowrob:'primitiveShape', PrimitiveShape).
