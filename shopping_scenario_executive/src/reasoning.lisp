@@ -158,33 +158,27 @@
 
 (defun get-item-semantic-handles (item)
   (with-prolog-vars-bound (?semantichandle)
-      `("object_semantic_handle" ,item ?semantichandle)
-    (json-symbol->string ?semantichandle)))
-
-(defun get-item-semantic-handles (item)
-  (let ((handles (with-prolog-vars-bound (?semantichandle)
-                     `("object_semantic_handle" ,(add-prolog-namespace item)
-                                                ?semantichandle)
-                   (let ((grasp-type
-                           (with-first-prolog-vars-bound (?grasptype)
-                               `("grasp_type" ,(json-symbol->string ?semantichandle)
-                                              ?grasptype)
-                             (json-symbol->string ?grasptype)))
-                         (handle-pose
-                           (with-first-prolog-vars-bound (?pose)
-                               `("handle_pose" ,(json-symbol->string ?semantichandle)
-                                               ?pose)
-                             (cl-transforms:transform->pose
-                              (cl-transforms:matrix->transform
-                               (make-array
-                                '(4 4) :displaced-to (make-array
-                                                      16 :initial-contents ?pose)))))))
-                     (make-designator
-                      'object
-                      `((desig-props:type desig-props:handle)
-                        (desig-props:at ,(make-designator
-                                          'location
-                                          `((desig-props:pose ,handle-pose))))
-                        (desig-props:grasp-type ,(intern (string-upcase grasp-type)
-                                                         'desig-props))))))))
-    handles))
+      `("object_semantic_handle" ,(add-prolog-namespace item)
+                                 ?semantichandle)
+    (let ((grasp-type
+            (with-first-prolog-vars-bound (?grasptype)
+                `("grasp_type" ,(json-symbol->string ?semantichandle)
+                               ?grasptype)
+              (json-symbol->string ?grasptype)))
+          (handle-pose
+            (with-first-prolog-vars-bound (?pose)
+                `("handle_pose" ,(json-symbol->string ?semantichandle)
+                                ?pose)
+              (cl-transforms:transform->pose
+               (cl-transforms:matrix->transform
+                (make-array
+                 '(4 4) :displaced-to (make-array
+                                       16 :initial-contents ?pose)))))))
+      (make-designator
+       'object
+       `((desig-props:type desig-props:handle)
+         (desig-props:at ,(make-designator
+                           'location
+                           `((desig-props:pose ,handle-pose))))
+         (desig-props:grasp-type ,(intern (string-upcase grasp-type)
+                                          'desig-props)))))))
