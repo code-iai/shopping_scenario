@@ -204,15 +204,23 @@
                                `((desig-props:grasp-type ,grasp-type)))))
         collect handle-object))
 
-(defun spawn-model-on-rack-level (rack level model urdf x y rotation)
-  (let* ((racklevel (get-rack-on-level rack level))
-         (elevation 0.1)
-         (pose (get-rack-level-relative-pose racklevel x y elevation rotation)))
+(defun spawn-model-on-rack-level-index (rack level model urdf x y rotation)
+  (spawn-model-on-rack-level
+   (get-rack-on-level rack level) model urdf x y rotation))
+
+(defun spawn-model-on-rack-level (racklevel model urdf x y rotation)
+  (let* ((elevation 0.1)
+         (pose (get-rack-level-relative-pose
+                racklevel x y elevation rotation)))
     (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
 
 (defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
   (let ((urdf (get-item-urdf-path item)))
-    (spawn-model-on-rack-level (first (get-racks)) level item urdf x y rotation)))
+    (spawn-model-on-rack-level-index (first (get-racks)) level item urdf x y rotation)))
+
+(defun spawn-shopping-item-on-named-level (item level x y &optional (rotation (tf:euler->quaternion)))
+  (let ((urdf (get-item-urdf-path item)))
+    (spawn-model-on-rack-level level item urdf x y rotation)))
 
 (defun make-empty-object-arrangement (&key map)
   (let* ((rack (first (get-racks)))
@@ -240,13 +248,40 @@
                (setf objects (remove object objects)))
     arrangement))
 
+(defun resolve-object-arrangement (arrangement)
+  (let ((dimensions (array-dimensions arrangement))
+        (positions (make-arrangement-position-map)))
+    (loop for i from 0 below (first dimensions)
+          append (loop for j from 0 below (second dimensions)
+                       as item = (aref arrangement i j)
+                       when (not (string= item ""))
+                         collect
+                         (destructuring-bind (rack-level . offset)
+                             (aref positions i j)
+                           `(,item ,rack-level ,offset))))))
+
 (defun make-arrangement-position-map ()
   (let* ((rack (first (get-racks)))
          (map (make-empty-object-arrangement :map t))
-         (dimensions (array-dimensions map)))
+         (dimensions (array-dimensions map))
+         (items-per-row (second dimensions)))
     (loop for i from 0 below (first dimensions)
           as rack-level = (get-rack-on-level rack i)
-          do (loop for j from 0 below (second dimensions)
+          as rack-width = (elt (get-item-dimensions rack-level) 1)
+          as item-space = (/ rack-width items-per-row)
+          do (loop for j from 0 below items-per-row
+                   as offset = (+ (* j item-space)
+                                  (* item-space 0.5))
                    do (setf (aref map i j)
-                            `(,rack-level))))
+                            (cons rack-level offset))))
     map))
+
+(defun spawn-random-object-arrangement ()
+  (let ((arrangement (resolve-object-arrangement
+                      (make-random-object-arrangement)))
+        (x-offset -0.2))
+    (dolist (object-position arrangement)
+      (destructuring-bind (item racklevel y-offset)
+          object-position
+        (spawn-shopping-item-on-named-level
+         item racklevel x-offset y-offset)))))
