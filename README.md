@@ -52,6 +52,9 @@ package:
    name, know invisible object characteristcs / static background
    knowledge).
 
+ * `pr2_moveit_node`: Readily configured MoveIt! node to control the
+   simulated PR2 in Gazebo.
+
 
 ### Open To Dos
 
