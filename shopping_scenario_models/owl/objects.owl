@@ -226,43 +226,43 @@
     
     
     <!-- TODO: Add the object's properties (like handles and dimensions) here. -->
-    <owl:NamedIndividual rdf:about="&knowrob;Corn_uai8735a">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Corn_uai8735a">
       <rdf:type rdf:resource="&knowrob;Corn"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;Corn_jal987c1">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Corn_jal987c1">
       <rdf:type rdf:resource="&knowrob;Corn"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_sh876app">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_sh876app">
       <rdf:type rdf:resource="&knowrob;Kelloggs"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_oallp49c">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_oallp49c">
       <rdf:type rdf:resource="&knowrob;Kelloggs"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;Lion_jql358ab">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Lion_jql358ab">
       <rdf:type rdf:resource="&knowrob;Lion"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;Salt_3djp92uc">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Salt_3djp92uc">
       <rdf:type rdf:resource="&knowrob;Salt"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;PancakeMix_8dhu26v2">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_8dhu26v2">
       <rdf:type rdf:resource="&knowrob;PancakeMix"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;TomatoSauce_p33iuf8a">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_p33iuf8a">
       <rdf:type rdf:resource="&knowrob;TomatoSauce"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;SaltDispenser_j33981mn">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#SaltDispenser_j33981mn">
       <rdf:type rdf:resource="&knowrob;SaltDispenser"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="&knowrob;Oregano_nmbhag32">
+    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Oregano_nmbhag32">
       <rdf:type rdf:resource="&knowrob;Oregano"/>
     </owl:NamedIndividual>
     
