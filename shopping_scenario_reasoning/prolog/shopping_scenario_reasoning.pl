@@ -46,7 +46,10 @@
       object_literal_atom/3,
       rr_call/3,
       object_dimensions_restricted/4,
-      object_primitive_shape/2
+      object_primitive_shape/2,
+      object_semantic_handle/2,
+      grasp_type/2,
+      handle_pose/2
     ]).
 
 
@@ -72,7 +75,10 @@
     object_literal_atom(r, r, r),
     rr_call(r, r, r),
     object_dimensions_restricted(r, r, r, r),
-    object_primitive_shape(r, r).
+    object_primitive_shape(r, r),
+    object_semantic_handle(r, r),
+    grasp_type(r, r),
+    handle_pose(r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -284,3 +290,31 @@ object_dimensions_restricted(Object, Width, Depth, Height) :-
 %
 object_primitive_shape(Object, PrimitiveShape) :-
     object_literal_atom(Object, knowrob:'primitiveShape', PrimitiveShape).
+
+
+%% object_semantic_handle(?Object, ?SemanticHandle) is nondet.
+%
+% @param Object          The object to get semantic handles for
+% @param SemanticHandle  The semantic handle on the object
+%
+object_semantic_handle(Object, SemanticHandle) :-
+    owl_has(Object, knowrob:'semanticHandle', SemanticHandle).
+
+
+%% grasp_type(?SemanticHandle, ?Type) is nondet.
+%
+% @param SemanticHandle  The semantic handle on the object
+% @param Type            Grasp type of this handle
+%
+grasp_type(SemanticHandle, Type) :-
+    owl_has(Object, knowrob:'graspType', literal(type(_, Type))).
+
+
+%% handle_pose(?SemanticHandle, ?Matrix) is nondet.
+%
+% @param SemanticHandle  The semantic handle on the object
+% @param Matrix          Homogeneous matrix of this handle
+%
+handle_pose(SemanticHandle, Matrix) :-
+    owl_has(SemanticHandle, knowrob:'handlePose', Pose),
+    rotmat_to_list(Pose, Matrix).
