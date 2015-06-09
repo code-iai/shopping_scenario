@@ -37,6 +37,7 @@
 
 :- register_ros_package(iai_semantic_maps).
 :- owl_parser:owl_parse('package://shopping_scenario_models/owl/shopping_area.owl').
+:- owl_parser:owl_parse('package://shopping_scenario_models/owl/shopping_rack.owl').
 :- owl_parser:owl_parse('package://shopping_scenario_models/owl/objects.owl').
 :- owl_parser:owl_parse('package://iai_semantic_maps/owl/iai_maps_addons.owl').
 
