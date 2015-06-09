@@ -391,14 +391,14 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.055</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.075</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
