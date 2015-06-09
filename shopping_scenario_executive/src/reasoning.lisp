@@ -137,7 +137,6 @@
 
 (defun get-item-dimensions (item)
   "Returns the dimensions (with, depth, height) of an item `item'."
-  (format t "~a~%" (add-prolog-namespace item))
   (with-first-prolog-vars-bound (?width ?depth ?height)
       `("object_dimensions_restricted"
         ,(add-prolog-namespace item)
