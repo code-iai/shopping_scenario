@@ -75,9 +75,7 @@
 (defun is-stackable (item)
   "Returns whether the shopping item `item' is stackable or not."
   (not (not (json-prolog:prolog
-             `("is_stackable" ,(add-prolog-namespace
-                                item
-                                :namespace "http://knowrob.org/kb/knowrob.owl"))))))
+             `("is_stackable" ,(add-prolog-namespace item))))))
 
 (defun get-racks ()
   "Returns all racks known in the current semantic environment."
@@ -133,26 +131,22 @@
 (defun get-item-urdf-path (item)
   "Returns the absolute URDF file path for an item `item' (if set in the semantic information supplied to KnowRob)."
   (with-first-prolog-vars-bound (?urdfpath)
-      `("item_urdf_path" ,(add-prolog-namespace
-                           item
-                           :namespace "http://knowrob.org/kb/knowrob.owl")
+      `("item_urdf_path" ,(add-prolog-namespace item)
                          ?urdfpath)
     (json-symbol->string ?urdfpath)))
 
 (defun get-item-dimensions (item)
   "Returns the dimensions (with, depth, height) of an item `item'."
+  (format t "~a~%" (add-prolog-namespace item))
   (with-first-prolog-vars-bound (?width ?depth ?height)
-      `("item_dimensions" ,(add-prolog-namespace
-                            item
-                            :namespace "http://knowrob.org/kb/knowrob.owl")
-                          ?width ?depth ?height)
+      `("object_dimensions_restricted"
+        ,(add-prolog-namespace item)
+        ?width ?depth ?height)
     (vector ?width ?depth ?height)))
 
 (defun get-items-by-class-type (class-type)
   "Returns all item instances that are of class type `class-type'."
   (with-prolog-vars-bound (?item)
-      `("item_class_type" ,(add-prolog-namespace
-                            class-type
-                            :namespace "http://knowrob.org/kb/knowrob.owl")
+      `("item_class_type" ,(add-prolog-namespace class-type)
                           ?item)
     (split-prolog-symbol (json-symbol->string ?item))))

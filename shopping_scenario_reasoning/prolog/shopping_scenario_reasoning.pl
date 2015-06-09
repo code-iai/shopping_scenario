@@ -41,8 +41,11 @@
       rack_level_elevation/2,
       rack_level_relative_position/4,
       item_urdf_path/2,
-      item_dimensions/4,
-      item_class_type/2
+      item_class_type/2,
+      object_position/4,
+      object_literal_atom/3,
+      rr_call/3,
+      object_dimensions_restricted/4
     ]).
 
 
@@ -63,8 +66,11 @@
     rack_level_elevation(r, r),
     rack_level_relative_position(r, r, r, r),
     item_urdf_path(r, r),
-    item_dimensions(r, r),
-    item_class_type(r, r).
+    item_class_type(r, r),
+    object_position(r, r),
+    object_literal_atom(r, r, r),
+    rr_call(r, r, r),
+    object_dimensions_restricted.
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -95,8 +101,7 @@ item_urdf_path(Item, URDFPath) :-
     shopping_item(Item),
     owl_has(Item, knowrob:'urdf', literal(type(_, URDFRelative))),
     
-    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
-    jpl_call(RR, 'resolveRelativePath', [URDFRelative], URDFPath).
+    rr_call('resolveRelativePath', [URDFRelative], URDFPath).
 
 
 %% is_stackable(?Item) is nondet.
@@ -144,7 +149,23 @@ rack_level(Rack, RackLevel) :-
 rack_on_level(Rack, Level, RackLevel) :-
     rack(Rack),
     rdf_triple(knowrob:'rackLevel', Rack, RackLevel),
-    rdf_triple(knowrob:'level', RackLevel, LevelLiteral), strip_literal_type(LevelLiteral, LevelLiteralAtom), term_to_atom(Level, LevelLiteralAtom).
+    
+    rdf_triple(knowrob:'level', RackLevel, LevelLiteral),
+    strip_literal_type(LevelLiteral, LevelLiteralAtom),
+    term_to_atom(Level, LevelLiteralAtom).
+
+
+%% rr_call(?Function, ?Parameters, ?Result) is nondet.
+%
+% Calls a function in the Java class 'RackReasoner'. This is a shorthand for jpl_new... and jpl_call... specific to RackReasoner.
+%
+% @param Function     The function to call
+% @param Parameters   The parameters to pass to the function
+% @param Result       The returned result
+%
+rr_call(Function, Parameters, Result) :-
+    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
+    jpl_call(RR, Function, Parameters, Result).
 
 
 %% position_on_rack(?X, ?Y, ?Z, ?LevelHeight, ?Rack, ?RackLevel) is nondet.
@@ -161,19 +182,25 @@ rack_on_level(Rack, Level, RackLevel) :-
 position_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
     rack(Rack),
     rack_level(Rack, RackLevel),
-    current_object_pose(RackLevel, [_, _, _, RLX, _, _, _, RLY, _, _, _, RLZ, _, _, _, _]),
+    object_position(RackLevel, RLX, RLY, RLZ),
     
-    rdf_has(RackLevel, knowrob:'widthOfObject', WidthLiteral),
-    strip_literal_type(WidthLiteral, WidthLiteralAtom),
-    term_to_atom(LevelWidth, WidthLiteralAtom),
+    object_dimensions_restricted(RackLevel, LevelDepth, LevelWidth, LevelHeight),
     
-    rdf_has(RackLevel, knowrob:'depthOfObject', DepthLiteral),
-    strip_literal_type(DepthLiteral, DepthLiteralAtom),
-    term_to_atom(LevelDepth, DepthLiteralAtom),
-    
-    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
-    jpl_call(RR, 'positionOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
+    rr_call('positionOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
     jpl_is_true(Result).
+
+
+%% object_position(?Object, ?X, ?Y, ?Z) is nondet.
+%
+%  Return the position of the given object.
+%
+% @param Object       The object to return the position for
+% @param X            The X coordinate for the object
+% @param Y            The Y coordinate for the object
+% @param Z            The Z coordinate for the object
+%
+object_position(Object, X, Y, Z) :-
+    current_object_pose(Object, [_, _, _, X, _, _, _, Y, _, _, _, Z, _, _, _, _]).
 
 
 %% rack_level_elevation(?RackLevel, ?Elevation) is nondet.
@@ -184,14 +211,10 @@ position_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
 % @param Elevation    Z coordinate of the rack level (on its surface)
 %
 rack_level_elevation(RackLevel, Elevation) :-
-    current_object_pose(RackLevel, [_, _, _, _, _, _, _, _, _, _, _, RLZ, _, _, _, _]),
+    object_position(RackLevel, _, _, RLZ),
+    object_dimensions_restricted(RackLevel, _, _, LevelHeight),
     
-    rdf_has(RackLevel, knowrob:'heightOfObject', HeightLiteral),
-    strip_literal_type(HeightLiteral, HeightLiteralAtom),
-    term_to_atom(LevelHeight, HeightLiteralAtom),
-    
-    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
-    jpl_call(RR, 'rackLevelElevation', [RLZ, LevelHeight], Elevation).
+    rr_call('rackLevelElevation', [RLZ, LevelHeight], Elevation).
 
 
 %% rack_level_relative_position(?RackLevel, ?RelativeX, ?RelativeY, ?AbsolutePosition) is nondet.
@@ -204,39 +227,24 @@ rack_level_elevation(RackLevel, Elevation) :-
 % @param AbsolutePosition  Absolute position generated
 %
 rack_level_relative_position(RackLevel, RelativeX, RelativeY, AbsolutePosition) :-
-    current_object_pose(RackLevel, [_, _, _, RLX, _, _, _, RLY, _, _, _, RLZ, _, _, _, _]),
+    rack_level_elevation(RackLevel, Elevation),
+    object_position(RackLevel, RLX, RLY, _),
     
-    rdf_has(RackLevel, knowrob:'heightOfObject', HeightLiteral),
-    strip_literal_type(HeightLiteral, HeightLiteralAtom),
-    term_to_atom(LevelHeight, HeightLiteralAtom),
-    
-    jpl_new('org.knowrob.shopping_scenario_reasoning.RackReasoner', [], RR),
-    jpl_call(RR, 'rackLevelElevation', [RLZ, LevelHeight], Elevation),
-    jpl_call(RR, 'rackLevelRelativePosition', [RLX, RLY, RLZ, RelativeX, RelativeY], AbsolutePositionArray),
+    rr_call('rackLevelRelativePosition', [RLX, RLY, Elevation, RelativeX, RelativeY], AbsolutePositionArray),
     jpl_array_to_list(AbsolutePositionArray, AbsolutePosition).
 
 
-%% item_dimensions(?Item, ?Width, ?Depth, ?Height) is nondet.
+%% object_literal_atom(?Object, ?Property, ?Value) is nondet.
 %
-%  Returns the 3D dimensions (width, depth, height) of a given item.
+% Returns the given property (wrapped in a literal and represented as an atom) for the given object.
+% @param Object       Object to return the property for
+% @param Property     The property to return the literal wrapped/atom represented value for
+% @param Value        The contained value
 %
-% @param Item         Item to get the dimensions for
-% @param Width        Width (X dimension)
-% @param Depth        Depth (Y dimension)
-% @param Height       Height (Z dimension)
-%
-item_dimensions(Item, Width, Depth, Height) :-
-    owl_has(Item, knowrob:'widthOfObject', WidthLiteral),
-    strip_literal_type(WidthLiteral, WidthLiteralAtom),
-    term_to_atom(Width, WidthLiteralAtom),
-    
-    owl_has(Item, knowrob:'depthOfObject', DepthLiteral),
-    strip_literal_type(DepthLiteral, DepthLiteralAtom),
-    term_to_atom(Depth, DepthLiteralAtom),
-    
-    owl_has(Item, knowrob:'heightOfObject', HeightLiteral),
-    strip_literal_type(HeightLiteral, HeightLiteralAtom),
-    term_to_atom(Height, HeightLiteralAtom).
+object_literal_atom(Object, Property, Value) :-
+    owl_has(Object, Property, Literal),
+    strip_literal_type(Literal, Atom),
+    term_to_atom(Value, Atom).
 
 
 %% item_class_type(?ClassType, ?Item) is nondet.
@@ -248,3 +256,18 @@ item_dimensions(Item, Width, Depth, Height) :-
 %
 item_class_type(ClassType, Item) :-
     rdfs_instance_of(Item, ClassType).
+
+
+%% object_dimensions_restricted(Object, Width, Depth, Height) is nondet.
+%
+% Gets the width, depth, and height of a given object, and can traverse into class restrictions.
+%
+% @param Object       The object to get the dimensions for
+% @param Width        Width of the object
+% @param Depth        Depth of the object
+% @param Height       Height of the object
+%
+object_dimensions_restricted(Object, Width, Depth, Height) :-
+    object_literal_atom(Object, knowrob:'widthOfObject', Width),
+    object_literal_atom(Object, knowrob:'depthOfObject', Depth),
+    object_literal_atom(Object, knowrob:'heightOfObject', Height).
