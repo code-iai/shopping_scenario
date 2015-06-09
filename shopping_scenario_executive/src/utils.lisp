@@ -292,3 +292,7 @@
   (let ((items (get-shopping-items)))
     (dolist (item items)
       (cram-gazebo-utilities::delete-gazebo-model item))))
+
+(defun prepare-simulated-scene ()
+  (delete-shopping-items-from-gazebo)
+  (spawn-random-object-arrangement))
