@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<robot name="pancakemix"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
+  
+  <boxlink name="pancakemix" size_x="0.095" size_y="0.05" size_z="0.21" />
+  
+</robot>

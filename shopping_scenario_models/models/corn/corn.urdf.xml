@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<robot name="corn"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
+  
+  <cylinderlink name="corn" radius="0.0425" height="0.085" />
+  
+</robot>

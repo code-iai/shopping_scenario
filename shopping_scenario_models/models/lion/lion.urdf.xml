@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<robot name="cuboidal"
+<robot name="lion"
        xmlns:xacro="http://www.ros.org/wiki/xacro">
   
   <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
   
-  <boxlink name="cuboidal" size_x="0.05" size_y="0.15" size_z="0.30" />
+  <boxlink name="lion" size_x="0.195" size_y="0.045" size_z="0.26" />
   
 </robot>
