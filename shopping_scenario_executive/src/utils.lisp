@@ -209,7 +209,7 @@
    (get-rack-on-level rack level) model urdf x y rotation))
 
 (defun spawn-model-on-rack-level (racklevel model urdf x y rotation)
-  (let* ((elevation 0.1)
+  (let* ((elevation 0.01)
          (pose (get-rack-level-relative-pose
                 racklevel x y elevation rotation)))
     (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
@@ -270,8 +270,9 @@
           as rack-width = (elt (get-item-dimensions rack-level) 1)
           as item-space = (/ rack-width items-per-row)
           do (loop for j from 0 below items-per-row
-                   as offset = (+ (* j item-space)
-                                  (* item-space 0.5))
+                   as offset = (- (+ (* j item-space)
+                                     (* item-space 0.5))
+                                  (/ rack-width 2))
                    do (setf (aref map i j)
                             (cons rack-level offset))))
     map))
@@ -279,9 +280,15 @@
 (defun spawn-random-object-arrangement ()
   (let ((arrangement (resolve-object-arrangement
                       (make-random-object-arrangement)))
-        (x-offset -0.2))
+        (x-offset -0.15))
     (dolist (object-position arrangement)
       (destructuring-bind (item racklevel y-offset)
           object-position
         (spawn-shopping-item-on-named-level
-         item racklevel x-offset y-offset)))))
+         item racklevel x-offset y-offset
+         (tf:euler->quaternion :az (/ pi 2)))))))
+
+(defun delete-shopping-items-from-gazebo ()
+  (let ((items (get-shopping-items)))
+    (dolist (item items)
+      (cram-gazebo-utilities::delete-gazebo-model item))))
