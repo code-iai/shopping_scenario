@@ -68,6 +68,7 @@
     <!-- New Data Properties -->
     <owl:DatatypeProperty rdf:about="&knowrob;stackable"/>
     <owl:DatatypeProperty rdf:about="&knowrob;urdf"/>
+    <owl:DatatypeProperty rdf:about="&knowrob;primitiveShape"/>
     
     
     <!-- General Classes -->
@@ -88,6 +89,7 @@
       </rdfs:subClassOf>
     </owl:Class>
     
+    <!-- Corn -->
     <owl:Class rdf:about="&knowrob;Corn">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
       <rdfs:subClassOf rdf:resource="&knowrob;Stackable"/>
@@ -95,39 +97,247 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/corn/corn.urdf</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.03</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.03</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.25</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">cylinder</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
     
+    <!-- Kelloggs -->
     <owl:Class rdf:about="&knowrob;Kelloggs">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/cuboidal/cuboidal.urdf</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/kelloggs/kelloggs.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.195</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.07</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.29</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">box</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+    </owl:Class>
+    
+    <!-- Lion -->
+    <owl:Class rdf:about="&knowrob;Lion">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/lion/lion.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.195</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.045</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.26</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">box</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+    </owl:Class>
+    
+    <!-- Salt -->
+    <owl:Class rdf:about="&knowrob;Salt">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/salt/salt.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.06</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.045</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.14</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">box</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+    </owl:Class>
+    
+    <!-- Pancake Mix -->
+    <owl:Class rdf:about="&knowrob;PancakeMix">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/pancakemix/pancakemix.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.095</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.05</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.21</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">box</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+    </owl:Class>
+    
+    <!-- Tomato Sauce -->
+    <owl:Class rdf:about="&knowrob;TomatoSauce">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tomatosauce/tomatosauce.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.075</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.05</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.11</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">box</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+    </owl:Class>
+    
+    <!-- Salt Dispenser -->
+    <owl:Class rdf:about="&knowrob;SaltDispenser">
+      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/saltdispenser/saltdispenser.urdf</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
@@ -141,80 +351,61 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.15</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.05</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
-	  <owl:hasValue rdf:datatype="&xsd;double">0.30</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.14</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
-    </owl:Class>
-    
-    <owl:Class rdf:about="&knowrob;Lion">
-      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
-	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/cuboidal/cuboidal.urdf</owl:hasValue>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">cylinder</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
     
-    <owl:Class rdf:about="&knowrob;Salt">
-      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
-      
-      <rdfs:subClassOf>
-	<owl:Restriction>
-	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/cuboidal/cuboidal.urdf</owl:hasValue>
-	</owl:Restriction>
-      </rdfs:subClassOf>
-    </owl:Class>
-    
-    <owl:Class rdf:about="&knowrob;PancakeMix">
-      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
-      
-      <rdfs:subClassOf>
-	<owl:Restriction>
-	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
-	</owl:Restriction>
-      </rdfs:subClassOf>
-    </owl:Class>
-    
-    <owl:Class rdf:about="&knowrob;TomatoSauce">
-      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
-      
-      <rdfs:subClassOf>
-	<owl:Restriction>
-	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/cuboidal/cuboidal.urdf</owl:hasValue>
-	</owl:Restriction>
-      </rdfs:subClassOf>
-    </owl:Class>
-    
-    <owl:Class rdf:about="&knowrob;SaltDispenser">
-      <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
-      
-      <rdfs:subClassOf>
-	<owl:Restriction>
-	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
-	</owl:Restriction>
-      </rdfs:subClassOf>
-    </owl:Class>
-    
+    <!-- Oregano -->
     <owl:Class rdf:about="&knowrob;Oregano">
       <rdfs:subClassOf rdf:resource="&knowrob;ShoppingItem"/>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;urdf"/>
-	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/tubular/tubular.urdf</owl:hasValue>
+	  <owl:hasValue rdf:datatype="&xsd;string">package://shopping_scenario_models/models/oregano/oregano.urdf</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;widthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.055</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;depthOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;heightOfObject"/>
+	  <owl:hasValue rdf:datatype="&xsd;double">0.085</owl:hasValue>
+	</owl:Restriction>
+      </rdfs:subClassOf>
+      
+      <rdfs:subClassOf>
+	<owl:Restriction>
+	  <owl:onProperty rdf:resource="&knowrob;primitiveShape"/>
+	  <owl:hasValue rdf:datatype="&xsd;string">cylinder</owl:hasValue>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
