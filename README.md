@@ -18,7 +18,7 @@ $ roslaunch shopping_scenario_executive shopping_scenario_simulated.launch
 ```
 
 The simulated part requires to have the package
-[https://github.com/code-iai/nav_pcontroller](`nav_pcontroller`)
+[`nav_pcontroller`](https://github.com/code-iai/nav_pcontroller)
 present and compiled in the ROS package path.
 
 
