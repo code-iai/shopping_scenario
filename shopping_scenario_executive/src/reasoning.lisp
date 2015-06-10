@@ -150,7 +150,7 @@
                           ?item)
     (split-prolog-symbol (json-symbol->string ?item))))
 
-(defun get-item-primitve-shape (item)
+(defun get-item-primitive-shape (item)
   (with-first-prolog-vars-bound (?primitiveshape)
       `("object_primitive_shape" ,(add-prolog-namespace item)
                                  ?primitiveshape)
