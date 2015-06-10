@@ -1,5 +1,5 @@
 /*
- * Reasoning.java
+ * RackReasoner.java
  * Copyright (c) 2015 Jan Winkler
  *
  * All rights reserved.
@@ -55,16 +55,32 @@ public class RackReasoner {
 		dPoseZ >= dRackLevelZ && dPoseZ < dRackLevelZ + dLevelHeight);
     }
     
+    /**
+     *  Calculate the surface elevation of a rack level, given its
+     *  center elevation and its height.
+     */
     public double rackLevelElevation(double dZ, double dHeight) {
 	return dZ + (dHeight / 2);
     }
     
+    /**
+     *  Absolute position of relative coordinates (x, y, z in a double
+     *  array) on a rack level surface, given the absolute center
+     *  position of the rack level, and the relative coordinates (x,
+     *  y). The relative coordinates are relative to the center of the
+     *  rack level.
+     */
     public double[] rackLevelRelativePosition(double dX, double dY, double dZ, double dRelativeX, double dRelativeY) {
 	double[] arrReturn = {dX + dRelativeX, dY + dRelativeY, dZ};
 	
 	return arrReturn;
     }
     
+    /**
+     *  Resolves a relative package path. Paths like
+     *  `package://my_package/models` are resolved into the absolute
+     *  path of the package `my_package`, plus `/models` appended.
+     */
     public String resolveRelativePath(String strRelativePath) {
 	String strReturn = strRelativePath;
 	
