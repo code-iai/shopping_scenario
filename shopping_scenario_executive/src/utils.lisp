@@ -160,6 +160,7 @@
     (actionlib:send-goal-and-wait action-client goal)))
 
 (defun move-arms-away ()
+  "Moves the left, and then the right robot arm up into a safe pose."
   (move-arms-up :side :left)
   (move-arms-up :side :right))
 
@@ -209,26 +210,31 @@
    (get-rack-on-level rack level) model urdf x y rotation))
 
 (defun spawn-model-on-rack-level (racklevel model urdf x y rotation)
+  "Spawns the URDF model `urdf' (path) of the object `model' (model name) on the named rack level `racklevel',  at lower-left relative coordinates `x', `y'. `rotation' is the object's rotation, and defaults to a zero-rotation."
   (let* ((elevation 0.01)
          (pose (get-rack-level-relative-pose
                 racklevel x y elevation rotation)))
     (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
 
 (defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
+  "Spawns the object `item' on the indexed rack level `level' at lower-left relative coordinates `x', `y'. Optionally, the object's `rotation' can be set. This defaults to a zero-rotation."
   (let ((urdf (get-item-urdf-path item)))
     (spawn-model-on-rack-level-index (first (get-racks)) level item urdf x y rotation)))
 
 (defun spawn-shopping-item-on-named-level (item level x y &optional (rotation (tf:euler->quaternion)))
+  "Spawns the object `item' on the named rack level `level' at lower-left relative coordinates `x', `y'. Optionally, the object's `rotation' can be set. This defaults to a zero-rotation."
   (let ((urdf (get-item-urdf-path item)))
     (spawn-model-on-rack-level level item urdf x y rotation)))
 
 (defun make-empty-object-arrangement (&key map)
+  "Creates an empty arrangement map for mapping objects to their positions on a rack."
   (let* ((rack (first (get-racks)))
          (rack-levels (get-rack-levels rack)))
     (make-array `(,(length rack-levels) ,*rack-level-positions-row*)
                 :initial-element (unless map ""))))
 
 (defun print-object-arrangement (arrangement)
+  "Prints an object arrangement."
   (let ((dimensions (array-dimensions arrangement)))
     (loop for i from 0 below (first dimensions)
           do (loop for j from 0 below (second dimensions)
@@ -236,6 +242,7 @@
              (format t "~%"))))
 
 (defun make-random-object-arrangement ()
+  "Randomly places all known shopping items in a (m x n) grid such that it can be used to spawn the objects on an actual rack."
   (let* ((arrangement (make-empty-object-arrangement))
          (dimensions (array-dimensions arrangement))
          (objects (get-shopping-items)))
@@ -249,6 +256,7 @@
     arrangement))
 
 (defun resolve-object-arrangement (arrangement)
+  "Using a template object arrangement grid (see `make-arrangement-position-map'), the random object arrangement `arrangement' is mapped to specific coordinates on the current rack."
   (let ((dimensions (array-dimensions arrangement))
         (positions (make-arrangement-position-map)))
     (loop for i from 0 below (first dimensions)
@@ -261,6 +269,7 @@
                            `(,item ,rack-level ,offset))))))
 
 (defun make-arrangement-position-map ()
+  "Creates a grid template (m x n matrix) that describes the layout of a rack, mentioning which position on the grid reflects which rack level (using its unique identifier), and what its offset from the left lower corner would be."
   (let* ((rack (first (get-racks)))
          (map (make-empty-object-arrangement :map t))
          (dimensions (array-dimensions map))
@@ -278,6 +287,7 @@
     map))
 
 (defun spawn-random-object-arrangement ()
+  "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
   (let ((arrangement (resolve-object-arrangement
                       (make-random-object-arrangement)))
         (x-offset -0.15))
@@ -289,17 +299,18 @@
          (tf:euler->quaternion :az (/ pi 2)))))))
 
 (defun delete-shopping-items-from-gazebo ()
+  "Deletes (unspawns) all known shopping items from the current Gazebo scene."
   (let ((items (get-shopping-items)))
     (dolist (item items)
       (cram-gazebo-utilities::delete-gazebo-model item))))
 
 (defun prepare-simulated-scene ()
-  "First deletes all shopping items from the Gazebo scene, and then
-populates the scenen with a random object arrangement."
+  "First deletes all shopping items from the Gazebo scene, and then populates the scenen with a random object arrangement."
   (delete-shopping-items-from-gazebo)
   (spawn-random-object-arrangement))
 
 (defun get-shopping-objects ()
+  "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
   (let ((shopping-items (get-shopping-items)))
     (mapcar
      (lambda (item)
