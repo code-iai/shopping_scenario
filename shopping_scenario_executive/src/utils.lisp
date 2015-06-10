@@ -303,10 +303,16 @@ populates the scenen with a random object arrangement."
   (let ((shopping-items (get-shopping-items)))
     (mapcar
      (lambda (shopping-item)
-       (make-designator
-        'object `((desig-props::name ,shopping-item)
-                  ,@(mapcar
-                     (lambda (handle)
-                       `(desig-props::handle ,handle))
-                     (get-item-semantic-handles shopping-item)))))
+       (let ((handles (get-item-semantic-handles
+                       shopping-item))
+             (shape (or (get-item-primitive-shape
+                         shopping-item)
+                        "box")))
+         (make-designator
+          'object `((desig-props:name ,shopping-item)
+                    ,@(mapcar
+                       (lambda (handle)
+                         `(desig-props:handle ,handle))
+                       handles)
+                    (desig-props:shape ,shape)))))
      shopping-items)))
