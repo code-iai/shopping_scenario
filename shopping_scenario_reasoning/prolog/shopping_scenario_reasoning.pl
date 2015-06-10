@@ -307,7 +307,7 @@ object_semantic_handle(Object, SemanticHandle) :-
 % @param Type            Grasp type of this handle
 %
 grasp_type(SemanticHandle, Type) :-
-    owl_has(Object, knowrob:'graspType', literal(type(_, Type))).
+    owl_has(SemanticHandle, knowrob:'graspType', literal(type(_, Type))).
 
 
 %% handle_pose(?SemanticHandle, ?Matrix) is nondet.
