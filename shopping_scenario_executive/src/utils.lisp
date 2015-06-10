@@ -305,9 +305,12 @@ populates the scenen with a random object arrangement."
      (lambda (shopping-item)
        (let ((handles (get-item-semantic-handles
                        shopping-item))
-             (shape (or (get-item-primitive-shape
-                         shopping-item)
-                        "box")))
+             (shape (intern
+                     (string-upcase
+                      (or (get-item-primitive-shape
+                           shopping-item)
+                          "box"))
+                     'desig-props)))
          (make-designator
           'object `((desig-props:name ,shopping-item)
                     ,@(mapcar

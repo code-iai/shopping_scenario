@@ -55,4 +55,4 @@
   (:import-from :cram-roslisp-common *tf2*)
   (:export)
   (:desig-properties :on :name :grasp-type :handle
-                     :pose))
+                     :pose :shape :box :cylinder))
