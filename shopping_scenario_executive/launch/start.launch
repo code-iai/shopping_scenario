@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find shopping_scenario_executive)/launch/shopping_scenario_simulation.launch"/>
+  <include file="$(find pr2_description_lowres)/robots/upload_pr2.launch"/>
+  
+  <node name="autonomous_operation" pkg="shopping_scenario" type="start.sh" />
+  
+</launch>

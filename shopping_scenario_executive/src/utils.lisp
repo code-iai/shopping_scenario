@@ -37,6 +37,10 @@
 ;;;
 
 (defun start-scenario-external ()
+  (roslisp:ros-info (shopping) "Connecting to ROS")
+  (roslisp-utilities:startup-ros)
+  (roslisp:ros-info (shopping) "Initializing Environment")
+  (prepare-settings)
   (roslisp:ros-info (shopping) "This starts the scenario for autonomous operation once everyting is in place."))
 
 (defmacro with-process-modules (&body body)
