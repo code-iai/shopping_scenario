@@ -294,5 +294,19 @@
       (cram-gazebo-utilities::delete-gazebo-model item))))
 
 (defun prepare-simulated-scene ()
+  "First deletes all shopping items from the Gazebo scene, and then
+populates the scenen with a random object arrangement."
   (delete-shopping-items-from-gazebo)
   (spawn-random-object-arrangement))
+
+(defun get-shopping-objects ()
+  (let ((shopping-items (get-shopping-items)))
+    (mapcar
+     (lambda (shopping-item)
+       (make-designator
+        'object `((desig-props::name ,shopping-item)
+                  ,@(mapcar
+                     (lambda (handle)
+                       `(desig-props::handle ,handle))
+                     (get-item-semantic-handles shopping-item)))))
+     shopping-items)))

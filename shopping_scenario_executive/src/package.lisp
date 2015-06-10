@@ -54,4 +54,5 @@
   (:import-from :cram-reasoning def-fact-group <- not)
   (:import-from :cram-roslisp-common *tf2*)
   (:export)
-  (:desig-properties :on :name))
+  (:desig-properties :on :name :grasp-type :handle
+                     :pose))
