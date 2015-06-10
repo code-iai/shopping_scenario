@@ -53,6 +53,6 @@
   (:import-from :cram-language def-cram-function def-top-level-cram-function)
   (:import-from :cram-reasoning def-fact-group <- not)
   (:import-from :cram-roslisp-common *tf2*)
-  (:export)
+  (:export start-scenario-external)
   (:desig-properties :on :name :grasp-type :handle
                      :pose :shape :box :cylinder))

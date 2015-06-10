@@ -36,6 +36,9 @@
 ;;; Infrastructure Utilities
 ;;;
 
+(defun start-scenario-external ()
+  (roslisp:ros-info (shopping) "This starts the scenario for autonomous operation once everyting is in place."))
+
 (defmacro with-process-modules (&body body)
   "Implicitly runs process modules necessary for operating the PR2 robot. The started (and after finishing the body code also automatically evaporated) process modules are:
 
