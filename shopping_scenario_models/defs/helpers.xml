@@ -7,12 +7,18 @@
   <xacro:include filename="$(find shopping_scenario_models)/defs/inertia.xml"/>
   
   <macro name="boxlink" params="name size_x size_y size_z">
+    <boxlink_materialized name="${name}" size_x="${size_x}" size_y="${size_y}" size_z="${size_z}" material="PlainGrey"/>
+  </macro>
+  
+  <macro name="boxlink_materialized" params="name size_x size_y size_z material">
     <link name="${name}">
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
           <box size="${size_x} ${size_y} ${size_z}" />
         </geometry>
+	
+	<material name="${material}" />
       </visual>
       
       <collision>
