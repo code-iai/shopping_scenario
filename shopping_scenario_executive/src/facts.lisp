@@ -27,13 +27,33 @@
 
 (in-package :shopping-scenario-executive)
 
-(def-fact-group costmap-metadata (desig-loc)
+(defun make-scenario-area-restriction-cost-function ()
+  (let ((min-x -1.0)
+        (max-x 1.5)
+        (min-y -0.5)
+        (max-y 0.5))
+    (lambda (x y)
+      (if (and (>= x min-x)
+               (<= x max-x)
+               (>= y min-y)
+               (<= y max-y))
+          (if (> x 0.25)
+              (if (< y 1.0)
+                  1.0d0
+                  0.0d0)
+              1.0d0)
+          0.0d0))))
 
-  (<- (costmap-size 10 10))
-  (<- (costmap-origin -5 -5))
-  (<- (costmap-resolution 0.05))
+(defmethod costmap-generator-name->score
+    ((name (common-lisp:eql 'scenario-area-restriction-distribution)))
+  100)
+
+(def-fact-group scenario-costmap-area-restriction (desig-costmap)
   
-  (<- (costmap-padding 0.5))
-  (<- (costmap-manipulation-padding 0.45))
-  (<- (costmap-in-reach-distance 0.7))
-  (<- (costmap-reach-minimal-distance 0.4)))
+  (<- (desig-costmap ?desig ?cm)
+    (or (desig-prop ?desig (desig-props:to desig-props:see))
+        (desig-prop ?desig (desig-props:to desig-props:reach)))
+    (costmap ?cm)
+    (costmap-add-function scenario-area-restriction-distribution
+                          (make-scenario-area-restriction-cost-function)
+                          ?cm)))

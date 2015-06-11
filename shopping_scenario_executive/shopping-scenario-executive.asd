@@ -64,6 +64,7 @@
   ((:module "src"
     :components
     ((:file "package")
+     (:file "facts" :depends-on ("package"))
      (:file "costmap-metadata" :depends-on ("package"))
      (:file "sem-map-config" :depends-on ("package"))
      (:file "reasoning" :depends-on ("package"))
@@ -72,4 +73,5 @@
                                  "utils"
                                  "reasoning"
                                  "costmap-metadata"
-                                 "sem-map-config"))))))
+                                 "sem-map-config"
+                                 "facts"))))))

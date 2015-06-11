@@ -41,24 +41,24 @@
 
 (def-top-level-cram-function arrange-rack-objects-simulated (&key hints)
   "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
+  (prepare-settings)
   (with-simulation-process-modules
     (let ((target-arrangement (make-target-arrangement :hints hints)))
-      ;; TODO(winkler): Arrange objects here.
-      (with-designators ((rack-level (location `((desig-props::on "RackLevel")
-                                                 (desig-props::name "RackLevel1_fh28hepgfq"))))
-                         (obj (object `((desig-props:name "Corn_uai8735a")
-                                        (desig-props:at ,rack-level)
-                                        (desig-props::max-handles 1)
-                                        ,@(mapcar
-                                           (lambda (handle-object)
-                                             `(desig-props:handle ,handle-object))
-                                           (make-handles
-                                            0.04
-                                            :segments 2
-                                            :ax (/ pi 2)
-                                            :center-offset
-                                            (tf:make-3d-vector 0.02 0.0 0.07)))))))
-        (spawn-shopping-item "Corn_uai8735a" 2 -0.2 0.2)
+     ;; (with-designators ((rack-level (location `((desig-props::on "RackLevel")
+     ;;                                             (desig-props::name "RackLevel1_fh28hepgfq"))))
+     ;;                     (obj (object `((desig-props:name "Corn_uai8735a")
+     ;;                                    (desig-props:at ,rack-level)
+     ;;                                    (desig-props::max-handles 1)
+     ;;                                    ,@(mapcar
+     ;;                                       (lambda (handle-object)
+     ;;                                         `(desig-props:handle ,handle-object))
+     ;;                                       (make-handles
+     ;;                                        0.04
+     ;;                                        :segments 2
+     ;;                                        :ax (/ pi 2)
+     ;;                                        :center-offset
+     ;;                                        (tf:make-3d-vector 0.02 0.0 0.07)))))))
+        (prepare-simulated-scene)
         (move-torso-up)
         (move-arms-away)
-        (pick-object obj)))))
+        (pick-object (first (get-shopping-objects "Kelloggs"))))))
