@@ -14,7 +14,7 @@ and it should start all necessary components. To run the Gazebo
 simulation of the scenario (with all models spawned etc.), run
 
 ```bash
-$ roslaunch shopping_scenario_executive shopping_scenario_simulated.launch
+$ roslaunch shopping_scenario_executive shopping_scenario_simulation.launch
 ```
 
 The simulated part requires to have the package
