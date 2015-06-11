@@ -39,11 +39,18 @@
       ;; TODO(winkler): Arrange objects here.
       )))
 
-(def-top-level-cram-function arrange-rack-objects-simulated (&key hints)
-  "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
+(def-top-level-cram-function arrange-rack-objects-simulated ()
   (prepare-settings)
+  (prepare-simulated-scene)
+  (move-torso-up)
+  (move-arms-away)
   (with-simulation-process-modules
-    (let ((target-arrangement (make-target-arrangement :hints hints)))
+    (let* ((object (first (get-shopping-objects "Kelloggs")))
+           (perceived-object (perceive-a object)))
+        (pick-object perceived-object))))
+
+
+
      ;; (with-designators ((rack-level (location `((desig-props::on "RackLevel")
      ;;                                             (desig-props::name "RackLevel1_fh28hepgfq"))))
      ;;                     (obj (object `((desig-props:name "Corn_uai8735a")
@@ -58,7 +65,4 @@
      ;;                                        :ax (/ pi 2)
      ;;                                        :center-offset
      ;;                                        (tf:make-3d-vector 0.02 0.0 0.07)))))))
-        (prepare-simulated-scene)
-        (move-torso-up)
-        (move-arms-away)
-        (pick-object (first (get-shopping-objects "Kelloggs"))))))
+      
