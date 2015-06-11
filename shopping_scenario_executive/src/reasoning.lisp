@@ -146,7 +146,9 @@
 (defun get-items-by-class-type (class-type)
   "Returns all item instances that are of class type `class-type'."
   (with-prolog-vars-bound (?item)
-      `("item_class_type" ,(add-prolog-namespace class-type)
+      `("item_class_type" ,(add-prolog-namespace
+                            class-type
+                            :namespace "http://knowrob.org/kb/knowrob.owl")
                           ?item)
     (split-prolog-symbol (json-symbol->string ?item))))
 
