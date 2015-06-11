@@ -316,9 +316,10 @@
   (delete-shopping-items-from-gazebo)
   (spawn-random-object-arrangement))
 
-(defun get-shopping-objects ()
+(defun get-shopping-objects (&optional class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
-  (let ((shopping-items (get-shopping-items)))
+  (let ((shopping-items (or (and class-type (get-items-by-class-type class-type))
+                            (get-shopping-items))))
     (mapcar
      (lambda (item)
        (let ((handles (get-item-semantic-handles item))
