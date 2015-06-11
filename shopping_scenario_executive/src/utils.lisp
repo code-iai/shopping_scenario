@@ -180,6 +180,25 @@
         (t
          (achieve `(cram-plan-library:object-in-hand ,object)))))
 
+(defun perceive-a (object &key stationary (move-head t))
+  (cpl:with-failure-handling
+      ((cram-plan-failures:object-not-found (f)
+         (declare (ignore f))
+         (ros-warn (longterm) "Object not found. Retrying.")
+         (cpl:retry)))
+    (cond (stationary
+           (let ((at (desig-prop-value object 'desig-props:at)))
+             (when move-head
+               (achieve `(cram-plan-library:looking-at ,(reference at))))
+             (first (perceive-object
+                     'cram-plan-library:currently-visible
+                     object))))
+          (t (cpl:with-failure-handling
+                 ((cram-plan-failures:location-not-reached-failure (f)
+                    (declare (ignore f))
+                    (cpl:retry)))
+               (perceive-object 'cram-plan-library:a object))))))
+
 (defun make-handles (distance-from-center
                      &key
                        (segments 1)
