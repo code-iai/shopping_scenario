@@ -39,16 +39,42 @@
       ;; TODO(winkler): Arrange objects here.
       )))
 
-(def-top-level-cram-function arrange-rack-objects-simulated ()
+(def-top-level-cram-function arrange-rack-objects-simulated (&optional hints)
   (prepare-settings)
   (prepare-simulated-scene)
   (move-torso-up)
   (move-arms-away)
-  (with-simulation-process-modules
-    (let* ((object (first (get-shopping-objects "Kelloggs")))
-           (perceived-object (perceive-a object)))
-        (pick-object perceived-object))))
+  (let ((class-type (cadr (find 'type hints
+                                :test (lambda (x y)
+                                        (eql x (car y)))))))
+    (with-simulation-process-modules
+      (let ((all-items (get-shopping-objects)))
+        (dolist (item all-items)
+          (let ((perceived-object (perceive-a item)))
+            ))))))
+        ;(pick-object perceived-object)))))
 
+(def-top-level-cram-function perceive-object-class (class-type)
+  (with-simulation-process-modules
+    (let ((object (first (get-shopping-objects class-type))))
+      (perceive-a object))))
+
+(def-cram-function perceive-scene ()
+  ;; Iterate through all rack levels and add their contents to the
+  ;; collision environment.
+  (go-in-front-of-rack)
+  (let* ((rack (first (get-racks)))
+         (levels (get-rack-levels rack)))
+    (loop for level in levels
+          as pose = (get-rack-level-relative-pose
+                     level 0 0 0
+                     (cl-transforms:euler->quaternion))
+          do (achieve `(cram-plan-library:looking-at ,pose))
+             (with-designators ((generic-object (object `())))
+               (let ((perceived-objects
+                       (perceive-a generic-object :stationary t :move-head nil)))
+                 (dolist (perceived-object perceived-objects)
+                   (format t "~a~%" (desig-prop-value perceived-object 'name))))))))
 
 
      ;; (with-designators ((rack-level (location `((desig-props::on "RackLevel")

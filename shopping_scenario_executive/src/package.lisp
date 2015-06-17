@@ -55,4 +55,5 @@
   (:import-from :cram-roslisp-common *tf2*)
   (:export start-scenario-external)
   (:desig-properties :on :name :grasp-type :handle
-                     :pose :shape :box :cylinder))
+                     :pose :shape :box :cylinder
+                     :type :navigation :pose :goal))
