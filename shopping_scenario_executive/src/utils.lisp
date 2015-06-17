@@ -29,6 +29,7 @@
 (in-package :shopping-scenario-executive)
 
 (defvar *action-client-torso* nil)
+(defvar *shopping-item-urdfs* (make-hash-table :test 'equal))
 
 (defparameter *rack-level-positions-row* 4)
 
@@ -42,6 +43,13 @@
   (roslisp:ros-info (shopping) "Initializing Environment")
   (prepare-settings)
   (roslisp:ros-info (shopping) "This starts the scenario for autonomous operation once everyting is in place."))
+
+(defun load-shopping-item-urdf (shopping-item)
+  (let ((urdf-path (get-item-urdf-path shopping-item)))
+    (unless (gethash urdf-path *shopping-item-urdfs*)
+      (setf (gethash urdf-path *shopping-item-urdfs*)
+            (cl-urdf:parse-urdf (pathname urdf-path))))
+    (gethash urdf-path *shopping-item-urdfs*)))
 
 (defmacro with-process-modules (&body body)
   "Implicitly runs process modules necessary for operating the PR2 robot. The started (and after finishing the body code also automatically evaporated) process modules are:
@@ -335,7 +343,7 @@
   (delete-shopping-items-from-gazebo)
   (spawn-random-object-arrangement))
 
-(defun get-shopping-objects (&optional class-type)
+(defun get-shopping-objects (&key class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
   (let ((shopping-items (or (and class-type (get-items-by-class-type class-type))
                             (get-shopping-items))))
@@ -356,3 +364,15 @@
                        handles)
                     (desig-props:shape ,shape)))))
      shopping-items)))
+
+(defun go-to-pose (pose)
+  (with-designators ((goal-location (location `((pose ,pose))))
+                     (navigate (action `((type navigation)
+                                         (goal ,goal-location)))))
+    (perform navigate)))
+
+(defun go-in-front-of-rack ()
+  (go-to-pose (tf:make-pose-stamped
+               "map" 0.0
+               (tf:make-3d-vector 0 0 0)
+               (tf:euler->quaternion))))
