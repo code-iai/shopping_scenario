@@ -40,22 +40,15 @@
       ;; TODO(winkler): Arrange objects here.
       )))
 
-(def-top-level-cram-function arrange-rack-objects-simulated (&optional hints)
+(def-top-level-cram-function arrange-rack-objects-simulated ()
   (prepare-settings)
   (prepare-simulated-scene)
   (move-torso-up)
   (move-arms-away)
-  (let ((class-type (cadr (find 'type hints
-                                :test (lambda (x y)
-                                        (eql x (car y)))))))
-    (declare (ignore class-type))
-    (with-simulation-process-modules
-      (let ((all-items (get-shopping-objects)))
-        (dolist (item all-items)
-          (let ((perceived-object (perceive-a item)))
-            (declare (ignore perceived-object))
-            ))))))
-        ;(pick-object perceived-object)))))
+  (with-simulation-process-modules
+    ;; First, perceive scene
+    (perceive-simulated-scene)))
+    ;;(pick-object perceived-object)))))
 
 (def-top-level-cram-function perceive-object-class (class-type)
   (with-simulation-process-modules
