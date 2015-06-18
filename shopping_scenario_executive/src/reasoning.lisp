@@ -158,6 +158,12 @@
                                  ?primitiveshape)
     (json-symbol->string ?primitiveshape)))
 
+(defun get-item-primitive-shape-symbol (item)
+  (or (case (get-item-primitive-shape item)
+        ("box" :box)
+        ("cylinder" :cylinder))
+      :box))
+
 (defun get-item-semantic-handles (item)
   (with-prolog-vars-bound (?semantichandle)
       `("object_semantic_handle" ,(add-prolog-namespace item)

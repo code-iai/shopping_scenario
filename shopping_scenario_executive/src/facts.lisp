@@ -63,4 +63,8 @@
   (<- (infer-object-property ?object desig-props:dimensions ?value)
     (desig-prop ?object (desig-props:name ?name))
     (lisp-fun get-item-dimensions ?name ?value)
-    (not (equal ?value nil))))
+    (not (equal ?value nil)))
+  
+  (<- (infer-object-property ?object desig-props:shape ?value)
+    (desig-prop ?object (desig-props:name ?name))
+    (lisp-fun get-item-primitive-shape-symbol ?name ?value)))
