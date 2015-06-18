@@ -36,6 +36,7 @@
   "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
   (with-process-modules
     (let ((target-arrangement (make-target-arrangement :hints hints)))
+      (declare (ignore target-arrangement))
       ;; TODO(winkler): Arrange objects here.
       )))
 
@@ -47,16 +48,18 @@
   (let ((class-type (cadr (find 'type hints
                                 :test (lambda (x y)
                                         (eql x (car y)))))))
+    (declare (ignore class-type))
     (with-simulation-process-modules
       (let ((all-items (get-shopping-objects)))
         (dolist (item all-items)
           (let ((perceived-object (perceive-a item)))
+            (declare (ignore perceived-object))
             ))))))
         ;(pick-object perceived-object)))))
 
 (def-top-level-cram-function perceive-object-class (class-type)
   (with-simulation-process-modules
-    (let ((object (first (get-shopping-objects class-type))))
+    (let ((object (first (get-shopping-objects :class-type class-type))))
       (perceive-a object))))
 
 (def-cram-function perceive-scene ()
