@@ -57,3 +57,10 @@
     (costmap-add-function scenario-area-restriction-distribution
                           (make-scenario-area-restriction-cost-function)
                           ?cm)))
+
+(def-fact-group inference-facts (infer-object-property object-handle)
+  
+  (<- (infer-object-property ?object desig-props:dimensions ?value)
+    (desig-prop ?object (desig-props:name ?name))
+    (lisp-fun get-item-dimensions ?name ?value)
+    (not (equal ?value nil))))
