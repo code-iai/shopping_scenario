@@ -29,7 +29,7 @@
 (in-package :shopping-scenario-executive)
 
 ;;;
-;;; Plans
+;;; Top-Level Plans
 ;;;
 
 (def-top-level-cram-function arrange-rack-objects (&key hints)
@@ -47,50 +47,8 @@
   (move-arms-away)
   (with-simulation-process-modules
     ;; First, perceive scene
-    (perceive-simulated-scene)))
-    ;;(pick-object perceived-object)))))
-
-(def-top-level-cram-function perceive-object-class (class-type)
-  (with-simulation-process-modules
-    (let ((object (first (get-shopping-objects :class-type class-type))))
-      (perceive-a object))))
-
-(def-cram-function perceive-simulated-scene ()
-  (with-designators ((generic-object (object `())))
-    (perceive-all generic-object
-                  :stationary t
-                  :move-head nil)))
-
-(def-cram-function perceive-scene ()
-  ;; Iterate through all rack levels and add their contents to the
-  ;; collision environment.
-  (go-in-front-of-rack)
-  (let* ((rack (first (get-racks)))
-         (levels (get-rack-levels rack)))
-    (loop for level in levels
-          as pose = (get-rack-level-relative-pose
-                     level 0 0 0
-                     (cl-transforms:euler->quaternion))
-          do (achieve `(cram-plan-library:looking-at ,pose))
-             (with-designators ((generic-object (object `())))
-               (let ((perceived-objects
-                       (perceive-a generic-object :stationary t :move-head nil)))
-                 (dolist (perceived-object perceived-objects)
-                   (format t "~a~%" (desig-prop-value perceived-object 'name))))))))
-
-
-     ;; (with-designators ((rack-level (location `((desig-props::on "RackLevel")
-     ;;                                             (desig-props::name "RackLevel1_fh28hepgfq"))))
-     ;;                     (obj (object `((desig-props:name "Corn_uai8735a")
-     ;;                                    (desig-props:at ,rack-level)
-     ;;                                    (desig-props::max-handles 1)
-     ;;                                    ,@(mapcar
-     ;;                                       (lambda (handle-object)
-     ;;                                         `(desig-props:handle ,handle-object))
-     ;;                                       (make-handles
-     ;;                                        0.04
-     ;;                                        :segments 2
-     ;;                                        :ax (/ pi 2)
-     ;;                                        :center-offset
-     ;;                                        (tf:make-3d-vector 0.02 0.0 0.07)))))))
-      
+    (perceive-simulated-scene)
+    (with-designators ((the-object (object `())))
+      ;; TODO(winkler): Resolve `the-object' to a suitable test object
+      ;; on the rack.
+      (pick-object-from-rack the-object))))
