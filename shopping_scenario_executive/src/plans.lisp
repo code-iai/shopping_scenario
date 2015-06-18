@@ -62,6 +62,12 @@
     (let ((object (first (get-shopping-objects :class-type class-type))))
       (perceive-a object))))
 
+(def-cram-function perceive-simulated-scene ()
+  (with-designators ((generic-object (object `())))
+    (perceive-all generic-object
+                  :stationary t
+                  :move-head nil)))
+
 (def-cram-function perceive-scene ()
   ;; Iterate through all rack levels and add their contents to the
   ;; collision environment.
