@@ -66,9 +66,3 @@
   (with-simulation-process-modules
     (let ((object (first (get-shopping-objects :class-type class-type))))
       (perceive-a object))))
-
-(def-cram-function perceive-simulated-scene ()
-  (with-designators ((generic-object (object `())))
-    (perceive-all generic-object
-                  :stationary t
-                  :move-head nil)))

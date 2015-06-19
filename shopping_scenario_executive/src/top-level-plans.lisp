@@ -42,13 +42,14 @@
 
 (def-top-level-cram-function arrange-rack-objects-simulated ()
   (prepare-settings)
-  (prepare-simulated-scene)
-  (move-torso-up)
-  (move-arms-away)
-  (with-simulation-process-modules
-    ;; First, perceive scene
-    (perceive-simulated-scene)
-    (with-designators ((the-object (object `())))
-      ;; TODO(winkler): Resolve `the-object' to a suitable test object
-      ;; on the rack.
-      (pick-object-from-rack the-object))))
+  (let ((rack (first (get-racks))))
+    (prepare-simulated-scene)
+    (move-torso-up)
+    (move-arms-away)
+    (with-simulation-process-modules
+      ;; First, perceive scene
+      (achieve `(scene-perceived ,rack))
+      (with-designators ((the-object (object `())))
+        ;; TODO(winkler): Resolve `the-object' to a suitable test
+        ;; object on the rack.
+        (pick-object-from-rack the-object)))))
