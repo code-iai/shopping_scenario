@@ -85,10 +85,9 @@
 
 (defun get-rack-pose (rack)
   "Return the pose of the given rack, in `map' coordinates."
-  (with-prolog-vars-bound (?rotmatlist)
-      `(and ("current_object_pose" ,(add-prolog-namespace rack) ?mat)
-            ("rotmat_to_list" ?mat ?rotmatlist))
-    (tf:pose->pose-stamped "map" 0.0 (rotmat->pose ?rotmatlist))))
+  (with-prolog-vars-bound (?mat)
+      `("rack_pose" ,(add-prolog-namespace rack) ?mat)
+    (tf:pose->pose-stamped "map" 0.0 (rotmat->pose ?mat))))
 
 (defun get-rack-levels (rack)
   "Returns all rack levels for the given rack `rack'."
