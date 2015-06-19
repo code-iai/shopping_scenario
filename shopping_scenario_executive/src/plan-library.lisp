@@ -46,11 +46,15 @@
              (perceive-all
               generic-object :stationary t :move-head nil))))
 
-(def-cram-function pick-object-from-rack (object)
+(declare-goal object-picked-from-rack (rack object)
+  "Picks an object `object' from a given rack instance `rack'."
+  (declare (ignore rack object))
+  (roslisp:ros-info (shopping plans) "OBJECT-PICKED-FROM-RACK"))
+
+(def-goal (achieve (pick-object-from-rack ?rack ?object))
   "Repositions the robot's torso in order to be able to properly reach the rack level the object is residing on, and start picking up the object, repositioning and reperceiving as necessary."
   (let* ((rack-level (get-object-rack-level
-                      (first (get-racks))
-                      (desig-prop-value object 'name)))
+                      ?rack (desig-prop-value ?object 'name)))
          (elevation (get-rack-level-elevation rack-level)))
     ;; NOTE(winkler): Reposition robot torso according to rack level
     ;; height. This is a heuristic transformation which maps the
@@ -60,7 +64,7 @@
     ;; Actually pick the object. This will trigger re-perception and
     ;; navigation in order to properly grasp the object, lift it, and
     ;; move into a safe carrying pose.
-    (pick-object object)))
+    (pick-object ?object)))
 
 (def-top-level-cram-function perceive-object-class (class-type)
   (with-simulation-process-modules
