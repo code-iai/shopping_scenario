@@ -83,6 +83,13 @@
       `("rack" ?rack)
     (split-prolog-symbol (json-symbol->string ?rack))))
 
+(defun get-rack-pose (rack)
+  "Return the pose of the given rack, in `map' coordinates."
+  (with-prolog-vars-bound (?rotmatlist)
+      `(and ("current_object_pose" ,(add-prolog-namespace rack) ?mat)
+            ("rotmat_to_list" ?mat ?rotmatlist))
+    (tf:pose->pose-stamped "map" 0.0 (rotmat->pose ?rotmatlist))))
+
 (defun get-rack-levels (rack)
   "Returns all rack levels for the given rack `rack'."
   (with-prolog-vars-bound (?racklevel)
@@ -177,11 +184,7 @@
             (with-first-prolog-vars-bound (?pose)
                 `("handle_pose" ,(json-symbol->string ?semantichandle)
                                 ?pose)
-              (cl-transforms:transform->pose
-               (cl-transforms:matrix->transform
-                (make-array
-                 '(4 4) :displaced-to (make-array
-                                       16 :initial-contents ?pose)))))))
+              (rotmat->pose ?pose))))
       (make-designator
        'object
        `((desig-props:type desig-props:handle)
