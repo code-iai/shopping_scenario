@@ -36,7 +36,7 @@
         #:cram-language-designator-support)
   (:import-from :cram-language
                 top-level fl-funcall with-tags pursue tag retry-after-suspension
-                whenever pulsed value with-task-suspended seq)
+                whenever pulsed value with-task-suspended seq declare-goal def-goal)
   (:import-from :cram-designators
                 make-designator
                 action
