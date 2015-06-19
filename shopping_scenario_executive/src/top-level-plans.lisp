@@ -48,7 +48,7 @@
     (move-arms-away)
     (with-simulation-process-modules
       ;; First, perceive scene
-      (achieve `(scene-perceived ,rack))
+      (achieve `(rack-scene-perceived ,rack))
       (with-designators ((the-object (object `())))
         ;; TODO(winkler): Resolve `the-object' to a suitable test
         ;; object on the rack.
