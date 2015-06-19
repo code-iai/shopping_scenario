@@ -154,12 +154,12 @@
                      :urdf ,urdf-area)))))))
 
 (defun init-btr-perception ()
-  (btr::ignore-perception-bullet-object "floor")
-  (btr::ignore-perception-bullet-object "ground_plane")
-  (btr::ignore-perception-bullet-object 'cram-pr2-knowledge::pr2)
-  (btr::ignore-perception-bullet-object (first (get-racks)))
-  (btr::ignore-perception-bullet-object 'sem-map-rack)
-  (btr::ignore-perception-bullet-object 'sem-map-area))
+  (cram-environment-representation:ignore-bullet-object-during-perception "floor")
+  (cram-environment-representation:ignore-bullet-object-during-perception "ground_plane")
+  (cram-environment-representation:ignore-bullet-object-during-perception 'cram-pr2-knowledge::pr2)
+  (cram-environment-representation:ignore-bullet-object-during-perception (first (get-racks)))
+  (cram-environment-representation:ignore-bullet-object-during-perception 'sem-map-rack)
+  (cram-environment-representation:ignore-bullet-object-during-perception 'sem-map-area))
 
 (defun prepare-settings ()
   (cram-designators:disable-location-validation-function
