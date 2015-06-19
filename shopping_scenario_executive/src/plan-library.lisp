@@ -66,7 +66,18 @@
     ;; move into a safe carrying pose.
     (pick-object ?object)))
 
-(def-top-level-cram-function perceive-object-class (class-type)
-  (with-simulation-process-modules
-    (let ((object (first (get-shopping-objects :class-type class-type))))
-      (perceive-a object))))
+(declare-goal objects-detected-in-rack (rack object-template)
+  "Tries to detect objects in the given rack `rack', according to the description of the object template given as `object-template'."
+  (declare (ignore rack object-template))
+  (roslisp:ros-info (shopping plans) "OBJECTS-DETECTED-IN-RACK"))
+
+(def-goal (achieve (objects-detected-in-rack ?rack ?object-template))
+  (declare (ignore ?rack))
+  (let* ((type (desig-prop-value ?object-template 'type))
+         (name (desig-prop-value ?object-template 'name))
+         (at (desig-prop-value ?object-template 'at))
+         (pose (when at (desig-prop-value at 'pose))))
+    (declare (ignore type name pose))
+    ;; TODO(winkler): Extend this such that it makes use of the above
+    ;; properties, and reflects the respectiv behavior.
+    (perceive-all ?object-template)))
