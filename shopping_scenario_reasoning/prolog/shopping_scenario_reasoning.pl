@@ -37,6 +37,7 @@
       rack/1,
       rack_level/2,
       rack_on_level/3,
+      rack_pose/2,
       position_on_rack/6,
       rack_level_elevation/2,
       rack_level_relative_position/4,
@@ -66,6 +67,7 @@
     rack(r),
     rack_level(r, r),
     rack_on_level(r, r, r),
+    rack_pose(r, r),
     position_on_rack(r, r, r, r, r, r),
     rack_level_elevation(r, r),
     rack_level_relative_position(r, r, r, r),
@@ -161,6 +163,18 @@ rack_on_level(Rack, Level, RackLevel) :-
     rdf_triple(knowrob:'level', RackLevel, LevelLiteral),
     strip_literal_type(LevelLiteral, LevelLiteralAtom),
     term_to_atom(Level, LevelLiteralAtom).
+
+
+%% rack_pose(?Rack, ?RotationMatrix) is nondet.
+%
+%  Return rotation matrix representing the pose of the given rack
+%
+% @param Rack            Rack to get the pose for
+% @param RotationMatrix  The rotation matrix representing the pose for the given rack
+%
+rack_pose(Rack, RotationMatrix) :-
+    rack(Rack),
+    current_object_pose(Rack, RotationMatrix).
 
 
 %% rr_call(?Function, ?Parameters, ?Result) is nondet.
