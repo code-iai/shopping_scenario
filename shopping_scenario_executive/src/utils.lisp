@@ -399,8 +399,19 @@
                                          (goal ,goal-location)))))
     (perform navigate)))
 
-(defun go-in-front-of-rack ()
-  (go-to-pose (tf:make-pose-stamped
-               "map" 0.0
-               (tf:make-3d-vector 0 0 0)
-               (tf:euler->quaternion))))
+(defun go-in-front-of-rack (rack)
+  (let* ((rack-pose (get-rack-pose rack))
+         (pose-in-front-of
+           (tf:copy-pose-stamped
+            rack-pose
+            :origin (tf:v+ (tf:origin rack-pose)
+                           (tf:make-3d-vector
+                            -1.5 0.0 0.0)))))
+    (go-to-pose pose-in-front-of)))
+
+(defun rotmat->pose (rotmat)
+  (cl-transforms:transform->pose
+   (cl-transforms:matrix->transform
+    (make-array
+     '(4 4) :displaced-to (make-array
+                           16 :initial-contents rotmat)))))
