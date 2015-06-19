@@ -171,7 +171,7 @@
   (moveit:clear-collision-environment)
   (sem-map-coll-env:publish-semantic-map-collision-objects))
 
-(defun move-torso-up (&optional (position 0.3))
+(defun move-torso (&optional (position 0.3))
   (let* ((action-client (or *action-client-torso*
                             (actionlib:make-action-client
                              "/torso_controller/position_joint_action"
@@ -348,17 +348,18 @@
                             (cons rack-level offset))))
     map))
 
-(defun spawn-random-object-arrangement ()
-  "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
-  (let ((arrangement (resolve-object-arrangement
-                      (make-random-object-arrangement)))
+(defun resolve-and-spawn-object-arrangement (arrangement)
+  (let ((resolved-arrangement (resolve-object-arrangement arrangement))
         (x-offset -0.15))
-    (dolist (object-position arrangement)
-      (destructuring-bind (item racklevel y-offset)
-          object-position
+    (dolist (object-position resolved-arrangement)
+      (destructuring-bind (item racklevel y-offset) object-position
         (spawn-shopping-item-on-named-level
          item racklevel x-offset y-offset
          (tf:euler->quaternion :az (/ pi 2)))))))
+
+(defun spawn-random-object-arrangement ()
+  "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
+  (resolve-and-spawn-object-arrangement (make-random-object-arrangement)))
 
 (defun delete-shopping-items-from-gazebo ()
   "Deletes (unspawns) all known shopping items from the current Gazebo scene."
@@ -366,10 +367,14 @@
     (dolist (item items)
       (cram-gazebo-utilities::delete-gazebo-model item))))
 
-(defun prepare-simulated-scene ()
+(defun prepare-simulated-scene (&key simple)
   "First deletes all shopping items from the Gazebo scene, and then populates the scenen with a random object arrangement."
   (delete-shopping-items-from-gazebo)
-  (spawn-random-object-arrangement))
+  (cond (simple
+         (let ((simple-arrangement (make-empty-object-arrangement)))
+           (setf (aref simple-arrangement 2 2) "Kelloggs_sh876app")
+           (resolve-and-spawn-object-arrangement simple-arrangement)))
+        (t (spawn-random-object-arrangement))))
 
 (defun get-shopping-objects (&key class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."

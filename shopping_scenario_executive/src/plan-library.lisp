@@ -60,7 +60,7 @@
     ;; height. This is a heuristic transformation which maps the
     ;; absolute height of thelowest and highest rack level to the
     ;; lower and upper boundaries of the torso position.
-    (move-torso-up (/ elevation 5.0))
+    (move-torso (/ elevation 5.0))
     ;; Actually pick the object. This will trigger re-perception and
     ;; navigation in order to properly grasp the object, lift it, and
     ;; move into a safe carrying pose.

@@ -43,8 +43,8 @@
 (def-top-level-cram-function arrange-rack-objects-simulated ()
   (prepare-settings)
   (let ((rack (first (get-racks))))
-    (prepare-simulated-scene)
-    (move-torso-up)
+    (prepare-simulated-scene :simple t)
+    (move-torso)
     (move-arms-away)
     (with-simulation-process-modules
       ;; First, perceive scene
