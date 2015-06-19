@@ -51,7 +51,7 @@
   (declare (ignore rack object))
   (roslisp:ros-info (shopping plans) "OBJECT-PICKED-FROM-RACK"))
 
-(def-goal (achieve (pick-object-from-rack ?rack ?object))
+(def-goal (achieve (object-picked-from-rack ?rack ?object))
   "Repositions the robot's torso in order to be able to properly reach the rack level the object is residing on, and start picking up the object, repositioning and reperceiving as necessary."
   (let* ((rack-level (get-object-rack-level
                       ?rack (desig-prop-value ?object 'name)))

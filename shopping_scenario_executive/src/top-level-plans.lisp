@@ -52,4 +52,4 @@
       (with-designators ((the-object (object `())))
         ;; TODO(winkler): Resolve `the-object' to a suitable test
         ;; object on the rack.
-        (pick-object-from-rack the-object)))))
+        (achieve `(object-picked-from-rack ,rack ,the-object))))))
