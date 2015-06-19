@@ -420,3 +420,8 @@
     (make-array
      '(4 4) :displaced-to (make-array
                            16 :initial-contents rotmat)))))
+
+(defun reposition-torso-for-rack-level (rack level)
+  (let* ((level (get-rack-on-level rack level))
+         (elevation (get-rack-level-elevation level)))
+    (move-torso (/ elevation 5.0))))
