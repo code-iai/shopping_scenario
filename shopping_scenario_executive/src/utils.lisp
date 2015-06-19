@@ -407,11 +407,24 @@
 (defun go-in-front-of-rack (rack)
   (let* ((rack-pose (get-rack-pose rack))
          (pose-in-front-of
-           (tf:copy-pose-stamped
-            rack-pose
-            :origin (tf:v+ (tf:origin rack-pose)
-                           (tf:make-3d-vector
-                            -1.5 0.0 0.0)))))
+           ;; NOTE(winkler): Hacky, until I find out why the other one
+           ;; doesn't work. The robot seems to drive somewhere beyond
+           ;; the set pose, far to the back of the scene.
+           (tf:make-pose-stamped
+            "map" 0.0
+            (tf:make-3d-vector 0 0 0)
+            (tf:euler->quaternion))))
+           ;; (tf:pose->pose-stamped
+           ;;  (tf:frame-id rack-pose) (tf:stamp rack-pose)
+           ;;  (cl-transforms:transform-pose
+           ;;   (tf:make-transform
+           ;;    (tf:make-3d-vector -2.0 0.0 0)
+           ;;    (tf:euler->quaternion))
+           ;;   (cl-transforms:transform-pose
+           ;;    (tf:make-transform
+           ;;     (tf:make-3d-vector 0.0 0.0 0.0)
+           ;;     (tf:euler->quaternion :az (/ pi 2)))
+           ;;    rack-pose)))))
     (go-to-pose pose-in-front-of)))
 
 (defun rotmat->pose (rotmat)
