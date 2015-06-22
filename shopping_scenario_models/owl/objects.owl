@@ -177,14 +177,14 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_laok8b26"/>
+	  <owl:hasValue rdf:resource="&knowrob;Kelloggs_Handle_laok8b26"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_diuxn543"/>
+	  <owl:hasValue rdf:resource="&knowrob;Kelloggs_Handle_diuxn543"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
@@ -231,14 +231,14 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_aii8lm3s"/>
+	  <owl:hasValue rdf:resource="&knowrob;Lion_Handle_aii8lm3s"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_la009mn3"/>
+	  <owl:hasValue rdf:resource="&knowrob;Lion_Handle_la009mn3"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
@@ -285,14 +285,14 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_loapm34g"/>
+	  <owl:hasValue rdf:resource="&knowrob;Salt_Handle_loapm34g"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_laoiugmn"/>
+	  <owl:hasValue rdf:resource="&knowrob;Salt_Handle_laoiugmn"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
@@ -339,14 +339,14 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_aoiqu89m"/>
+	  <owl:hasValue rdf:resource="&knowrob;PancakeMix_Handle_aoiqu89m"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_paolikc0"/>
+	  <owl:hasValue rdf:resource="&knowrob;PancakeMix_Handle_paolikc0"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
@@ -393,14 +393,14 @@
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_0llakm34"/>
+	  <owl:hasValue rdf:resource="&knowrob;TomatoSauce_Handle_0llakm34"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
       
       <rdfs:subClassOf>
 	<owl:Restriction>
 	  <owl:onProperty rdf:resource="&knowrob;semanticHandle"/>
-	  <owl:hasValue rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_nruy76a0"/>
+	  <owl:hasValue rdf:resource="&knowrob;TomatoSauce_Handle_nruy76a0"/>
 	</owl:Restriction>
       </rdfs:subClassOf>
     </owl:Class>
@@ -491,33 +491,17 @@
     <!-- =========== -->
     
     
-    <!-- TODO: Add the object's properties (like handles and dimensions) here. -->
-    
     <!-- Corn -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Corn_uai8735a">
-      <rdf:type rdf:resource="&knowrob;Corn"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Corn_jal987c1">
-      <rdf:type rdf:resource="&knowrob;Corn"/>
-    </owl:NamedIndividual>
+    <!-- TODO: Add handles -->
     
     <!-- Kelloggs -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_sh876app">
-      <rdf:type rdf:resource="&knowrob;Kelloggs"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_oallp49c">
-      <rdf:type rdf:resource="&knowrob;Kelloggs"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_laok8b26">
+    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_Handle_laok8b26">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_laok8b26_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;Kelloggs_Handle_laok8b26_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_laok8b26_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_Handle_laok8b26_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -537,13 +521,13 @@
       <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m33>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_diuxn543">
+    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_Handle_diuxn543">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_diuxn543_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;Kelloggs_Handle_diuxn543_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Kelloggs_Handle_diuxn543_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;Kelloggs_Handle_diuxn543_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -564,17 +548,13 @@
     </owl:NamedIndividual>
     
     <!-- Lion -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Lion_jql358ab">
-      <rdf:type rdf:resource="&knowrob;Lion"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_aii8lm3s">
+    <owl:NamedIndividual rdf:about="&knowrob;Lion_Handle_aii8lm3s">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_aii8lm3s_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;Lion_Handle_aii8lm3s_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_aii8lm3s_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;Lion_Handle_aii8lm3s_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -594,13 +574,13 @@
       <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m33>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_la009mn3">
+    <owl:NamedIndividual rdf:about="&knowrob;Lion_Handle_la009mn3">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_la009mn3_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;Lion_Handle_la009mn3_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Lion_Handle_la009mn3_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;Lion_Handle_la009mn3_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -621,17 +601,13 @@
     </owl:NamedIndividual>
     
     <!-- Salt -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Salt_3djp92uc">
-      <rdf:type rdf:resource="&knowrob;Salt"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_loapm34g">
+    <owl:NamedIndividual rdf:about="&knowrob;Salt_Handle_loapm34g">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_loapm34g_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;Salt_Handle_loapm34g_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_loapm34g_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;Salt_Handle_loapm34g_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -651,13 +627,13 @@
       <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m33>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_laoiugmn">
+    <owl:NamedIndividual rdf:about="&knowrob;Salt_Handle_laoiugmn">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_laoiugmn_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;Salt_Handle_laoiugmn_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Salt_Handle_laoiugmn_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;Salt_Handle_laoiugmn_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -678,17 +654,13 @@
     </owl:NamedIndividual>
     
     <!-- Pancake Mix -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_8dhu26v2">
-      <rdf:type rdf:resource="&knowrob;PancakeMix"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_aoiqu89m">
+    <owl:NamedIndividual rdf:about="&knowrob;PancakeMix_Handle_aoiqu89m">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_aoiqu89m_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;PancakeMix_Handle_aoiqu89m_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_aoiqu89m_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;PancakeMix_Handle_aoiqu89m_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -708,13 +680,13 @@
       <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m33>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_paolikc0">
+    <owl:NamedIndividual rdf:about="&knowrob;PancakeMix_Handle_paolikc0">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_paolikc0_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;PancakeMix_Handle_paolikc0_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#PancakeMix_Handle_paolikc0_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;PancakeMix_Handle_paolikc0_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -735,17 +707,13 @@
     </owl:NamedIndividual>
     
     <!-- Tomato Sauce -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_p33iuf8a">
-      <rdf:type rdf:resource="&knowrob;TomatoSauce"/>
-    </owl:NamedIndividual>
-    
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_0llakm34">
+    <owl:NamedIndividual rdf:about="&knowrob;TomatoSauce_Handle_0llakm34">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_0llakm34_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;TomatoSauce_Handle_0llakm34_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_0llakm34_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;TomatoSauce_Handle_0llakm34_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -765,13 +733,13 @@
       <knowrob:m33 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0</knowrob:m33>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_nruy76a0">
+    <owl:NamedIndividual rdf:about="&knowrob;TomatoSauce_Handle_nruy76a0">
       <rdf:type rdf:resource="&knowrob;SemanticHandle"/>
-      <knowrob:handlePose rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_nruy76a0_pose"/>
+      <knowrob:handlePose rdf:resource="&knowrob;TomatoSauce_Handle_nruy76a0_pose"/>
       <knowrob:graspType rdf:datatype="&xsd;string">push</knowrob:graspType>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#TomatoSauce_Handle_nruy76a0_pose">
+    <owl:NamedIndividual rdf:about="&knowrob;TomatoSauce_Handle_nruy76a0_pose">
       <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
       <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.0</knowrob:m00>
       <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.0</knowrob:m01>
@@ -792,13 +760,9 @@
     </owl:NamedIndividual>
     
     <!-- Salt Dispenser -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#SaltDispenser_j33981mn">
-      <rdf:type rdf:resource="&knowrob;SaltDispenser"/>
-    </owl:NamedIndividual>
+    <!-- TODO: Add handles -->
     
     <!-- Oregano -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Oregano_nmbhag32">
-      <rdf:type rdf:resource="&knowrob;Oregano"/>
-    </owl:NamedIndividual>
+    <!-- TODO: Add handles -->
     
 </rdf:RDF>

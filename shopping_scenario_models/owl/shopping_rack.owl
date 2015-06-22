@@ -119,36 +119,36 @@
     
     
     <!-- Map Individual -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98">
+    <owl:NamedIndividual rdf:about="&knowrob;SemanticEnvironmentMap_Lq93n1o98">
         <rdf:type rdf:resource="&knowrob;SemanticEnvironmentMap"/>
     </owl:NamedIndividual>
     
     
     <!-- Single Perception Time Point Individual -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#timepoint_1361536619">
+    <owl:NamedIndividual rdf:about="&knowrob;timepoint_1361536619">
         <rdf:type rdf:resource="&knowrob;TimePoint"/>
     </owl:NamedIndividual>
     
     
     <!-- Rack -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#Rack_f238ry42gj">
+    <owl:NamedIndividual rdf:about="&knowrob;Rack_f238ry42gj">
       <rdf:type rdf:resource="&knowrob;Rack"/>
       <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
-      <knowrob:rackLevel rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel0_f32ry932fw"/>
-      <knowrob:rackLevel rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel1_fh28hepgfq"/>
-      <knowrob:rackLevel rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel2_oihroihow8"/>
-      <knowrob:rackLevel rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h"/>
-      <knowrob:rackBack rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackBack_oqiuc389ua"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel0_f32ry932fw"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel1_fh28hepgfq"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel2_oihroihow8"/>
+      <knowrob:rackLevel rdf:resource="&knowrob;RackLevel3_ah08yh2o4h"/>
+      <knowrob:rackBack rdf:resource="&knowrob;RackBack_oqiuc389ua"/>
     </owl:NamedIndividual>
     
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_Rack_f238ry42gj">
         <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
         <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
-        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_Rack_f238ry42gj"/>
-        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#Rack_f238ry42gj"/>
+        <knowrob:eventOccursAt rdf:resource="&knowrob;RotationMatrix3D_Rack_f238ry42gj"/>
+        <knowrob:objectActedOn rdf:resource="&knowrob;Rack_f238ry42gj"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_Rack_f238ry42gj">
+    <owl:NamedIndividual rdf:about="&knowrob;RotationMatrix3D_Rack_f238ry42gj">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.9999996829318347</knowrob:m01>
@@ -170,7 +170,7 @@
     
     
     <!-- Rack Back -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackBack_oqiuc389ua">
+    <owl:NamedIndividual rdf:about="&knowrob;RackBack_oqiuc389ua">
       <rdf:type rdf:resource="&knowrob;RackBack"/>
       <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
       <knowrob:heightOfObject rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.6</knowrob:heightOfObject>
@@ -181,11 +181,11 @@
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackBack_oqiuc389ua">
         <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
         <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
-        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackBack_oqiuc389ua"/>
-        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackBack_oqiuc389ua"/>
+        <knowrob:eventOccursAt rdf:resource="&knowrob;RotationMatrix3D_RackBack_oqiuc389ua"/>
+        <knowrob:objectActedOn rdf:resource="&knowrob;RackBack_oqiuc389ua"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackBack_oqiuc389ua">
+    <owl:NamedIndividual rdf:about="&knowrob;RotationMatrix3D_RackBack_oqiuc389ua">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
@@ -207,7 +207,7 @@
     
     
     <!-- Rack Level 0 -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel0_f32ry932fw">
+    <owl:NamedIndividual rdf:about="&knowrob;RackLevel0_f32ry932fw">
       <rdf:type rdf:resource="&knowrob;RackLevel"/>
       <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
       <knowrob:level rdf:datatype="&xsd;integer">0</knowrob:level>
@@ -219,11 +219,11 @@
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel0_f32ry932fw">
         <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
         <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
-        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel0_f32ry932fw"/>
-        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel0_f32ry932fw"/>
+        <knowrob:eventOccursAt rdf:resource="&knowrob;RotationMatrix3D_RackLevel0_f32ry932fw"/>
+        <knowrob:objectActedOn rdf:resource="&knowrob;RackLevel0_f32ry932fw"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel0_f32ry932fw">
+    <owl:NamedIndividual rdf:about="&knowrob;RotationMatrix3D_RackLevel0_f32ry932fw">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.9999996829318347</knowrob:m01>
@@ -245,7 +245,7 @@
     
     
     <!-- Rack Level 1 -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel1_fh28hepgfq">
+    <owl:NamedIndividual rdf:about="&knowrob;RackLevel1_fh28hepgfq">
       <rdf:type rdf:resource="&knowrob;RackLevel"/>
       <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
       <knowrob:level rdf:datatype="&xsd;integer">1</knowrob:level>
@@ -257,11 +257,11 @@
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel1_fh28hepgfq">
         <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
         <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
-        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel1_fh28hepgfq"/>
-        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel1_fh28hepgfq"/>
+        <knowrob:eventOccursAt rdf:resource="&knowrob;RotationMatrix3D_RackLevel1_fh28hepgfq"/>
+        <knowrob:objectActedOn rdf:resource="&knowrob;RackLevel1_fh28hepgfq"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel1_fh28hepgfq">
+    <owl:NamedIndividual rdf:about="&knowrob;RotationMatrix3D_RackLevel1_fh28hepgfq">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
@@ -283,7 +283,7 @@
     
     
     <!-- Rack Level 2 -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel2_oihroihow8">
+    <owl:NamedIndividual rdf:about="&knowrob;RackLevel2_oihroihow8">
       <rdf:type rdf:resource="&knowrob;RackLevel"/>
       <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
       <knowrob:level rdf:datatype="&xsd;integer">2</knowrob:level>
@@ -295,11 +295,11 @@
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel2_oihroihow8">
         <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
         <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
-        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel2_oihroihow8"/>
-        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel2_oihroihow8"/>
+        <knowrob:eventOccursAt rdf:resource="&knowrob;RotationMatrix3D_RackLevel2_oihroihow8"/>
+        <knowrob:objectActedOn rdf:resource="&knowrob;RackLevel2_oihroihow8"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel2_oihroihow8">
+    <owl:NamedIndividual rdf:about="&knowrob;RotationMatrix3D_RackLevel2_oihroihow8">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
@@ -321,7 +321,7 @@
     
     
     <!-- Rack Level 3 -->
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h">
+    <owl:NamedIndividual rdf:about="&knowrob;RackLevel3_ah08yh2o4h">
       <rdf:type rdf:resource="&knowrob;RackLevel"/>
       <knowrob:describedInMap rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#SemanticEnvironmentMap_Lq93n1o98"/>
       <knowrob:level rdf:datatype="&xsd;integer">3</knowrob:level>
@@ -333,11 +333,11 @@
     <owl:NamedIndividual rdf:about="&knowrob;SemanticMapPerception_RackLevel3_ah08yh2o4h">
         <rdf:type rdf:resource="&knowrob;SemanticMapPerception"/>
         <knowrob:startTime rdf:resource="http://ias.cs.tum.edu/kb/ias_semantic_map.owl#timepoint_1361536619"/>
-        <knowrob:eventOccursAt rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel3_ah08yh2o4h"/>
-        <knowrob:objectActedOn rdf:resource="http://knowrob.org/kb/ias_semantic_map.owl#RackLevel3_ah08yh2o4h"/>
+        <knowrob:eventOccursAt rdf:resource="&knowrob;RotationMatrix3D_RackLevel3_ah08yh2o4h"/>
+        <knowrob:objectActedOn rdf:resource="&knowrob;RackLevel3_ah08yh2o4h"/>
     </owl:NamedIndividual>
     
-    <owl:NamedIndividual rdf:about="http://knowrob.org/kb/ias_semantic_map.owl#RotationMatrix3D_RackLevel3_ah08yh2o4h">
+    <owl:NamedIndividual rdf:about="&knowrob;RotationMatrix3D_RackLevel3_ah08yh2o4h">
         <rdf:type rdf:resource="&knowrob;RotationMatrix3D"/>
         <knowrob:m00 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0</knowrob:m00>
         <knowrob:m01 rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</knowrob:m01>
