@@ -84,7 +84,12 @@
     (move-arms-away)
     ;; First, perceive scene
     (achieve `(rack-scene-perceived ,rack))
-    (with-designators ((the-object (object `())))
+    (with-designators ((the-object
+                        (object
+                         (cond ((eql (get-hint hints :simulation-type)
+                                     :simple)
+                               `((desig-props:name
+                                  "Kelloggs_sh876app")))))))
       ;; TODO(winkler): Resolve `the-object' to a suitable test
       ;; object on the rack.
       (achieve `(object-picked-from-rack ,rack ,the-object)))))
