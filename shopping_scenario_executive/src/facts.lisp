@@ -68,3 +68,14 @@
   (<- (infer-object-property ?object desig-props:shape ?value)
     (desig-prop ?object (desig-props:name ?name))
     (lisp-fun get-item-primitive-shape-symbol ?name ?value)))
+
+(def-fact-group occassions (holds)
+
+  (<- (object-picked-from-rack ?rack ?object)
+    (crs:fail))
+
+  (<- (objects-detected-in-rack ?rack ?object-template)
+    (crs:fail))
+
+  (<- (rack-scene-perceived)
+    (crs:fail)))
