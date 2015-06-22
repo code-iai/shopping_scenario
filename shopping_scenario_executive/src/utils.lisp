@@ -467,6 +467,9 @@
          (elevation (get-rack-level-elevation level)))
     (move-torso (/ elevation 5.0))))
 
+(defun json-prolog-present ()
+  (roslisp:wait-for-service "json_prolog/query" 0.25))
+
 (defun check-system-settings (&key hints)
   (when (cond ((eql (roslisp:node-status) :shutdown)
                (roslisp:ros-error
@@ -486,8 +489,13 @@
                    (t (roslisp:ros-error
                        (check) "Gazebo spawn service not present.")
                       nil))))
-      (cond ((roslisp:has-param "/robot_description_lowres")
-             t)
-            (t (roslisp:ros-error
-                (check) "Low-Resolution robot model not present on the parameter server.")
-               nil)))))
+      (when (cond ((roslisp:has-param "/robot_description_lowres")
+                   t)
+                  (t (roslisp:ros-error
+                      (check) "Low-Resolution robot model not present on the parameter server.")
+                     nil))
+        (cond ((json-prolog-present)
+               t)
+              (t (roslisp:ros-error
+                  (check) "JSON-Prolog query service not present.")
+                 nil))))))
