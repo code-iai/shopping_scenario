@@ -419,6 +419,7 @@
                      'desig-props)))
          (make-designator
           'object `((desig-props:name ,item)
+                    (desig-props:type ,(get-item-class item))
                     ,@(mapcar
                        (lambda (handle)
                          `(desig-props:handle ,handle))

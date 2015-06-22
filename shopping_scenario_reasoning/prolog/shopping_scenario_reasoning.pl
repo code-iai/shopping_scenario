@@ -51,7 +51,8 @@
       object_primitive_shape/2,
       object_semantic_handle/2,
       grasp_type/2,
-      handle_pose/2
+      handle_pose/2,
+      object_type/2
     ]).
 
 
@@ -82,7 +83,8 @@
     object_primitive_shape(r, r),
     object_semantic_handle(r, r),
     grasp_type(r, r),
-    handle_pose(r, r).
+    handle_pose(r, r),
+    object_type(r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -100,6 +102,17 @@
 shopping_item(Item) :-
     rdf_has(Item, rdf:type, A),
     rdf_reachable(A, rdfs:subClassOf, knowrob:'ShoppingItem').
+
+
+%% object_type(?Object, ?Type) is nondet.
+%
+%  Correlate an object instance to a type.
+%
+% @param Object      Object to get the type for
+% @param Type        Type of the object instance
+%
+object_type(Object, Type) :-
+    rdf_has(Object, rdf:type, Type).
 
 
 %% item_urdf_path(?Item, ?URDFPath) is nondet.

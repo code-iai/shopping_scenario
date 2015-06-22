@@ -211,3 +211,8 @@
   (with-first-prolog-vars-bound (?instance)
       `("add_shopping_item" ,(add-prolog-namespace class) ?instance)
     (strip-prolog-string ?instance)))
+
+(defun get-item-class (item)
+  (with-first-prolog-vars-bound (?class)
+      `("object_type" ,(add-prolog-namespace item) ?class)
+    (strip-prolog-string ?class)))
