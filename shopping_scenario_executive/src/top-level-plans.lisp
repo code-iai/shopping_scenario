@@ -29,27 +29,69 @@
 (in-package :shopping-scenario-executive)
 
 ;;;
+;;; Hints Documentation
+;;;
+
+;; The hints system allows customization of the scenario before
+;; running it, without actually touching any plan code or changing the
+;; knowledge base. This is the second-level, quasi static task
+;; parameter knowledge. All hint keys are precedet with a colon (`:')
+;; and are therefore Lisp keyword symbols.
+;; 
+;; Available hints (and their expected values) are:
+;; 
+;;  * `:world':
+;;    - `:simulation': Runs the scenario in a Gazebo
+;;      simulation. Prepares the simulated scene, and spawns
+;;      appropriate object scenes.
+;;    - `:reality': Runs the scenatio on a real PR2 robot.
+;;
+;;  * `:simulation-type':
+;;    - `:simple': Only valid in `:simulation' worlds. Triggers
+;;      spawning only one `Kelloggs' object in the third rack level,
+;;      easily reachable for the PR2.
+;;    - `:default': Spawns random object arrangements all over the
+;;      whole rack. This is the default setting.
+
+
+;;;
+;;; Shortcuts
+;;;
+
+(defun run-simulated (&key hints)
+  (run-rack-arrangement
+   (update-hints hints `((:world :simulation)))))
+
+(defun run-reality (&key hints)
+  (run-rack-arrangement
+   (update-hints hints `((:world :reality)))))
+
+;;;
 ;;; Top-Level Plans
 ;;;
 
-(def-top-level-cram-function arrange-rack-objects (&key hints)
-  "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
-  (with-process-modules
-    (let ((target-arrangement (make-target-arrangement :hints hints)))
-      (declare (ignore target-arrangement))
-      ;; TODO(winkler): Arrange objects here.
-      )))
-
-(def-top-level-cram-function arrange-rack-objects-simulated ()
-  (prepare-settings)
+(def-cram-function rack-arrangement (&key hints)
+  "Performs a rack-tidying up scenario by controlling a PR2 robot that rearranges objects, based on a given target arrangement."
   (let ((rack (first (get-racks))))
-    (prepare-simulated-scene :simple t)
     (move-torso)
     (move-arms-away)
-    (with-simulation-process-modules
-      ;; First, perceive scene
-      (achieve `(rack-scene-perceived ,rack))
-      (with-designators ((the-object (object `())))
-        ;; TODO(winkler): Resolve `the-object' to a suitable test
-        ;; object on the rack.
-        (achieve `(object-picked-from-rack ,rack ,the-object))))))
+    ;; First, perceive scene
+    (achieve `(rack-scene-perceived ,rack))
+    (with-designators ((the-object (object `())))
+      ;; TODO(winkler): Resolve `the-object' to a suitable test
+      ;; object on the rack.
+      (achieve `(object-picked-from-rack ,rack ,the-object)))))
+
+(def-top-level-cram-function run-rack-arrangement (&key hints)
+  "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
+  (prepare-settings)
+  (let ((world (get-hint hints :world :reality)))
+    (ecase world
+      (:simulation
+       (with-simulation-process-modules
+         (prepare-simulated-scene
+          :simple (eql (get-hint hints :simulation-type) :simple))
+         (rack-arrangement :hints hints)))
+      (:reality
+       (with-process-modules
+         (rack-arrangement :hints hints))))))

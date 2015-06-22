@@ -51,6 +51,19 @@
             (cl-urdf:parse-urdf (pathname urdf-path))))
     (gethash urdf-path *shopping-item-urdfs*)))
 
+(defun get-hint (hints hint-symbol &optional default)
+  (let ((result (find hint-symbol hints
+                      :test (lambda (x y) (eql x (car y))))))
+    (cond (result result)
+          (t (when default default)))))
+
+(defun update-hints (hints updates)
+  (let ((hints-without-updated
+          (remove-if (lambda (hint)
+                       (get-hint updates (car hint)))
+                     hints)))
+    (append hints-without-updated updates)))
+
 (defmacro with-process-modules (&body body)
   "Implicitly runs process modules necessary for operating the PR2 robot. The started (and after finishing the body code also automatically evaporated) process modules are:
 
