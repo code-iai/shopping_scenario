@@ -59,12 +59,16 @@
 ;;;
 
 (defun run-simulated (&key hints)
-  (run-rack-arrangement
-   (update-hints hints `((:world :simulation)))))
+  (run-rack-arrangement-protected
+   :hints (update-hints hints `((:world :simulation)))))
 
 (defun run-reality (&key hints)
-  (run-rack-arrangement
-   (update-hints hints `((:world :reality)))))
+  (run-rack-arrangement-protected
+   :hints (update-hints hints `((:world :reality)))))
+
+(defun run-rack-arrangement-protected (&key hints)
+  (when (check-system-settings :hints hints)
+    (run-rack-arrangement :hints hints)))
 
 ;;;
 ;;; Top-Level Plans
