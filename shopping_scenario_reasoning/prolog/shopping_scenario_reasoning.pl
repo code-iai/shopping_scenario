@@ -206,7 +206,7 @@ position_on_rack(X, Y, Z, LevelHeight, Rack, RackLevel) :-
     rack_level(Rack, RackLevel),
     object_position(RackLevel, RLX, RLY, RLZ),
     
-    object_dimensions_restricted(RackLevel, LevelDepth, LevelWidth, LevelHeight),
+    object_dimensions_restricted(RackLevel, LevelDepth, LevelWidth, _),
     
     rr_call('positionOnRackLevel', [X, Y, Z, RLX, RLY, RLZ, LevelWidth, LevelDepth, LevelHeight], Result),
     jpl_is_true(Result).
