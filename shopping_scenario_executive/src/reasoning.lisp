@@ -140,16 +140,14 @@
 (defun get-item-urdf-path (item)
   "Returns the absolute URDF file path for an item `item' (if set in the semantic information supplied to KnowRob)."
   (with-first-prolog-vars-bound (?urdfpath)
-      `("item_urdf_path" ,(add-prolog-namespace item)
-                         ?urdfpath)
+      `("item_urdf_path" ,(add-prolog-namespace item) ?urdfpath)
     (json-symbol->string ?urdfpath)))
 
 (defun get-item-dimensions (item)
   "Returns the dimensions `(width depth height)' of an item `item' as vector."
   (with-first-prolog-vars-bound (?width ?depth ?height)
       `("object_dimensions_restricted"
-        ,(add-prolog-namespace item)
-        ?width ?depth ?height)
+        ,(add-prolog-namespace item) ?width ?depth ?height)
     (vector ?width ?depth ?height)))
 
 (defun get-items-by-class-type (class-type)
