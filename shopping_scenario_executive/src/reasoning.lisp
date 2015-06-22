@@ -58,7 +58,10 @@
      (subseq prolog-symbol (1+ delimiter-position))
      (subseq prolog-symbol 0 delimiter-position))))
 
-(defun add-prolog-namespace (symbol &key (namespace "http://knowrob.org/kb/ias_semantic_map.owl") (delimiter '\#))
+(defun strip-prolog-string (symbol)
+  (split-prolog-symbol (json-symbol->string symbol)))
+
+(defun add-prolog-namespace (symbol &key (namespace "http://knowrob.org/kb/knowrob.owl") (delimiter '\#))
   "Concatenates a string that consists of the given `namespace', the `delimiter', and finally the `symbol'."
   (concatenate
    'string
@@ -70,7 +73,7 @@
   "Returns all shopping items known in the current semantic environment."
   (with-prolog-vars-bound (?item)
       `("shopping_item" ?item)
-    (split-prolog-symbol (json-symbol->string ?item))))
+    (strip-prolog-string ?item)))
 
 (defun is-stackable (item)
   "Returns whether the shopping item `item' is stackable or not."
@@ -81,7 +84,7 @@
   "Returns all racks known in the current semantic environment."
   (with-prolog-vars-bound (?rack)
       `("rack" ?rack)
-    (split-prolog-symbol (json-symbol->string ?rack))))
+    (strip-prolog-string ?rack)))
 
 (defun get-rack-pose (rack)
   "Return the pose of the given rack, in `map' coordinates."
@@ -93,13 +96,13 @@
   "Returns all rack levels for the given rack `rack'."
   (with-prolog-vars-bound (?racklevel)
       `("rack_level" ,(add-prolog-namespace rack) ?racklevel)
-    (split-prolog-symbol (json-symbol->string ?racklevel))))
+    (strip-prolog-string ?racklevel)))
 
 (defun get-rack-on-level (rack level)
   "Returns the rack level `level' on rack `rack'. `level' is an integer."
   (with-first-prolog-vars-bound (?racklevel)
       `("rack_on_level" ,(add-prolog-namespace rack) ,level ?racklevel)
-    (split-prolog-symbol (json-symbol->string ?racklevel))))
+    (strip-prolog-string ?racklevel)))
 
 (defun location-on-rack-level (rack level)
   "Generates a location designator that describes a three dimensional pose on the two dimensional plane of the given rack level `level' on rack `rack'. `level' is an integer."
@@ -117,7 +120,7 @@
         `("position_on_rack"
           ,(tf:x origin) ,(tf:y origin) ,(tf:z origin)
           0.3 ,(add-prolog-namespace rack) ?racklevel)
-      (split-prolog-symbol (json-symbol->string ?racklevel)))))
+      (strip-prolog-string ?racklevel))))
 
 (defun get-rack-level-elevation (racklevel)
   "Returns the z-coordinate of the surface of the rack level `racklevel'."
@@ -152,11 +155,8 @@
 (defun get-items-by-class-type (class-type)
   "Returns all item instances that are of class type `class-type'."
   (with-prolog-vars-bound (?item)
-      `("item_class_type" ,(add-prolog-namespace
-                            class-type
-                            :namespace "http://knowrob.org/kb/knowrob.owl")
-                          ?item)
-    (split-prolog-symbol (json-symbol->string ?item))))
+      `("item_class_type" ,(add-prolog-namespace class-type) ?item)
+    (strip-prolog-string ?item)))
 
 (defun get-item-primitive-shape (item)
   (with-first-prolog-vars-bound (?primitiveshape)
@@ -192,3 +192,24 @@
                            `((desig-props:pose ,handle-pose))))
          (desig-props:grasp-type ,(intern (string-upcase grasp-type)
                                           'desig-props)))))))
+
+(defun shopping-item-classes (&key (base-class "ShoppingItem"))
+  (cpl:mapcar-clean
+   (lambda (class)
+     (let ((stripped-class (strip-prolog-string class)))
+       (unless (string= stripped-class base-class)
+         stripped-class)))
+   (with-prolog-vars-bound (?class)
+      `("owl_subclass_of" ?class ,(add-prolog-namespace base-class))
+    ?class)))
+
+(defun shopping-item-class-p (class)
+  (not (not (find class (shopping-item-classes) :test #'string=))))
+
+(defun add-shopping-item (class)
+  (assert (shopping-item-class-p class)
+          ()
+          "Class `~a' is not a subclass of `ShoppingItem'." class)
+  (with-first-prolog-vars-bound (?instance)
+      `("add_shopping_item" ,(add-prolog-namespace class) ?instance)
+    (strip-prolog-string ?instance)))
