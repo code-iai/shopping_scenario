@@ -50,8 +50,8 @@ public class RackReasoner {
      *  are considered to be on the level.
      */
     public boolean positionOnRackLevel(double dPoseX, double dPoseY, double dPoseZ, double dRackLevelX, double dRackLevelY, double dRackLevelZ, double dLevelWidth, double dLevelDepth, double dLevelHeight) {
-	return (dPoseX >= dRackLevelX - dLevelWidth / 2 && dPoseX < dRackLevelX + dLevelWidth / 2 &&
-		dPoseY >= dRackLevelY - dLevelDepth / 2 && dPoseY < dRackLevelY + dLevelDepth / 2 &&
+	return (dPoseX >= dRackLevelX - dLevelDepth / 2 && dPoseX < dRackLevelX + dLevelDepth / 2 &&
+		dPoseY >= dRackLevelY - dLevelWidth / 2 && dPoseY < dRackLevelY + dLevelWidth / 2 &&
 		dPoseZ >= dRackLevelZ && dPoseZ < dRackLevelZ + dLevelHeight);
     }
     
