@@ -389,6 +389,21 @@
            (resolve-and-spawn-object-arrangement simple-arrangement)))
         (t (spawn-random-object-arrangement))))
 
+(defmacro try-all-objects ((var list) &body body)
+  "Tries all objects in `list', binding each of the to the variable `var'. In that environment, `body' is executed. Failures of type `object-not-found', `manipulation-pose-unreachable', `manipulation-failure', and `location-not-reached-failure' are caught implicitly, and the next object is tried."
+  `(block try-all-objects
+     (dolist (,var ,list)
+       (block try-all-objects-safety
+         (cpl:with-failure-handling
+             (((or cram-plan-failures:object-not-found
+                   cram-plan-failures:manipulation-pose-unreachable
+                   cram-plan-failures:manipulation-failure
+                   cram-plan-failures:location-not-reached-failure) (f)
+                (declare (ignore f))
+                (return-from try-all-objects-safety)))
+           (let ((result (progn ,@body)))
+             (return-from try-all-objects result)))))))
+
 (defun get-shopping-objects (&key class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
   (let ((shopping-items (or (and class-type (get-items-by-class-type class-type))

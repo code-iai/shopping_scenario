@@ -96,20 +96,9 @@
               (achieve `(objects-detected-in-rack ,rack ,the-object))))
         (unless detected-objects
           (cpl:fail 'cram-plan-failures:object-not-found))
-        (block pick-detected-object
-          (dolist (detected-object detected-objects)
-            (block pick-detected-object-safety
-              (cpl:with-failure-handling
-                  (((or cram-plan-failures:object-not-found
-                        cram-plan-failures:manipulation-pose-unreachable
-                        cram-plan-failures:manipulation-failure
-                        cram-plan-failures:location-not-reached-failure) (f)
-                     (declare (ignore f))
-                     (return-from pick-detected-object-safety)))
-                (achieve `(object-picked-from-rack
-                           ,rack ,detected-object))
-                (equate the-object detected-object)
-                (return-from pick-detected-object)))))))))
+        (try-all-objects (detected-object detected-objects)
+          (achieve `(object-picked-from-rack ,rack ,detected-object))
+          (equate the-object detected-object))))))
 
 (def-top-level-cram-function run-rack-arrangement (&key hints)
   "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
