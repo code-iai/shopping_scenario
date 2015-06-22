@@ -53,8 +53,7 @@
 
 (def-goal (achieve (object-picked-from-rack ?rack ?object))
   "Repositions the robot's torso in order to be able to properly reach the rack level the object is residing on, and start picking up the object, repositioning and reperceiving as necessary."
-  (let* ((rack-level (get-object-rack-level
-                      ?rack (desig-prop-value ?object 'name)))
+  (let* ((rack-level (get-object-rack-level ?rack ?object))
          (elevation (get-rack-level-elevation rack-level)))
     ;; NOTE(winkler): Reposition robot torso according to rack level
     ;; height. This is a heuristic transformation which maps the
