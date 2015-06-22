@@ -52,8 +52,8 @@
     (gethash urdf-path *shopping-item-urdfs*)))
 
 (defun get-hint (hints hint-symbol &optional default)
-  (let ((result (find hint-symbol hints
-                      :test (lambda (x y) (eql x (car y))))))
+  (let ((result (cadr (find hint-symbol hints
+                            :test (lambda (x y) (eql x (car y)))))))
     (cond (result result)
           (t (when default default)))))
 
@@ -451,3 +451,28 @@
   (let* ((level (get-rack-on-level rack level))
          (elevation (get-rack-level-elevation level)))
     (move-torso (/ elevation 5.0))))
+
+(defun check-system-settings (&key hints)
+  (when (cond ((eql (roslisp:node-status) :shutdown)
+               (roslisp:ros-error
+                (check) "The ROS node is not connected.")
+               nil)
+              (t t))
+    (when (case (get-hint hints :world)
+            (:reality
+             (cond ((cram-uima:uima-present)
+                    t)
+                   (t (roslisp:ros-error
+                       (check) "RoboSherlock service not present.")
+                      nil)))
+            (:simulation
+             (cond ((cram-gazebo-utilities:gazebo-present)
+                    t)
+                   (t (roslisp:ros-error
+                       (check) "Gazebo spawn service not present.")
+                      nil))))
+      (cond ((roslisp:has-param "/robot_description_lowres")
+             t)
+            (t (roslisp:ros-error
+                (check) "Low-Resolution robot model not present on the parameter server.")
+               nil)))))
