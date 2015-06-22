@@ -33,6 +33,7 @@
 :- module(shopping_scenario_reasoning,
     [
       shopping_item/1,
+      add_shopping_item/2,
       is_stackable/1,
       rack/1,
       rack_level/2,
@@ -63,6 +64,7 @@
 
 :-  rdf_meta
     shopping_item(r),
+    add_shopping_item(r, r),
     is_stackable(r, r),
     rack(r),
     rack_level(r, r),
@@ -332,3 +334,12 @@ grasp_type(SemanticHandle, Type) :-
 handle_pose(SemanticHandle, Matrix) :-
     owl_has(SemanticHandle, knowrob:'handlePose', Pose),
     rotmat_to_list(Pose, Matrix).
+
+
+%% add_shopping_item(?Type, ?Item) is nondet.
+%
+% @param Type     The class type of the item to add
+% @param Item     The added item
+%
+add_shopping_item(Type, Item) :-
+    rdf_instance_from_class(Type, Item).
