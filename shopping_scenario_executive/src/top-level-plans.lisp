@@ -59,14 +59,17 @@
 ;;;
 
 (defun run-simulated (&key hints)
+  "Shortcut for running the rack arrangement scenario in simulation."
   (run-rack-arrangement-protected
    :hints (update-hints hints `((:world :simulation)))))
 
 (defun run-reality (&key hints)
+  "Shortcut for running the rack arrangement scenario in reality."
   (run-rack-arrangement-protected
    :hints (update-hints hints `((:world :reality)))))
 
 (defun run-rack-arrangement-protected (&key hints)
+  "Runs the rack arrangement scenario in an environment protected by `check-system-settings'."
   (when (check-system-settings :hints hints)
     (run-rack-arrangement :hints hints)))
 
