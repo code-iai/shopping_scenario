@@ -228,3 +228,9 @@
   (with-first-prolog-vars-bound (?class)
       `("object_type" ,(add-prolog-namespace item) ?class)
     (strip-prolog-string ?class)))
+
+(defun remove-all-shopping-items ()
+  "Removes all known shopping items from the knowledge base."
+  (let ((items (get-shopping-items)))
+    (dolist (item items)
+      (remove-shopping-item item))))
