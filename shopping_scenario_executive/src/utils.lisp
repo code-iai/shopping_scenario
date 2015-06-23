@@ -281,13 +281,15 @@
                                `((desig-props:grasp-type ,grasp-type)))))
         collect handle-object))
 
-(defun spawn-model-on-rack-level-index (rack level model urdf x y rotation)
+(defun spawn-model-on-rack-level-index (rack level model urdf x y elevation rotation)
   (spawn-model-on-rack-level
-   (get-rack-on-level rack level) model urdf x y rotation))
+   (get-rack-on-level rack level) model urdf x y elevation rotation))
 
-(defun spawn-model-on-rack-level (racklevel model urdf x y rotation)
+(defun spawn-model-on-rack-level (racklevel model urdf x y elevation rotation)
   "Spawns the URDF model `urdf' (path) of the object `model' (model name) on the named rack level `racklevel',  at lower-left relative coordinates `x', `y'. `rotation' is the object's rotation, and defaults to a zero-rotation."
-  (let* ((elevation 0.01)
+  ;; This elevation helps not spawning objects inside of each
+  ;; other. Like the shopping item inside of the rack level.
+  (let* ((elevation (+ elevation 0.01))
          (pose (get-rack-level-relative-pose
                 racklevel x y elevation rotation)))
     (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
@@ -295,12 +297,14 @@
 (defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
   "Spawns the object `item' on the indexed rack level `level' at lower-left relative coordinates `x', `y'. Optionally, the object's `rotation' can be set. This defaults to a zero-rotation."
   (let ((urdf (get-item-urdf-path item)))
-    (spawn-model-on-rack-level-index (first (get-racks)) level item urdf x y rotation)))
+    (spawn-model-on-rack-level-index
+     (first (get-racks)) level
+     item urdf x y 0 rotation)))
 
-(defun spawn-shopping-item-on-named-level (item level x y &optional (rotation (tf:euler->quaternion)))
+(defun spawn-shopping-item-on-named-level (item level x y elevation &optional (rotation (tf:euler->quaternion)))
   "Spawns the object `item' on the named rack level `level' at lower-left relative coordinates `x', `y'. Optionally, the object's `rotation' can be set. This defaults to a zero-rotation."
   (let ((urdf (get-item-urdf-path item)))
-    (spawn-model-on-rack-level level item urdf x y rotation)))
+    (spawn-model-on-rack-level level item urdf x y elevation rotation)))
 
 (defun make-empty-object-arrangement ()
   "Creates an empty arrangement map for mapping objects to their positions on a rack."
@@ -381,11 +385,21 @@
 (defun resolve-and-spawn-object-arrangement (arrangement)
   (let ((resolved-arrangement (resolve-object-arrangement arrangement)))
     (dolist (object-position resolved-arrangement)
-      (destructuring-bind (item racklevel y-offset x-offset)
+      (destructuring-bind (items racklevel y-offset x-offset)
           object-position
-        (spawn-shopping-item-on-named-level
-         item racklevel x-offset y-offset
-         (tf:euler->quaternion :az (/ pi 2)))))))
+        (let ((combined-heights
+                (loop for i from 0 below (length items)
+                      as item = (elt items i)
+                      collect
+                      (loop for j from 0 below i
+                            summing
+                            (third (get-item-dimensions item))))))
+          (loop for i from 0 below (length items)
+                as item = (elt items i)
+                do (spawn-shopping-item-on-named-level
+                    item racklevel x-offset y-offset
+                    (elt combined-heights i)
+                    (tf:euler->quaternion :az (/ pi 2)))))))))
 
 (defun spawn-random-object-arrangement (&key hints)
   "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
