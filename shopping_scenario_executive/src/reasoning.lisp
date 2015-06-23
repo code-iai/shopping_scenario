@@ -158,18 +158,21 @@
     (strip-prolog-string ?item)))
 
 (defun get-item-primitive-shape (item)
+  "Returns the primitive shape of the shopping item `item' as denoted by the knowledge base."
   (with-first-prolog-vars-bound (?primitiveshape)
       `("object_primitive_shape" ,(add-prolog-namespace item)
                                  ?primitiveshape)
     (json-symbol->string ?primitiveshape)))
 
 (defun get-item-primitive-shape-symbol (item)
+  "Returns the same primitive shape as `get-item-primitive-shape', but transforms the returned string value into a Lisp symbol for all known shapes (`:box', `:cylinder'). The function defaults to `:box' if the shape is not available or not known."
   (or (case (get-item-primitive-shape item)
         ("box" :box)
         ("cylinder" :cylinder))
       :box))
 
 (defun get-item-semantic-handles (item)
+  "Lists all semantic handles of the item identified by `item' that are known in the knowledge base. All handles are returned as object designators of type `handle' and have a grasp-type (denoting how to approach the handle while grasping it) and a object-center relative pose."
   (with-prolog-vars-bound (?semantichandle)
       `("object_semantic_handle" ,(add-prolog-namespace item)
                                  ?semantichandle)
@@ -193,6 +196,7 @@
                                           'desig-props)))))))
 
 (defun shopping-item-classes (&key (base-class "ShoppingItem"))
+  "Lists all subclasses of the KnowRob base-class `ShoppingItem'. The base-class itself does not count towards the shopping item classes and is not considered a valid instantiation of a usable shopping item."
   (cpl:mapcar-clean
    (lambda (class)
      (let ((stripped-class (strip-prolog-string class)))
@@ -203,9 +207,11 @@
     ?class)))
 
 (defun shopping-item-class-p (class)
+  "Returns a boolean value denoting whether `class' is a valid shopping item class (i.e., a subclass of `ShoppingItem')."
   (not (not (find class (shopping-item-classes) :test #'string=))))
 
 (defun add-shopping-item (class)
+  "Adds a new shopping item instance of type `class' to the knowledge base."
   (assert (shopping-item-class-p class)
           ()
           "Class `~a' is not a subclass of `ShoppingItem'." class)
@@ -214,6 +220,7 @@
     (strip-prolog-string ?instance)))
 
 (defun remove-shopping-item (item)
+  "Removes the shopping item with the (namespace-less) OWL identifier `item'."
   (json-prolog:prolog `("remove_shopping_item"
                         ,(add-prolog-namespace item))))
 
