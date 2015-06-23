@@ -316,8 +316,9 @@
                    do (format t "\"~a\"~t" (aref arrangement j i)))
              (format t "~%"))))
 
-(defun make-random-object-arrangement ()
+(defun make-random-object-arrangement (&key hints)
   "Randomly places all known shopping items in a (m x n) grid such that it can be used to spawn the objects on an actual rack."
+  ;; TODO(winkler): Add support for the hints system
   (let* ((arrangement (make-empty-object-arrangement))
          (dimensions (array-dimensions arrangement))
          (objects (get-shopping-items)))
@@ -370,9 +371,10 @@
          item racklevel x-offset y-offset
          (tf:euler->quaternion :az (/ pi 2)))))))
 
-(defun spawn-random-object-arrangement ()
+(defun spawn-random-object-arrangement (&key hints)
   "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
-  (resolve-and-spawn-object-arrangement (make-random-object-arrangement)))
+  (resolve-and-spawn-object-arrangement
+   (make-random-object-arrangement :hints hints)))
 
 (defun delete-shopping-items-from-gazebo ()
   "Deletes (unspawns) all known shopping items from the current Gazebo scene."
@@ -380,14 +382,17 @@
     (dolist (item items)
       (cram-gazebo-utilities::delete-gazebo-model item))))
 
-(defun prepare-simulated-scene (&key simple)
+(defun prepare-simulated-scene (&key hints)
   "First deletes all shopping items from the Gazebo scene, and then populates the scenen with a random object arrangement."
   (delete-shopping-items-from-gazebo)
-  (cond (simple
-         (let ((simple-arrangement (make-empty-object-arrangement)))
-           (setf (aref simple-arrangement 2 2) "Kelloggs_sh876app")
-           (resolve-and-spawn-object-arrangement simple-arrangement)))
-        (t (spawn-random-object-arrangement))))
+  (let ((hints
+          (or (when (eql (get-hint hints :simulation-type) :simple)
+                (update-hints
+                 hints `((:items-scene-amount 1)
+                         (:items-scene-classes "Kelloggs"))))
+              hints)))
+    (populate-item-database :hints hints)
+    (spawn-random-object-arrangement :hints hints)))
 
 (defmacro try-all-objects ((var list) &body body)
   "Tries all objects in `list', binding each of the to the variable `var'. In that environment, `body' is executed. Failures of type `object-not-found', `manipulation-pose-unreachable', `manipulation-failure', and `location-not-reached-failure' are caught implicitly, and the next object is tried."
