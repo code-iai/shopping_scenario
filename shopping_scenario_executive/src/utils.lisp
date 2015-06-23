@@ -32,6 +32,7 @@
 (defvar *shopping-item-urdfs* (make-hash-table :test 'equal))
 
 (defparameter *rack-level-positions-row* 4)
+(defparameter *rack-level-positions-depth* 3)
 
 ;;;
 ;;; Infrastructure Utilities
@@ -305,20 +306,15 @@
   "Creates an empty arrangement map for mapping objects to their positions on a rack."
   (let* ((rack (first (get-racks)))
          (rack-levels (get-rack-levels rack)))
-    (make-array `(,(length rack-levels) ,*rack-level-positions-row*)
+    (make-array `(,(length rack-levels)
+                  ,*rack-level-positions-row*
+                  ,*rack-level-positions-depth*)
                 :initial-element (unless map ""))))
-
-(defun print-object-arrangement (arrangement)
-  "Prints an object arrangement."
-  (let ((dimensions (array-dimensions arrangement)))
-    (loop for i from 0 below (first dimensions)
-          do (loop for j from 0 below (second dimensions)
-                   do (format t "\"~a\"~t" (aref arrangement j i)))
-             (format t "~%"))))
 
 (defun make-random-object-arrangement (&key hints)
   "Randomly places all known shopping items in a (m x n) grid such that it can be used to spawn the objects on an actual rack."
   ;; TODO(winkler): Add support for the hints system
+  (declare (ignore hints))
   (let* ((arrangement (make-empty-object-arrangement))
          (dimensions (array-dimensions arrangement))
          (objects (get-shopping-items)))
@@ -326,8 +322,9 @@
           as object = (first objects)
           as i = (random (first dimensions))
           as j = (random (second dimensions))
-          when (string= (aref arrangement i j) "")
-            do (setf (aref arrangement i j) object)
+          as k = (random (third dimensions))
+          when (string= (aref arrangement i j k) "")
+            do (setf (aref arrangement i j k) object)
                (setf objects (remove object objects)))
     arrangement))
 
@@ -336,37 +333,45 @@
   (let ((dimensions (array-dimensions arrangement))
         (positions (make-arrangement-position-map)))
     (loop for i from 0 below (first dimensions)
-          append (loop for j from 0 below (second dimensions)
-                       as item = (aref arrangement i j)
-                       when (not (string= item ""))
-                         collect
-                         (destructuring-bind (rack-level . offset)
-                             (aref positions i j)
-                           `(,item ,rack-level ,offset))))))
+          append
+          (loop for j from 0 below (second dimensions)
+                append
+                (loop for k from 0 below (third dimensions)
+                      as item = (aref arrangement i j k)
+                      when (not (string= item ""))
+                        collect
+                        (destructuring-bind
+                            (rack-level . (offset-h offset-d))
+                            (aref positions i j k)
+                          `(,item ,rack-level ,offset-h ,offset-d)))))))
 
 (defun make-arrangement-position-map ()
   "Creates a grid template (m x n matrix) that describes the layout of a rack, mentioning which position on the grid reflects which rack level (using its unique identifier), and what its offset from the left lower corner would be."
   (let* ((rack (first (get-racks)))
          (map (make-empty-object-arrangement :map t))
          (dimensions (array-dimensions map))
-         (items-per-row (second dimensions)))
+         (items-per-row (second dimensions))
+         (items-depth (third dimensions)))
     (loop for i from 0 below (first dimensions)
           as rack-level = (get-rack-on-level rack i)
           as rack-width = (elt (get-item-dimensions rack-level) 1)
           as item-space = (/ rack-width items-per-row)
           do (loop for j from 0 below items-per-row
-                   as offset = (- (+ (* j item-space)
-                                     (* item-space 0.5))
-                                  (/ rack-width 2))
-                   do (setf (aref map i j)
-                            (cons rack-level offset))))
+                   as offset-h = (- (+ (* j item-space)
+                                       (* item-space 0.5))
+                                    (/ rack-width 2))
+                   do (loop for k from 0 below items-depth
+                            as offset-d = (+ (* k 0.1) -0.15)
+                            do (setf (aref map i j k)
+                                     (cons rack-level `(,offset-h
+                                                        ,offset-d))))))
     map))
 
 (defun resolve-and-spawn-object-arrangement (arrangement)
-  (let ((resolved-arrangement (resolve-object-arrangement arrangement))
-        (x-offset -0.15))
+  (let ((resolved-arrangement (resolve-object-arrangement arrangement)))
     (dolist (object-position resolved-arrangement)
-      (destructuring-bind (item racklevel y-offset) object-position
+      (destructuring-bind (item racklevel y-offset x-offset)
+          object-position
         (spawn-shopping-item-on-named-level
          item racklevel x-offset y-offset
          (tf:euler->quaternion :az (/ pi 2)))))))
