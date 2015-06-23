@@ -129,7 +129,7 @@
       `("rack_level_elevation" ,(add-prolog-namespace racklevel) ?elevation)
     ?elevation))
 
-(defun get-rack-level-relative-pose (racklevel x y z rotation)
+(defun get-rack-level-relative-pose (racklevel x y z &optional (rotation (tf:euler->quaternion)))
   "Returns (in absolute map coordinates) a pose stamped that describes the relative pose ((x y z) rotation) on the rack level `racklevel'."
   (with-first-prolog-vars-bound (?result)
       `("rack_level_relative_position"
