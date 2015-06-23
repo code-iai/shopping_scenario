@@ -52,6 +52,15 @@
 ;;      easily reachable for the PR2.
 ;;    - `:default': Spawns random object arrangements all over the
 ;;      whole rack. This is the default setting.
+;;
+;;  * `:items-scene-amount':
+;;    - Number of objects to spawn in the simulated world (and to
+;;      assert into the knowledge base). Defaults to 8.
+;;
+;;  * `:items-scene-classes':
+;;    - Which classes to use for spawning random objects in the
+;;      simulated world (and to assert into the knowledge
+;;      base). Defaults to all known shopping item classes.
 
 
 ;;;
