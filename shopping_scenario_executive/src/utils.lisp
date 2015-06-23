@@ -211,6 +211,28 @@
         (t
          (achieve `(cram-plan-library:object-in-hand ,object)))))
 
+(defun place-object (object location &key stationary)
+  (cpl:with-failure-handling
+      ((cram-plan-failures:manipulation-pose-unreachable (f)
+         (declare (ignore f))
+         (cram-plan-library::retry-with-updated-location
+          location (next-solution location)))
+       (cram-plan-failures:location-not-reached-failure (f)
+         (declare (ignore f))
+         (ros-warn (longterm) "Cannot reach location. Retrying.")
+         (cpl:retry)))
+    (let ((side (var-value
+                 '?side
+                 (lazy-car (crs:prolog
+                            `(cram-plan-library:object-in-hand
+                              ,object ?side))))))
+      (cond (stationary
+             `(achieve `(cram-plan-library::object-put
+                         ,object ,location)))
+            (t
+             `(achieve `(cram-plan-library::object-placed-at
+                         ,object ,location)))))))
+
 (defun perceive-a (object &key stationary (move-head t))
   (cpl:with-failure-handling
       ((cram-plan-failures:object-not-found (f)
@@ -433,6 +455,16 @@
                 (return-from try-all-objects-safety)))
            (let ((result (progn ,@body)))
              (return-from try-all-objects result)))))))
+
+(defmacro try-forever (&body body)
+  `(cpl:with-failure-handling
+       (((or cram-plan-failures:object-not-found
+             cram-plan-failures:manipulation-pose-unreachable
+             cram-plan-failures:manipulation-failure
+             cram-plan-failures:location-not-reached-failure) (f)
+         (declare (ignore f))
+         (cpl:retry)))
+     ,@body))
 
 (defun get-shopping-objects (&key class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
