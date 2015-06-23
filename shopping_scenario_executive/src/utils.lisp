@@ -202,9 +202,6 @@
   (move-arms-up :side :left)
   (move-arms-up :side :right))
 
-(defun make-target-arrangement (&key hints)
-  )
-
 (defun pick-object (object &key stationary)
   (cond (stationary
          (achieve `(cram-plan-library:object-picked ,object)))
