@@ -34,6 +34,7 @@
     [
       shopping_item/1,
       add_shopping_item/2,
+      remove_shopping_item/1,
       is_stackable/1,
       rack/1,
       rack_level/2,
@@ -66,6 +67,7 @@
 :-  rdf_meta
     shopping_item(r),
     add_shopping_item(r, r),
+    remove_shopping_item(r),
     is_stackable(r, r),
     rack(r),
     rack_level(r, r),
@@ -352,7 +354,15 @@ handle_pose(SemanticHandle, Matrix) :-
 %% add_shopping_item(?Type, ?Item) is nondet.
 %
 % @param Type     The class type of the item to add
-% @param Item     The added item
+% @param Item     The added item instance
 %
 add_shopping_item(Type, Item) :-
     rdf_instance_from_class(Type, Item).
+
+
+%% remove_shopping_item(?Item) is nondet.
+%
+% @param Item     The item to remove
+%
+remove_shopping_item(Item) :-
+    rdf_retractall(Item, _, _).
