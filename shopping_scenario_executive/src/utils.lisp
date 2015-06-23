@@ -500,3 +500,14 @@
               (t (roslisp:ros-error
                   (check) "JSON-Prolog query service not present.")
                  nil))))))
+
+(defun populate-item-database (&key hints)
+  "Populates the item database with a new distribution of item instances, removing all formerly known instances of shopping items. The hints system here understands the two keywords `:items-scene-amount', denoting an integer value of how many items should be inserted into the knowledge base, and `:items-scene-classes', describing which item classes may be used for population. The former defaults to 8 items, the latter to all known shopping item classes."
+  (remove-all-shopping-items)
+  (let* ((amount (get-hint hints :items-scene-amount 8))
+         (valid-classes (get-hint hints :items-scene-classes
+                                  (shopping-item-classes))))
+    (loop for i from 0 below amount
+          as class-idx = (random (length valid-classes))
+          as class = (elt valid-classes class-idx)
+          do (add-shopping-item class))))
