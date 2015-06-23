@@ -80,3 +80,22 @@
     ;; TODO(winkler): Extend this such that it makes use of the above
     ;; properties, and reflects the respectiv behavior.
     (perceive-all ?object-template)))
+
+(declare-goal object-handover (object target-hand)
+  "Hands over the held object `object' such that it is held by the hand `target-hand', if not already true."
+  (declare (ignore object target-hand))
+  (roslisp:ros-info (shopping plans) "OBJECT-HANDOVER"))
+
+(def-goal (achieve (object-handover ?object ?target-hand))
+  (let ((current-hand
+          (assoc '?hand
+                 (lazy-car
+                  (crs:prolog `(pr2-manip-pm::object-in-hand
+                                ,?object ?hand))))))
+    (unless (eql current-hand ?target-hand)
+      ;; TODO(winkler): Implement the handover here. Ideally, the
+      ;; `programmatic' motion strategy is done in the PR2
+      ;; manipulation process module, while this plan only supplies it
+      ;; with the necessary information and parameterizes the task.
+      (roslisp:ros-warn
+       (shopping plans) "Handover not yet implemented!"))))

@@ -78,4 +78,7 @@
     (crs:fail))
 
   (<- (rack-scene-perceived)
-    (crs:fail)))
+    (crs:fail))
+  
+  (<- (object-handover ?object ?target-hand)
+    (not (pr2-manip-pm::object-in-hand ?object ?target-hand))))
