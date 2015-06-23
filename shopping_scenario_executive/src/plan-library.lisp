@@ -99,3 +99,16 @@
       ;; with the necessary information and parameterizes the task.
       (roslisp:ros-warn
        (shopping plans) "Handover not yet implemented!"))))
+
+(declare-goal object-placed-on-rack (object level x y)
+  "Attempts to place the object `object' on the racklevel `level' of rack `rack'. `x' and `y' are center-relative coordinates on that racklevel."
+  (declare (ignore object level x y))
+  (roslisp:ros-info (shopping plans) "OBJECT-PLACED-ON-RACK"))
+
+(def-goal (achieve (object-placed-on-rack ?object ?level ?x ?y))
+  (let* ((elevation 0.0)
+         (absolute-pose (get-rack-level-relative-pose
+                         ?level ?x ?y elevation)))
+    (with-designators ((loc (location `((desig-props:pose
+                                         ,absolute-pose)))))
+      (place-object ?object loc))))
