@@ -77,29 +77,6 @@
 ;;; Top-Level Plans
 ;;;
 
-(def-cram-function rack-arrangement (&key hints)
-  "Performs a rack-tidying up scenario by controlling a PR2 robot that rearranges objects, based on a given target arrangement."
-  (let ((rack (first (get-racks))))
-    (move-torso)
-    (move-arms-away)
-    ;; First, perceive scene
-    (achieve `(rack-scene-perceived ,rack))
-    (with-designators ((the-object
-                        (object
-                         (cond ((eql (get-hint hints :simulation-type)
-                                     :simple)
-                               `((desig-props:name
-                                  "Kelloggs_sh876app")))))))
-      ;; TODO(winkler): Resolve `the-object' to a suitable test
-      ;; object on the rack.
-      (let ((detected-objects
-              (achieve `(objects-detected-in-rack ,rack ,the-object))))
-        (unless detected-objects
-          (cpl:fail 'cram-plan-failures:object-not-found))
-        (try-all-objects (detected-object detected-objects)
-          (achieve `(object-picked-from-rack ,rack ,detected-object))
-          (equate the-object detected-object))))))
-
 (def-top-level-cram-function run-rack-arrangement (&key hints)
   "Main scenario entry point to start arranging objects. The `hints' (if defined) are forwarded to the target arrangement sampler."
   (prepare-settings)
@@ -107,9 +84,25 @@
     (ecase world
       (:simulation
        (with-simulation-process-modules
-         (prepare-simulated-scene
-          :simple (eql (get-hint hints :simulation-type) :simple))
+         (prepare-simulated-scene :hints hints)
          (rack-arrangement :hints hints)))
       (:reality
        (with-process-modules
          (rack-arrangement :hints hints))))))
+
+(def-cram-function rack-arrangement (&key hints)
+  "Performs a rack-tidying up scenario by controlling a PR2 robot that rearranges objects, based on a given target arrangement."
+  (let ((rack (first (get-racks))))
+    (move-torso)
+    (move-arms-away)
+    ;; First, perceive scene
+    (achieve `(rack-scene-perceived ,rack))
+    (let ((objects (get-shopping-objects)))
+      (dolist (object objects)
+        (let ((detected-objects
+                (achieve `(objects-detected-in-rack ,rack ,object))))
+          (unless detected-objects
+            (cpl:fail 'cram-plan-failures:object-not-found))
+          (try-all-objects (detected-object detected-objects)
+            (achieve `(object-picked-from-rack ,rack ,detected-object))
+            (equate object detected-object)))))))
