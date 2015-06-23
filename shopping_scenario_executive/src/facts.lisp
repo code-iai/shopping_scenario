@@ -81,4 +81,7 @@
     (crs:fail))
   
   (<- (object-handover ?object ?target-hand)
-    (not (pr2-manip-pm::object-in-hand ?object ?target-hand))))
+    (not (pr2-manip-pm::object-in-hand ?object ?target-hand)))
+  
+  (<- (object-placed-on-rack ?object ?level ?x ?y)
+    (crs:fail)))
