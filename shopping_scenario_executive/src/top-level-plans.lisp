@@ -105,4 +105,10 @@
             (cpl:fail 'cram-plan-failures:object-not-found))
           (try-all-objects (detected-object detected-objects)
             (achieve `(object-picked-from-rack ,rack ,detected-object))
-            (equate object detected-object)))))))
+            (equate object detected-object))
+          (try-forever
+            (let ((level (get-rack-on-level rack 2))
+                  (x -0.15)
+                  (y 0.0))
+              (achieve `(object-placed-on-rack
+                         ,object ,level ,x ,y)))))))))
