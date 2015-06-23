@@ -302,30 +302,40 @@
   (let ((urdf (get-item-urdf-path item)))
     (spawn-model-on-rack-level level item urdf x y rotation)))
 
-(defun make-empty-object-arrangement (&key map)
+(defun make-empty-object-arrangement ()
   "Creates an empty arrangement map for mapping objects to their positions on a rack."
   (let* ((rack (first (get-racks)))
          (rack-levels (get-rack-levels rack)))
     (make-array `(,(length rack-levels)
                   ,*rack-level-positions-row*
                   ,*rack-level-positions-depth*)
-                :initial-element (unless map ""))))
+                :initial-element nil)))
 
 (defun make-random-object-arrangement (&key hints)
-  "Randomly places all known shopping items in a (m x n) grid such that it can be used to spawn the objects on an actual rack."
+  "Randomly places all known shopping items in a (m x n) grid such that it can be used to spawn the respective objects on an actual rack."
   ;; TODO(winkler): Add support for the hints system
   (declare (ignore hints))
   (let* ((arrangement (make-empty-object-arrangement))
          (dimensions (array-dimensions arrangement))
-         (objects (get-shopping-items)))
-    (loop while objects
-          as object = (first objects)
+         (items (get-shopping-items)))
+    (loop while items
+          as item = (first items)
+          as stackable = (is-stackable item)
           as i = (random (first dimensions))
           as j = (random (second dimensions))
           as k = (random (third dimensions))
-          when (string= (aref arrangement i j k) "")
-            do (setf (aref arrangement i j k) object)
-               (setf objects (remove object objects)))
+          do (cond ((eql (aref arrangement i j k) nil)
+                    (setf (aref arrangement i j k) `(,item))
+                    (setf items (remove item items)))
+                   (t (let ((stored-items (aref arrangement i j k)))
+                        (when (and (< (length stored-items)
+                                      (1- *rack-level-positions-depth*))
+                                   stackable
+                                   (string= (get-item-class
+                                             (first stored-items))
+                                            (get-item-class item)))
+                          (push item (aref arrangement i j k))
+                          (setf items (remove item items)))))))
     arrangement))
 
 (defun resolve-object-arrangement (arrangement)
@@ -337,18 +347,19 @@
           (loop for j from 0 below (second dimensions)
                 append
                 (loop for k from 0 below (third dimensions)
-                      as item = (aref arrangement i j k)
-                      when (not (string= item ""))
-                        collect
-                        (destructuring-bind
-                            (rack-level . (offset-h offset-d))
-                            (aref positions i j k)
-                          `(,item ,rack-level ,offset-h ,offset-d)))))))
+                      append
+                      (loop for item in (aref arrangement i j k)
+                            collect
+                            (destructuring-bind
+                                (rack-level . (offset-h offset-d))
+                                (aref positions i j k)
+                              `(,item ,rack-level
+                                      ,offset-h ,offset-d))))))))
 
 (defun make-arrangement-position-map ()
   "Creates a grid template (m x n matrix) that describes the layout of a rack, mentioning which position on the grid reflects which rack level (using its unique identifier), and what its offset from the left lower corner would be."
   (let* ((rack (first (get-racks)))
-         (map (make-empty-object-arrangement :map t))
+         (map (make-empty-object-arrangement))
          (dimensions (array-dimensions map))
          (items-per-row (second dimensions))
          (items-depth (third dimensions)))
