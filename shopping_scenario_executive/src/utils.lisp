@@ -351,14 +351,19 @@
           (loop for j from 0 below (second dimensions)
                 append
                 (loop for k from 0 below (third dimensions)
+                      as items = (aref arrangement i j k)
                       append
-                      (loop for item in (aref arrangement i j k)
+                      (loop for l from 0 below (length items)
+                            as item = (elt items l)
+                            with elevation = 0
                             collect
                             (destructuring-bind
                                 (rack-level . (offset-h offset-d))
                                 (aref positions i j k)
+                              (setf elevation (+ elevation
+                                                 (elt (get-item-dimensions item) 2)))
                               `(,item ,rack-level
-                                      ,offset-h ,offset-d))))))))
+                                      ,offset-h ,offset-d ,elevation))))))))
 
 (defun make-arrangement-position-map ()
   "Creates a grid template (m x n matrix) that describes the layout of a rack, mentioning which position on the grid reflects which rack level (using its unique identifier), and what its offset from the left lower corner would be."
@@ -385,21 +390,11 @@
 (defun resolve-and-spawn-object-arrangement (arrangement)
   (let ((resolved-arrangement (resolve-object-arrangement arrangement)))
     (dolist (object-position resolved-arrangement)
-      (destructuring-bind (items racklevel y-offset x-offset)
+      (destructuring-bind (item racklevel y-offset x-offset elevation)
           object-position
-        (let ((combined-heights
-                (loop for i from 0 below (length items)
-                      as item = (elt items i)
-                      collect
-                      (loop for j from 0 below i
-                            summing
-                            (third (get-item-dimensions item))))))
-          (loop for i from 0 below (length items)
-                as item = (elt items i)
-                do (spawn-shopping-item-on-named-level
-                    item racklevel x-offset y-offset
-                    (elt combined-heights i)
-                    (tf:euler->quaternion :az (/ pi 2)))))))))
+        (spawn-shopping-item-on-named-level
+         item racklevel x-offset y-offset elevation
+         (tf:euler->quaternion :az (/ pi 2)))))))
 
 (defun spawn-random-object-arrangement (&key hints)
   "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
