@@ -32,7 +32,7 @@
 (defvar *shopping-item-urdfs* (make-hash-table :test 'equal))
 
 (defparameter *rack-level-positions-row* 4)
-(defparameter *rack-level-positions-depth* 3)
+(defparameter *rack-level-positions-depth* 1);3)
 
 ;;;
 ;;; Infrastructure Utilities
@@ -204,32 +204,34 @@
   (move-arms-up :side :right))
 
 (defun pick-object (object &key stationary)
-  (cond (stationary
-         (achieve `(cram-plan-library:object-picked ,object)))
-        (t
-         (achieve `(cram-plan-library:object-in-hand ,object)))))
+  (let ((object (desig:current-desig object)))
+    (cond (stationary
+           (achieve `(cram-plan-library:object-picked ,object)))
+          (t
+           (achieve `(cram-plan-library:object-in-hand ,object))))))
 
 (defun place-object (object location &key stationary)
-  (cpl:with-failure-handling
-      ((cram-plan-failures:manipulation-pose-unreachable (f)
-         (declare (ignore f))
-         (cram-plan-library::retry-with-updated-location
-          location (next-solution location)))
-       (cram-plan-failures:location-not-reached-failure (f)
-         (declare (ignore f))
-         (ros-warn (longterm) "Cannot reach location. Retrying.")
-         (cpl:retry)))
-    (let ((side (var-value
-                 '?side
-                 (lazy-car (crs:prolog
-                            `(cram-plan-library:object-in-hand
-                              ,object ?side))))))
-      (cond (stationary
-             `(achieve `(cram-plan-library::object-put
-                         ,object ,location)))
-            (t
-             `(achieve `(cram-plan-library::object-placed-at
-                         ,object ,location)))))))
+  (let ((object (desig:current-desig object)))
+    (cpl:with-failure-handling
+        ((cram-plan-failures:manipulation-pose-unreachable (f)
+           (declare (ignore f))
+           (cram-plan-library::retry-with-updated-location
+            location (next-solution location)))
+         (cram-plan-failures:location-not-reached-failure (f)
+           (declare (ignore f))
+           (ros-warn (longterm) "Cannot reach location. Retrying.")
+           (cpl:retry)))
+      (let ((side (var-value
+                   '?side
+                   (lazy-car (crs:prolog
+                              `(cram-plan-library:object-in-hand
+                                ,object ?side))))))
+        (cond (stationary
+               `(achieve `(cram-plan-library::object-put
+                           ,object ,location)))
+              (t
+               `(achieve `(cram-plan-library::object-placed-at
+                           ,object ,location))))))))
 
 (defun perceive-a (object &key stationary (move-head t))
   (cpl:with-failure-handling
@@ -464,27 +466,29 @@
          (cpl:retry)))
      ,@body))
 
+(defun get-named-shopping-object (item)
+  (let ((handles (get-item-semantic-handles item))
+        (shape (intern
+                (string-upcase
+                 (or
+                  (get-item-primitive-shape item)
+                  "box"))
+                'desig-props)))
+    (make-designator
+     'object `((desig-props:name ,item)
+               (desig-props:type ,(get-item-class item))
+               ,@(mapcar
+                  (lambda (handle)
+                    `(desig-props:handle ,handle))
+                  handles)
+               (desig-props:shape ,shape)))))
+
 (defun get-shopping-objects (&key class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
   (let ((shopping-items (or (and class-type (get-items-by-class-type class-type))
                             (get-shopping-items))))
     (mapcar
-     (lambda (item)
-       (let ((handles (get-item-semantic-handles item))
-             (shape (intern
-                     (string-upcase
-                      (or
-                       (get-item-primitive-shape item)
-                       "box"))
-                     'desig-props)))
-         (make-designator
-          'object `((desig-props:name ,item)
-                    (desig-props:type ,(get-item-class item))
-                    ,@(mapcar
-                       (lambda (handle)
-                         `(desig-props:handle ,handle))
-                       handles)
-                    (desig-props:shape ,shape)))))
+     #'get-named-shopping-object
      shopping-items)))
 
 (defun go-to-pose (pose)
@@ -571,3 +575,30 @@
           as class-idx = (random (length valid-classes))
           as class = (elt valid-classes class-idx)
           do (add-shopping-item class))))
+
+(defun enrich-object-description (object &key (equate t))
+  (let ((object-name (desig-prop-value object 'name)))
+    (cond (object-name
+           (roslisp:ros-info
+            (shopping utils)
+            "Enriching object `~a'." object-name)
+           (let* ((knowledge-object (get-named-shopping-object object-name))
+                  (knowledge-description (description knowledge-object))
+                  (old-desc-filtered
+                    (remove-if (lambda (x)
+                                 (find x (description object)
+                                       :test (lambda (x y)
+                                               (eql x (car y)))))
+                               knowledge-description))
+                  (new-description (append old-desc-filtered knowledge-description))
+                  (new-desig (make-effective-designator
+                              object
+                              :new-properties new-description
+                              :data-object (slot-value object 'desig-props:data))))
+             (cond (equate
+                    (equate object new-desig))
+                   (t new-desig))))
+          (t (roslisp:ros-info
+              (shopping utils)
+              "Not enriching unnamed object.")
+             object))))
