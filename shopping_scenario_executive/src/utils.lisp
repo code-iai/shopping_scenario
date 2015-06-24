@@ -169,6 +169,7 @@
 
 (defun init-btr-perception ()
   (cram-environment-representation:ignore-bullet-object-during-perception "floor")
+  (cram-environment-representation:ignore-bullet-object-during-perception 'floor)
   (cram-environment-representation:ignore-bullet-object-during-perception "ground_plane")
   (cram-environment-representation:ignore-bullet-object-during-perception 'cram-pr2-knowledge::pr2)
   (cram-environment-representation:ignore-bullet-object-during-perception (first (get-racks)))
