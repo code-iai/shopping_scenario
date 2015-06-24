@@ -594,7 +594,7 @@
                   (new-desig (make-effective-designator
                               object
                               :new-properties new-description
-                              :data-object (slot-value object 'desig-props:data))))
+                              :data-object (slot-value object 'desig:data))))
              (cond (equate
                     (equate object new-desig))
                    (t new-desig))))
