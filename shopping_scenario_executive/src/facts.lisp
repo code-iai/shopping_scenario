@@ -29,7 +29,7 @@
 
 (defun make-scenario-area-restriction-cost-function ()
   (let ((min-x -1.0)
-        (max-x 1.5)
+        (max-x 1.0)
         (min-y -0.5)
         (max-y 0.5))
     (lambda (x y)
