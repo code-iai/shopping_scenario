@@ -586,10 +586,10 @@
                   (knowledge-description (description knowledge-object))
                   (old-desc-filtered
                     (remove-if (lambda (x)
-                                 (find x (description object)
+                                 (find x knowledge-description
                                        :test (lambda (x y)
-                                               (eql x (car y)))))
-                               knowledge-description))
+                                               (eql (car x) (car y)))))
+                               (description object)))
                   (new-description (append old-desc-filtered knowledge-description))
                   (new-desig (make-effective-designator
                               object

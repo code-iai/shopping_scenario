@@ -79,6 +79,10 @@
     (declare (ignore type name pose))
     ;; TODO(winkler): Extend this such that it makes use of the above
     ;; properties, and reflects the respectiv behavior.
+
+    ;; NOTE(winkler): Somehow, the `at' property is missing here,
+    ;; making manipulation impossible. Need to figure out why it gets
+    ;; cut out; this needs fixing next!
     (mapcar (lambda (perceived-object)
               (enrich-object-description perceived-object))
             (perceive-all ?object-template))))
