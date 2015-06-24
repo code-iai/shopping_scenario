@@ -79,7 +79,9 @@
     (declare (ignore type name pose))
     ;; TODO(winkler): Extend this such that it makes use of the above
     ;; properties, and reflects the respectiv behavior.
-    (perceive-all ?object-template)))
+    (mapcar (lambda (perceived-object)
+              (enrich-object-description perceived-object))
+            (perceive-all ?object-template))))
 
 (declare-goal object-handover (object target-hand)
   "Hands over the held object `object' such that it is held by the hand `target-hand', if not already true."
