@@ -28,23 +28,26 @@
 
 (in-package :shopping-scenario-executive)
 
-(declare-goal rack-scene-perceived (rack)
+(declare-goal rack-scene-perceived (rack hints)
   "Triggers a scene perception action. This means that the robot backs off from the rack, goes into a suitable pose for looking at it, and looks at each rack level individually. All objects being perceived are automatically asserted into a) the belief state (bullet world), and b) the collision environment."
-  (declare (ignore rack))
+  (declare (ignore rack hints))
   (roslisp:ros-info (shopping plans) "SCENE-PERCEIVED"))
 
-(def-goal (achieve (rack-scene-perceived ?rack))
+(def-goal (achieve (rack-scene-perceived ?rack ?hints))
   ;; Iterate through all rack levels and add their contents to the
   ;; collision environment.
   (go-in-front-of-rack ?rack)
-  (loop for level in (get-rack-levels ?rack)
-        as pose = (get-rack-level-relative-pose
-                   level 0 0 0
-                   (cl-transforms:euler->quaternion))
-        do (achieve `(cram-plan-library:looking-at ,pose))
-           (with-designators ((generic-object (object `())))
-             (perceive-all
-              generic-object :stationary t :move-head nil))))
+  (let ((perceive-scene-rack-level (get-hint ?hints :perceive-scene-rack-level nil)))
+    (loop for level in (or (when perceive-scene-rack-level
+                             `(,(get-rack-on-level ?rack perceive-scene-rack-level)))
+                           (get-rack-levels ?rack))
+          as pose = (get-rack-level-relative-pose
+                     level 0 0 0
+                     (cl-transforms:euler->quaternion))
+          do (achieve `(cram-plan-library:looking-at ,pose))
+             (with-designators ((generic-object (object `())))
+               (perceive-all
+                generic-object :stationary t :move-head nil)))))
 
 (declare-goal object-picked-from-rack (rack object)
   "Picks an object `object' from a given rack instance `rack'."

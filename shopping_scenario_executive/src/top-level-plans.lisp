@@ -70,7 +70,16 @@
 (defun run-simulated (&key hints)
   "Shortcut for running the rack arrangement scenario in simulation."
   (run-rack-arrangement-protected
-   :hints (update-hints hints `((:world :simulation)))))
+   :hints (update-hints hints `((:world :simulation)
+                                (:perceive-scene-rack-level 2)))))
+
+(defun run-simulated-simple (&key hints)
+  "Shortcut for running the rack arrangement scenario in simulation in a simplified version."
+  (run-simulated :hints (update-hints
+                         hints
+                         `((:items-scene-classes ("Lion"))
+                           (:items-scene-amount 1)
+                           (:allowed-rack-levels (2))))))
 
 (defun run-reality (&key hints)
   "Shortcut for running the rack arrangement scenario in reality."
@@ -106,7 +115,7 @@
     (move-torso)
     (move-arms-away)
     ;; First, perceive scene
-    (achieve `(rack-scene-perceived ,rack))
+    (achieve `(rack-scene-perceived ,rack ,hints))
     (let ((objects (get-shopping-objects)))
       (dolist (object objects)
         (let ((detected-objects
@@ -114,11 +123,12 @@
           (unless detected-objects
             (cpl:fail 'cram-plan-failures:object-not-found))
           (try-all-objects (detected-object detected-objects)
-            (achieve `(object-picked-from-rack ,rack ,detected-object))
-            (equate object detected-object))
-          (try-forever
-            (let ((level (get-rack-on-level rack 2))
-                  (x -0.15)
-                  (y 0.0))
-              (achieve `(object-placed-on-rack
-                         ,object ,level ,x ,y)))))))))
+            (when (desig-prop-value detected-object 'handle)
+              (achieve `(object-picked-from-rack ,rack ,detected-object))
+              (equate object detected-object)
+              (try-forever
+                (let ((level (get-rack-on-level rack 2))
+                      (x -0.15)
+                      (y 0.0))
+                  (achieve `(object-placed-on-rack
+                             ,object ,level ,x ,y)))))))))))
