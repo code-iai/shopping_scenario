@@ -28,7 +28,7 @@
 (in-package :shopping-scenario-executive)
 
 (defun make-scenario-area-restriction-cost-function ()
-  (let ((min-x -1.0)
+  (let ((min-x 0.1)
         (max-x 1.0)
         (min-y -0.5)
         (max-y 0.5))
