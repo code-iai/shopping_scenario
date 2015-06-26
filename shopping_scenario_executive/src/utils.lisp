@@ -339,15 +339,16 @@
 
 (defun make-random-object-arrangement (&key hints)
   "Randomly places all known shopping items in a (m x n) grid such that it can be used to spawn the respective objects on an actual rack."
-  ;; TODO(winkler): Add support for the hints system
-  (declare (ignore hints))
   (let* ((arrangement (make-empty-object-arrangement))
          (dimensions (array-dimensions arrangement))
-         (items (get-shopping-items)))
+         (items (get-shopping-items))
+         (allowed-rack-levels (get-hint hints :allowed-rack-levels
+                                        (loop for i from 0 below (first dimensions)
+                                              collect i))))
     (loop while items
           as item = (first items)
           as stackable = (is-stackable item)
-          as i = (random (first dimensions))
+          as i = (elt allowed-rack-levels (random (length allowed-rack-levels)))
           as j = (random (second dimensions))
           as k = (random (third dimensions))
           do (cond ((eql (aref arrangement i j k) nil)
@@ -443,18 +444,17 @@
 
 (defmacro try-all-objects ((var list) &body body)
   "Tries all objects in `list', binding each of the to the variable `var'. In that environment, `body' is executed. Failures of type `object-not-found', `manipulation-pose-unreachable', `manipulation-failure', and `location-not-reached-failure' are caught implicitly, and the next object is tried."
-  `(block try-all-objects
-     (dolist (,var ,list)
-       (block try-all-objects-safety
-         (cpl:with-failure-handling
-             (((or cram-plan-failures:object-not-found
-                   cram-plan-failures:manipulation-pose-unreachable
-                   cram-plan-failures:manipulation-failure
-                   cram-plan-failures:location-not-reached-failure) (f)
-                (declare (ignore f))
-                (return-from try-all-objects-safety)))
-           (let ((result (progn ,@body)))
-             (return-from try-all-objects result)))))))
+  `(dolist (,var ,list)
+     (block try-all-objects-safety
+       (cpl:with-failure-handling
+           (((or cram-plan-failures:object-not-found
+                 cram-plan-failures:manipulation-pose-unreachable
+                 cram-plan-failures:manipulation-failure
+                 cram-plan-failures:location-not-reached-failure) (f)
+              (declare (ignore f))
+              (return-from try-all-objects-safety)))
+         (let ((result (progn ,@body)))
+           (return result))))))
 
 (defmacro try-forever (&body body)
   `(cpl:with-failure-handling
