@@ -23,6 +23,7 @@
       
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0" />
+	<contact_coefficients mu="1.0" />
         <geometry>
           <box size="${size_x} ${size_y} ${size_z}" />
         </geometry>
@@ -43,6 +44,7 @@
       
       <collision>
 	<origin rpy="0 0 0" xyz="0 0 0" />
+	<contact_coefficients mu="1.0" />
 	<geometry>
 	  <cylinder radius="${radius}" length="${height}" />
 	</geometry>
