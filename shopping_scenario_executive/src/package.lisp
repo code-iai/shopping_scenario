@@ -49,6 +49,8 @@
                 object-handle)
   (:import-from :pr2-manipulation-process-module
                 reorient-object)
+  (:import-from :location-costmap
+                desig-costmap)
   (:import-from :cram-language-designator-support with-designators)
   (:import-from :cram-language def-cram-function def-top-level-cram-function)
   (:import-from :cram-reasoning def-fact-group <- not)
