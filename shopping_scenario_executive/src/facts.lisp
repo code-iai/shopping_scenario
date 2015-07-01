@@ -44,9 +44,25 @@
               1.0d0)
           0.0d0))))
 
+(defun make-scenario-rackposition-restriction-distribution (pose)
+  (let* ((origin (tf:origin pose))
+         (o-x (tf:x origin))
+         (o-y (tf:y origin)))
+    (lambda (x y)
+      (if (and (> x (- o-x 0.15))
+               (< x (+ o-x 0.15))
+               (> y (- o-y 0.60))
+               (< y (+ o-y 0.60)))
+          1.0d0
+          0.0d0))))
+
 (defmethod costmap-generator-name->score
     ((name (common-lisp:eql 'scenario-area-restriction-distribution)))
   100)
+
+(defmethod costmap-generator-name->score
+    ((name (common-lisp:eql 'scenario-rackposition-restriction-distribution)))
+  101)
 
 (def-fact-group scenario-costmap-area-restriction (desig-costmap)
   
@@ -56,6 +72,17 @@
     (costmap ?cm)
     (costmap-add-function scenario-area-restriction-distribution
                           (make-scenario-area-restriction-cost-function)
+                          ?cm))
+
+  (<- (desig-costmap ?desig ?cm)
+    (desig-prop ?desig (desig-props:to desig-props:reach))
+    (desig-prop ?desig (desig-props:obj ?obj))
+    (current-designator ?obj ?current-obj)
+    (desig-prop ?current-obj (desig-props:at ?at))
+    (desig-props ?at (desig-props:pose ?pose))
+    (costmap ?cm)
+    (costmap-add-function scenario-rackposition-restriction-distribution
+                          (make-scenario-rackposition-restriction-distribution ?pose)
                           ?cm)))
 
 (def-fact-group inference-facts (infer-object-property object-handle)
