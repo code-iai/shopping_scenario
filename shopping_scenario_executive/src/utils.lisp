@@ -34,6 +34,35 @@
 (defparameter *rack-level-positions-row* 4)
 (defparameter *rack-level-positions-depth* 1);3)
 
+(defclass distribution ()
+  ((variance :accessor variance :initform nil :initarg :variance)
+   (mean :accessor mean :initform nil :initarg :mean)))
+
+(defun next-double ()
+  (- (random 2.0) 1.0))
+
+(defun normal-random (&key (variance 1.0) (mean 0.0))
+  (let (v1 v2 (s 1d0))
+    (do* ()
+         ((< s 1.0))
+      (setf v1 (* 2 (next-double)))
+      (setf v2 (* 2 (next-double)))
+      (setf s (+ (* v1 v1) (* v2 v2))))
+    (let* ((multiplier (sqrt (/ (* -2 (log s)) s)))
+           (result (* v1 multiplier)))
+      (- (* (sqrt variance) result) mean))))
+
+(defun round-down (number)
+  (multiple-value-bind (result difference)
+      (round number)
+    (cond ((>= number 0)
+           (cond ((>= difference 0)
+                  result)
+                 (t (- number (1+ difference)))))
+          (t (cond ((<= difference 0)
+                    result)
+                   (t (- number (1- difference))))))))
+
 ;;;
 ;;; Infrastructure Utilities
 ;;;
@@ -52,9 +81,10 @@
             (cl-urdf:parse-urdf (pathname urdf-path))))
     (gethash urdf-path *shopping-item-urdfs*)))
 
-(defun get-hint (hints hint-symbol &optional default)
+(defun get-hint (hints hint-symbol &optional default (find-cmp #'eql))
   (let ((result (cadr (find hint-symbol hints
-                            :test (lambda (x y) (eql x (car y)))))))
+                            :test (lambda (x y)
+                                    (funcall find-cmp x (car y)))))))
     (cond (result result)
           (t (when default default)))))
 
@@ -300,8 +330,40 @@
                                 ,(a location `((desig-props:pose
                                                 ,handle-pose)))))
                              (when grasp-type
-                               `((desig-props:grasp-type ,grasp-type)))))
+                               `((desig-props:grasp-type
+                                  ,grasp-type)))))
         collect handle-object))
+
+(defun distribute-object
+    (&key (max-amount 4) (distribution (make-instance
+                                        'distribution
+                                        :mean 0.0
+                                        :variance 1.0)))
+  (min max-amount
+       (round-down
+        (abs (* (/ max-amount 2)
+                (normal-random :mean (mean distribution)
+                               :variance (variance distribution)))))))
+
+(defun make-random-distributed-object-list (&key hints)
+  (declare (ignorable hints))
+  (let ((classes (shopping-item-classes))
+        (class-distributions (get-hint hints :class-distributions)))
+    (loop for class in classes
+          as distribution = (get-hint class-distributions
+                                      class nil #'string=)
+          as count = (cond (distribution
+                            (distribute-object
+                             :distribution distribution))
+                           (t (distribute-object)))
+          append (loop for j from 0 below count
+                       collect class))))
+
+(defun populate-distributed-object-list (&key hints)
+  (remove-all-shopping-items)
+  (let ((classes (make-random-distributed-object-list :hints hints)))
+    (loop for class in classes
+          do (add-shopping-item class))))
 
 (defun spawn-model-on-rack-level-index (rack level model urdf x y elevation rotation)
   (spawn-model-on-rack-level
