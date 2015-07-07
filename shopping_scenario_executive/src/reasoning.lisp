@@ -54,9 +54,10 @@
   "Splits the namespace from the symbol of a prolog identifier symbol `prolog-symbol'. The two parts must be delimited by the delimiter `delimiter'. Returns a values list, consisting of the symbol, and the namespace."
   (let ((delimiter-position
           (position delimiter prolog-symbol :test #'string=)))
-    (values
-     (subseq prolog-symbol (1+ delimiter-position))
-     (subseq prolog-symbol 0 delimiter-position))))
+    (when delimiter-position
+      (values
+       (subseq prolog-symbol (1+ delimiter-position))
+       (subseq prolog-symbol 0 delimiter-position)))))
 
 (defun strip-prolog-string (symbol)
   "Combines the functionality of `json-symbol->string' and `split-prolog-symbol', resulting in a namespace-less string representing the value of `symbol'."
