@@ -79,7 +79,7 @@
     (desig-prop ?desig (desig-props:obj ?obj))
     (current-designator ?obj ?current-obj)
     (desig-prop ?current-obj (desig-props:at ?at))
-    (desig-props ?at (desig-props:pose ?pose))
+    (desig-prop ?at (desig-props:pose ?pose))
     (costmap ?cm)
     (costmap-add-function scenario-rackposition-restriction-distribution
                           (make-scenario-rackposition-restriction-distribution ?pose)
