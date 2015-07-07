@@ -86,9 +86,16 @@
     ;; NOTE(winkler): Somehow, the `at' property is missing here,
     ;; making manipulation impossible. Need to figure out why it gets
     ;; cut out; this needs fixing next!
-    (mapcar (lambda (perceived-object)
-              (enrich-object-description perceived-object))
-            (perceive-all ?object-template))))
+    (let ((enriched-objects
+            (mapcar (lambda (perceived-object)
+                      (enrich-object-description perceived-object))
+                    (perceive-all ?object-template))))
+      (dolist (object enriched-objects)
+        (plan-knowledge:on-event
+         (make-instance 'plan-knowledge:object-updated-event
+                        :perception-source :generic
+                        :object-designator object)))
+      enriched-objects)))
 
 (declare-goal object-handover (object target-hand)
   "Hands over the held object `object' such that it is held by the hand `target-hand', if not already true."
