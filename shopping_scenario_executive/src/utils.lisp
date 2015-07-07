@@ -466,7 +466,7 @@
                                        (* item-space 0.5))
                                     (/ rack-width 2))
                    do (loop for k from 0 below items-depth
-                            as offset-d = (+ (* k 0.1) -0.15)
+                            as offset-d = (+ (* k 0.1) -0.2)
                             do (setf (aref map i j k)
                                      (cons rack-level `(,offset-h
                                                         ,offset-d))))))
@@ -535,7 +535,8 @@
                  (or
                   (get-item-primitive-shape item)
                   "box"))
-                'desig-props)))
+                'desig-props))
+        (dimensions (get-item-dimensions item)))
     (make-designator
      'object `((desig-props:name ,item)
                (desig-props:type ,(get-item-class item))
@@ -543,7 +544,8 @@
                   (lambda (handle)
                     `(desig-props:handle ,handle))
                   handles)
-               (desig-props:shape ,shape)))))
+               (desig-props:shape ,shape)
+               (desig-props:dimensions ,dimensions)))))
 
 (defun get-shopping-objects (&key class-type)
   "Constructs object designators from shopping items known to the underlying knowledge base. Each item will be equipped with a name, semantic handles, and the object shape (all acquired from the knowledge base). Returns a list of object designators."
