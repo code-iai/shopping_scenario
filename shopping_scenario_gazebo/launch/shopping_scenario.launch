@@ -1,6 +1,8 @@
 <launch>
   
   <env name="GAZEBO_MODEL_PATH" value="$(find shopping_scenario_models)/models" />
+  <env name="GAZEBO_PLUGIN_PATH" value="$(find shopping_scenario_gazebo)/plugins" />
+  <env name="LD_LIBRARY_PATH" value="$(find shopping_scenario_gazebo)/plugins:$(env LD_LIBRARY_PATH)" />
   
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find shopping_scenario_gazebo)/worlds/shopping_scenario.world"/>
@@ -12,6 +14,6 @@
   </include>
   
   <!-- Start PR2 Robot -->
-  <include file="$(find pr2_gazebo)/launch/pr2.launch"/>
+  <include file="$(find pr2_moveit_node)/launch/pr2.launch"/>
   
 </launch>
