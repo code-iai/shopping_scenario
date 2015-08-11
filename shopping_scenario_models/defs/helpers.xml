@@ -29,7 +29,7 @@
         </geometry>
       </collision>
       
-      <cuboid_inertia width="${size_x}" length="${size_y}" height="${size_z}" mass="1" />
+      <cuboid_inertia width="${size_x}" length="${size_z}" height="${size_y}" mass="0.1" />
     </link>
   </macro>
   
