@@ -17,4 +17,5 @@
   
   <run_depend>robot_state_chain_publisher</run_depend>
   <run_depend>robot_state_publisher</run_depend>
+  <run_depend>attache_msgs</run_depend>
 </package>
