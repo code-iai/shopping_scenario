@@ -4,6 +4,6 @@
   
   <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
   
-  <boxlink name="tomatosauce" size_x="0.075" size_y="0.05" size_z="0.11" />
+  <boxlink name="link" size_x="0.075" size_y="0.05" size_z="0.11" />
   
 </robot>
