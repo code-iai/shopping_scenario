@@ -26,7 +26,9 @@
   <include ns="move_group" file="$(find pr2_moveit_node)/launch/planning_pipeline.launch.xml">
     <arg name="pipeline" value="ompl" />
   </include>
-
+  
+  <rosparam command="load" file="$(find pr2_moveit_node)/config/ompl_planning.yaml"/>
+  
   <!-- Trajectory Execution Functionality -->
   <include ns="move_group" file="$(find pr2_moveit_node)/launch/trajectory_execution.launch.xml" if="$(arg allow_trajectory_execution)">
     <arg name="moveit_manage_controllers" value="true" />
