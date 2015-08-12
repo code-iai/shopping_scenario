@@ -251,17 +251,17 @@
            (declare (ignore f))
            (ros-warn (longterm) "Cannot reach location. Retrying.")
            (cpl:retry)))
-      (let ((side (var-value
-                   '?side
-                   (lazy-car (crs:prolog
-                              `(cram-plan-library:object-in-hand
-                                ,object ?side))))))
+      ;; (let ((side (var-value
+      ;;              '?side
+      ;;              (lazy-car (crs:prolog
+      ;;                         `(cram-plan-library:object-in-hand
+      ;;                           ,object ?side))))))
         (cond (stationary
-               `(achieve `(cram-plan-library::object-put
-                           ,object ,location)))
+               (achieve `(cram-plan-library::object-put
+                          ,object ,location)))
               (t
-               `(achieve `(cram-plan-library::object-placed-at
-                           ,object ,location))))))))
+               (achieve `(cram-plan-library::object-placed-at
+                          ,object ,location)))))));)
 
 (defun perceive-a (object &key stationary (move-head t))
   (cpl:with-failure-handling
@@ -479,7 +479,7 @@
           object-position
         (spawn-shopping-item-on-named-level
          item racklevel x-offset y-offset elevation
-         (tf:euler->quaternion :az (/ pi 2)))))))
+         (tf:euler->quaternion)))))); :az (/ pi 2)))))))
 
 (defun spawn-random-object-arrangement (&key hints)
   "Creates a random object arrangement on a shopping rack (considering all known rack levels) and randomly places all known objects on it. Using this arrangement, the URDF models of the objects will be spawned into the current Gazebo scene."
@@ -666,3 +666,25 @@
               (shopping utils)
               "Not enriching unnamed object.")
              object))))
+
+(defmethod cram-language::on-grasp-object (object-name side)
+  (roslisp:ros-info (shopping utils) "Grasp object ~a with side ~a." object-name side)
+  (roslisp:call-service "/gazebo/attach"
+                        'attache_msgs-srv:Attachment
+                        :model1 "pr2"
+                        :link1 (case side
+                                 (:left "l_wrist_roll_link")
+                                 (:right "r_wrist_roll_link"))
+                        :model2 object-name
+                        :link2 "link"))
+
+(defmethod cram-language::on-putdown-object (object-name side)
+  (roslisp:ros-info (shopping utils) "Put down object ~a with side ~a." object-name side)
+  (roslisp:call-service "/gazebo/detach"
+                        'attache_msgs-srv:Attachment
+                        :model1 "pr2"
+                        :link1 (case side
+                                 (:left "l_wrist_roll_link")
+                                 (:right "r_wrist_roll_link"))
+                        :model2 object-name
+                        :link2 "link"))

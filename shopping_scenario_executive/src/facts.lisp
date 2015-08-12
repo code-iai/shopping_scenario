@@ -28,8 +28,8 @@
 (in-package :shopping-scenario-executive)
 
 (defun make-scenario-area-restriction-cost-function ()
-  (let ((min-x 0.1)
-        (max-x 1.0)
+  (let ((min-x -0.25)
+        (max-x 0.50)
         (min-y -0.5)
         (max-y 0.5))
     (lambda (x y)
@@ -37,11 +37,7 @@
                (<= x max-x)
                (>= y min-y)
                (<= y max-y))
-          (if (> x 0.25)
-              (if (< y 1.0)
-                  1.0d0
-                  0.0d0)
-              1.0d0)
+          1.0d0
           0.0d0))))
 
 (defun make-scenario-rackposition-restriction-distribution (pose)
@@ -55,6 +51,20 @@
                (< y (+ o-y 0.60)))
           1.0d0
           0.0d0))))
+
+(defun make-rack-facing-orientation-generator (object-acted-on)
+  (declare (ignore object-acted-on))
+  (format t "~%~%~%!!!!!!!!!!!!!!!!!!!!!!!!!!!!~%~%~%")
+  (let ((position (tf:make-identity-vector)))
+    (location-costmap:make-orientation-generator
+     (alexandria:rcurry (lambda (x y position)
+                          (declare (ignore x y position))
+                          ;; This always faces forward for now and
+                          ;; impicitly only takes one rack into
+                          ;; account. `object-acted-on', `x', and `y'
+                          ;; don't have any effect right now.
+                          0)
+                        position))))
 
 (defmethod costmap-generator-name->score
     ((name (common-lisp:eql 'scenario-area-restriction-distribution)))
@@ -72,9 +82,13 @@
     (costmap ?cm)
     (costmap-add-function scenario-area-restriction-distribution
                           (make-scenario-area-restriction-cost-function)
-                          ?cm))
+                          ?cm)
+    (costmap-add-orientation-generator
+     (make-rack-facing-orientation-generator ?desig)
+     ?cm))
 
   (<- (desig-costmap ?desig ?cm)
+    (crs:fail)
     (desig-prop ?desig (desig-props:to desig-props:reach))
     (desig-prop ?desig (desig-props:obj ?obj))
     (current-designator ?obj ?current-obj)

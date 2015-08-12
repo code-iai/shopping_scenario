@@ -114,7 +114,6 @@
   (let ((rack (first (get-racks))))
     (move-torso)
     (move-arms-away)
-    ;; First, perceive scene
     (achieve `(rack-scene-perceived ,rack ,hints))
     (let ((objects (get-shopping-objects)))
       (dolist (object objects)
@@ -122,14 +121,14 @@
                 (achieve `(objects-detected-in-rack ,rack ,object))))
           (unless detected-objects
             (cpl:fail 'cram-plan-failures:object-not-found))
-          (loop while t do
-            (try-all-objects (detected-object detected-objects)
-              (when (desig-prop-value detected-object 'handle)
-                (achieve `(object-picked-from-rack ,rack ,detected-object))
-                (equate object detected-object)
-                (try-forever
-                  (let ((level (get-rack-on-level rack 2))
-                        (x -0.15)
-                        (y 0.0))
-                    (achieve `(object-placed-on-rack
-                               ,object ,level ,x ,y))))))))))))
+          (try-all-objects (detected-object detected-objects)
+            (when (desig-prop-value detected-object 'handle)
+              (achieve `(object-picked-from-rack ,rack ,detected-object))
+              (unless (desig:desig-equal object detected-object)
+                (equate object detected-object))
+              (try-forever
+                (let ((level (get-rack-on-level rack 2))
+                      (x -0.05)
+                      (y 0.0))
+                  (achieve `(object-placed-on-rack
+                             ,object ,level ,x ,y)))))))))))

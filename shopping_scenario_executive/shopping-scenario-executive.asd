@@ -59,6 +59,7 @@
                robosherlock-process-module
                cram-beliefstate
                gazebo-perception-process-module
+               attache_msgs-srv
                pr2_controllers_msgs-msg)
   :components
   ((:module "src"
