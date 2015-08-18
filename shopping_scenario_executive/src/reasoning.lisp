@@ -130,14 +130,14 @@
       `("rack_level_elevation" ,(add-prolog-namespace racklevel) ?elevation)
     ?elevation))
 
-(defun get-rack-level-relative-pose (racklevel x y z &optional (rotation (tf:euler->quaternion)))
+(defun get-rack-level-relative-pose (rack-level x y z &optional (rotation (tf:euler->quaternion)))
   "Returns (in absolute map coordinates) a pose stamped that describes the relative pose ((x y z) rotation) on the rack level `racklevel'."
   (with-first-prolog-vars-bound (?result)
       `("rack_level_relative_position"
-        ,(add-prolog-namespace racklevel) ,x ,y ?result)
-    (destructuring-bind (x y elevation) ?result
+        ,(add-prolog-namespace rack-level) ,x ,y ?result)
+    (destructuring-bind (x-abs y-abs z-abs) ?result
       (tf:make-pose-stamped
-       "map" 0.0 (tf:make-3d-vector x y (+ z elevation)) rotation))))
+       "map" 0.0 (tf:make-3d-vector x-abs y-abs (+ z z-abs)) rotation))))
 
 (defun get-item-urdf-path (item)
   "Returns the absolute URDF file path for an item `item' (if set in the semantic information supplied to KnowRob)."

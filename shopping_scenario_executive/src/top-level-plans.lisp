@@ -77,9 +77,9 @@
   "Shortcut for running the rack arrangement scenario in simulation in a simplified version."
   (run-simulated :hints (update-hints
                          hints
-                         `((:items-scene-classes ("Lion"))
-                           (:items-scene-amount 1)
-                           (:allowed-rack-levels (2))))))
+                         `((:items-scene-classes ("Lion" "Kelloggs"))
+                           (:items-scene-amount 4)
+                           (:allowed-rack-levels (1 2))))))
 
 (defun run-reality (&key hints)
   "Shortcut for running the rack arrangement scenario in reality."
@@ -115,8 +115,10 @@
     (move-torso)
     (move-arms-away)
     (achieve `(rack-scene-perceived ,rack ,hints))
-    (let ((objects (get-shopping-objects)))
-      (loop for i from 0 to 2 do
+    (loop for i from 0 to 2 do
+      (let* ((objects (get-shopping-objects)))
+        (dolist (object objects)
+          (achieve `(objects-detected-in-rack ,rack ,object)))
         (dolist (object objects)
           (let ((detected-objects
                   (achieve `(objects-detected-in-rack ,rack ,object))))
@@ -128,8 +130,11 @@
                 (unless (desig:desig-equal object detected-object)
                   (equate object detected-object))
                 (try-forever
-                  (let ((level (get-rack-on-level rack (+ (random 2) 1)))
-                        (x -0.15)
-                        (y (- (random 0.6) 0.3)))
-                    (achieve `(object-placed-on-rack
-                               ,object ,level ,x ,y))))))))))))
+                  (multiple-value-bind (rack-level x y)
+                      (get-free-position-on-rack rack :hints hints)
+                    (let ((elevation (get-rack-level-elevation
+                                      (get-rack-on-level rack rack-level))))
+                      (move-torso (/ elevation 5.0))
+                      (achieve `(object-placed-on-rack
+                                 ,object ,(get-rack-on-level rack rack-level)
+                                 ,x ,y)))))))))))))

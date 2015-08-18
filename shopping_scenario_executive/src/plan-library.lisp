@@ -122,13 +122,9 @@
   (roslisp:ros-info (shopping plans) "OBJECT-PLACED-ON-RACK"))
 
 (def-goal (achieve (object-placed-on-rack ?object ?level ?x ?y))
-  (format t "Step 1~%")
   (let* ((elevation 0.0)
          (absolute-pose (get-rack-level-relative-pose
                          ?level ?x ?y elevation)))
-    (format t "Step 2~%")
     (with-designators ((loc (location `((desig-props:pose
                                          ,absolute-pose)))))
-      (format t "Step 3~%")
-      (place-object ?object loc)
-      (format t "Step 4~%"))))
+      (place-object ?object loc))))

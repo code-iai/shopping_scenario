@@ -292,9 +292,7 @@
            (let ((at (desig-prop-value object 'desig-props:at)))
              (when move-head
                (achieve `(cram-plan-library:looking-at ,(reference at))))
-             (first (perceive-object
-                     'cram-plan-library:currently-visible
-                     object))))
+             (perceive-object 'cram-plan-library:currently-visible object)))
           (t (cpl:with-failure-handling
                  ((cram-plan-failures:location-not-reached-failure (f)
                     (declare (ignore f))
@@ -688,3 +686,36 @@
                                  (:right "r_wrist_roll_link"))
                         :model2 object-name
                         :link2 "link"))
+
+(defun position-free? (rack-level x y &key (threshold 0.2))
+  (let* ((known-objects (get-shopping-items))
+         (present-object-poses
+           (force-ll
+            (lazy-mapcar
+             (lambda (bdgs)
+               (with-vars-bound (?p) bdgs
+                 ?p))
+             (crs:prolog `(and (btr:bullet-world ?w)
+                               (btr:object ?w ?o)
+                               (member ?o ,known-objects)
+                               (btr:object-pose ?w ?o ?p))))))
+         (elevation (get-rack-level-elevation rack-level)))
+    (loop for pose in present-object-poses do
+      (when (<= (tf:v-dist (tf:origin (get-rack-level-relative-pose
+                                       rack-level x y elevation))
+                           (tf:origin pose))
+                threshold)
+        (return nil))))
+  t)
+
+(defun get-free-position-on-rack (rack &key hints)
+  (loop while t do
+    (let ((rack-level
+            (let ((allowed-rack-levels
+                    (get-hint hints :allowed-rack-levels '(0 1 2 3))))
+              (nth (random (length allowed-rack-levels))
+                   allowed-rack-levels)))
+          (x -0.15)
+          (y (- (random 0.6) 0.3)))
+      (when (position-free? (get-rack-on-level rack rack-level) x y)
+        (return (values rack-level x y))))))
