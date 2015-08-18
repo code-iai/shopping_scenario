@@ -242,26 +242,24 @@
 
 (defun place-object (object location &key stationary)
   (let ((object (desig:current-desig object)))
-    (cpl:with-failure-handling
-        ((cram-plan-failures:manipulation-pose-unreachable (f)
-           (declare (ignore f))
-           (cram-plan-library::retry-with-updated-location
-            location (next-solution location)))
-         (cram-plan-failures:location-not-reached-failure (f)
-           (declare (ignore f))
-           (ros-warn (longterm) "Cannot reach location. Retrying.")
-           (cpl:retry)))
-      ;; (let ((side (var-value
-      ;;              '?side
-      ;;              (lazy-car (crs:prolog
-      ;;                         `(cram-plan-library:object-in-hand
-      ;;                           ,object ?side))))))
+    (cpl:with-retry-counters ((retry-counter 0))
+      (cpl:with-failure-handling
+          ((cram-plan-failures:manipulation-pose-unreachable (f)
+             (declare (ignore f))
+             (cpl:do-retry retry-counter
+               (cram-plan-library::retry-with-updated-location
+                location (next-solution location))))
+           (cram-plan-failures:location-not-reached-failure (f)
+             (declare (ignore f))
+             (cpl:do-retry retry-counter
+               (ros-warn (longterm) "Cannot reach location. Retrying.")
+               (cpl:retry))))
         (cond (stationary
                (achieve `(cram-plan-library::object-put
                           ,object ,location)))
               (t
                (achieve `(cram-plan-library::object-placed-at
-                          ,object ,location)))))));)
+                          ,object ,location))))))))
 
 (defun perceive-a (object &key stationary (move-head t))
   (cpl:with-failure-handling
@@ -687,7 +685,7 @@
                         :model2 object-name
                         :link2 "link"))
 
-(defun position-free? (rack-level x y &key (threshold 0.2))
+(defun position-free? (rack-level x y &key (threshold 0.15))
   (let* ((known-objects (get-shopping-items))
          (present-object-poses
            (force-ll
