@@ -14,7 +14,7 @@
   </include>
   
   <!-- Start PR2 Robot -->
-  <include file="$(find pr2_gazebo)/launch/pr2.launch"/>
-  <!--include file="$(find pr2_moveit_node)/launch/pr2.launch"/-->
+  <!--include file="$(find pr2_gazebo)/launch/pr2.launch"/-->
+  <include file="$(find shopping_scenario_gazebo)/launch/pr2.launch"/>
   
 </launch>

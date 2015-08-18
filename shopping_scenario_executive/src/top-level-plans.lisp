@@ -116,19 +116,20 @@
     (move-arms-away)
     (achieve `(rack-scene-perceived ,rack ,hints))
     (let ((objects (get-shopping-objects)))
-      (dolist (object objects)
-        (let ((detected-objects
-                (achieve `(objects-detected-in-rack ,rack ,object))))
-          (unless detected-objects
-            (cpl:fail 'cram-plan-failures:object-not-found))
-          (try-all-objects (detected-object detected-objects)
-            (when (desig-prop-value detected-object 'handle)
-              (achieve `(object-picked-from-rack ,rack ,detected-object))
-              (unless (desig:desig-equal object detected-object)
-                (equate object detected-object))
-              (try-forever
-                (let ((level (get-rack-on-level rack 2))
-                      (x -0.05)
-                      (y 0.0))
-                  (achieve `(object-placed-on-rack
-                             ,object ,level ,x ,y)))))))))))
+      (loop for i from 0 to 2 do
+        (dolist (object objects)
+          (let ((detected-objects
+                  (achieve `(objects-detected-in-rack ,rack ,object))))
+            (unless detected-objects
+              (cpl:fail 'cram-plan-failures:object-not-found))
+            (try-all-objects (detected-object detected-objects)
+              (when (desig-prop-value detected-object 'handle)
+                (achieve `(object-picked-from-rack ,rack ,detected-object))
+                (unless (desig:desig-equal object detected-object)
+                  (equate object detected-object))
+                (try-forever
+                  (let ((level (get-rack-on-level rack (+ (random 2) 1)))
+                        (x -0.15)
+                        (y (- (random 0.6) 0.3)))
+                    (achieve `(object-placed-on-rack
+                               ,object ,level ,x ,y))))))))))))

@@ -2876,7 +2876,7 @@
       <frameName>map</frameName>
     </plugin>
     <!-- a formal implementation of grasp hack in gazebo with fixed joint -->
-    <gripper name="r_grasp_hack">
+    <!--gripper name="r_grasp_hack">
       <grasp_check>
         <attach_steps>20</attach_steps>
         <detach_steps>40</detach_steps>
@@ -2885,7 +2885,7 @@
       <gripper_link>r_gripper_r_finger_tip_link</gripper_link>
       <gripper_link>r_gripper_l_finger_tip_link</gripper_link>
       <palm_link>r_gripper_palm_link</palm_link>
-    </gripper>
+    </gripper-->
   </gazebo>
   <!-- [lr]_gripper_joint is a fictitious joint, used by transmission for controller gap   -->
   <!-- [lr]_gripper_joint is not attached to any link                                      -->
@@ -3818,7 +3818,7 @@
       <frameName>map</frameName>
     </plugin>
     <!-- a formal implementation of grasp hack in gazebo with fixed joint -->
-    <gripper name="l_grasp_hack">
+    <!--gripper name="l_grasp_hack">
       <grasp_check>
         <attach_steps>20</attach_steps>
         <detach_steps>40</detach_steps>
@@ -3827,7 +3827,7 @@
       <gripper_link>l_gripper_r_finger_tip_link</gripper_link>
       <gripper_link>l_gripper_l_finger_tip_link</gripper_link>
       <palm_link>l_gripper_palm_link</palm_link>
-    </gripper>
+    </gripper-->
   </gazebo>
   <!-- [lr]_gripper_joint is a fictitious joint, used by transmission for controller gap   -->
   <!-- [lr]_gripper_joint is not attached to any link                                      -->
