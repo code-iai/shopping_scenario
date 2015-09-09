@@ -67,6 +67,12 @@
 ;;; Shortcuts
 ;;;
 
+(defun start-scenario-external ()
+  (roslisp:ros-info (shopping) "Connecting to ROS")
+  (roslisp-utilities:startup-ros)
+  (roslisp:ros-info (shopping) "Running Shopping Scenario (simulated, simplified)")
+  (run-simulated-simple))
+
 (defun run-simulated (&key hints)
   "Shortcut for running the rack arrangement scenario in simulation."
   (run-rack-arrangement-protected
