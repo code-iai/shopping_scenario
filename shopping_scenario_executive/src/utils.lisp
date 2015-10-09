@@ -67,13 +67,6 @@
 ;;; Infrastructure Utilities
 ;;;
 
-(defun start-scenario-external ()
-  (roslisp:ros-info (shopping) "Connecting to ROS")
-  (roslisp-utilities:startup-ros)
-  (roslisp:ros-info (shopping) "Initializing Environment")
-  (prepare-settings)
-  (roslisp:ros-info (shopping) "This starts the scenario for autonomous operation once everyting is in place."))
-
 (defun load-shopping-item-urdf (shopping-item)
   (let ((urdf-path (get-item-urdf-path shopping-item)))
     (unless (gethash urdf-path *shopping-item-urdfs*)
