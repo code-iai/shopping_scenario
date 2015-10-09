@@ -233,6 +233,14 @@
   (move-arms-up :side :left)
   (move-arms-up :side :right))
 
+(defun handover-object (object)
+  (with-designators ((handover-action
+                      (action
+                       `((to handover)
+                         (type trajectory)
+                         (obj ,object)))))
+    (perform handover-action)))
+
 (defun pick-object (object &key stationary)
   (let ((object (desig:current-desig object)))
     (cond (stationary
@@ -662,6 +670,18 @@
               (shopping utils)
               "Not enriching unnamed object.")
              object))))
+
+(defmethod cram-language::on-handover-transition (side-old side-new object-name)
+  (roslisp:ros-info (shopping utils) "Handover transition from side ~a to side ~a."
+                    side-old side-new)
+  (roslisp:call-service "/gazebo/detach"
+                        'attache_msgs-srv:Attachment
+                        :model1 "pr2"
+                        :link1 (case side-old
+                                 (:left "l_wrist_roll_link")
+                                 (:right "r_wrist_roll_link"))
+                        :model2 object-name
+                        :link2 "link"))
 
 (defmethod cram-language::on-grasp-object (object-name side)
   (roslisp:ros-info (shopping utils) "Grasp object ~a with side ~a." object-name side)

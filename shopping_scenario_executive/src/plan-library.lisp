@@ -128,3 +128,12 @@
     (with-designators ((loc (location `((desig-props:pose
                                          ,absolute-pose)))))
       (place-object ?object loc))))
+
+(declare-goal switched-holding-hand (object)
+  "Switches hands for the held object `object'."
+  (declare (ignore object))
+  (roslisp:ros-info (shopping plans) "SWITCHED-HOLDING-HANDS"))
+
+(def-goal (achieve (switched-holding-hand ?object))
+  (handover-object ?object)
+  (roslisp:ros-info (shopping plans) "Handover complete~%"))

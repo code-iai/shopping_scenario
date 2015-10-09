@@ -81,6 +81,9 @@
                            (:items-scene-amount 4)
                            (:allowed-rack-levels (1 2))))))
 
+(defun run-simulated-problem (&key hints)
+  (run-simulated :hints (update-hints hints `((:version :problem)))))
+
 (defun run-reality (&key hints)
   "Shortcut for running the rack arrangement scenario in reality."
   (run-rack-arrangement-protected
@@ -104,7 +107,10 @@
       (:simulation
        (with-simulation-process-modules
          (prepare-simulated-scene :hints hints)
-         (rack-arrangement :hints hints)))
+         (case (get-hint hints :version :normal)
+           (:normal (rack-arrangement :hints hints))
+           (:handover (rack-arrangement-handover :hints hints))
+           (:problem (solve-arrangement-problem :hints hints)))))
       (:reality
        (with-process-modules
          (rack-arrangement :hints hints))))))
@@ -138,3 +144,65 @@
                       (achieve `(object-placed-on-rack
                                  ,object ,(get-rack-on-level rack rack-level)
                                  ,x ,y)))))))))))))
+
+(def-cram-function rack-arrangement-handover (&key hints)
+  "Performs a rack-tidying up scenario by controlling a PR2 robot that rearranges objects, based on a given target arrangement."
+  (let ((rack (first (get-racks))))
+    (move-torso)
+    (move-arms-away)
+    (achieve `(rack-scene-perceived ,rack ,hints))
+      (let* ((objects (get-shopping-objects)))
+        (dolist (object objects)
+          (achieve `(objects-detected-in-rack ,rack ,object)))
+        (let ((object (first objects)))
+          (let ((detected-objects
+                  (achieve `(objects-detected-in-rack ,rack ,object))))
+            (unless detected-objects
+              (cpl:fail 'cram-plan-failures:object-not-found))
+            (try-all-objects (detected-object detected-objects)
+              (when (desig-prop-value detected-object 'handle)
+                (achieve `(object-picked-from-rack ,rack ,detected-object))
+                (go-in-front-of-rack rack)
+                (achieve `(switched-holding-hand ,detected-object))
+                )))))))
+                ;; (unless (desig:desig-equal object detected-object)
+                ;;   (equate object detected-object))
+                ;; (try-forever
+                ;;   (multiple-value-bind (rack-level x y)
+                ;;       (get-free-position-on-rack rack :hints hints)
+                ;;     (let ((elevation (get-rack-level-elevation
+                ;;                       (get-rack-on-level rack rack-level))))
+                ;;       (move-torso (/ elevation 5.0))
+                ;;       (achieve `(object-placed-on-rack
+                ;;                  ,object ,(get-rack-on-level rack rack-level)
+                ;;                  ,x ,y)))))))))))))
+
+(def-cram-function solve-arrangement-problem (&key hints)
+  (let* ((problem (assert-planning-problem))
+         (target (first problem))
+         (sequence (second problem)))
+    (let ((rack (first (get-racks))))
+      (move-torso)
+      (move-arms-away)
+      (achieve `(rack-scene-perceived ,rack ,hints))
+      (let* ((objects (get-shopping-objects)))
+        (dolist (object objects)
+          (achieve `(objects-detected-in-rack ,rack ,object)))
+        (loop for step in sequence do
+          (let ((command (first step))
+                (detail-1 (second step))
+                (detail-2 (third step)))
+            (case command
+              (:move
+               (roslisp:ros-info (shopping plans) "Moving from ~a to ~a"
+                                 detail-1 detail-2)))))))))
+        ;; (let ((object (first objects)))
+        ;;   (let ((detected-objects
+        ;;           (achieve `(objects-detected-in-rack ,rack ,object))))
+        ;;     (unless detected-objects
+        ;;       (cpl:fail 'cram-plan-failures:object-not-found))
+        ;;     (try-all-objects (detected-object detected-objects)
+        ;;       (when (desig-prop-value detected-object 'handle)
+        ;;         (achieve `(object-picked-from-rack ,rack ,detected-object))
+        ;;         (go-in-front-of-rack rack)
+        ;;         )))))))
