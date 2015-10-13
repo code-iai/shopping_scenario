@@ -195,31 +195,33 @@
         (dolist (object objects)
           (equate object
                   (first (achieve `(objects-detected-in-rack ,rack ,object)))))
-        (labels ((object-at-rack-position (x-index y-index)
+        (labels ((relative-xy (x-index y-index)
                    (let* ((rack-level (get-rack-on-level rack (- 3 y-index)))
-                          (elevation (get-rack-level-elevation
-                                      rack-level))
                           (rack-width (elt (get-item-dimensions rack-level) 1))
                           (item-space (/ rack-width 4))
-                          (offset-h (- (+ (* x-index item-space)
+                          (offset-h (- (+ (* (- 3 x-index) item-space)
+                                          (* item-space 0.5))
+                                       (/ rack-width 2))))
+                     `(-0.2 ,offset-h)))
+                 (pose-on-rack (x-index y-index)
+                   (let* ((rack-level (get-rack-on-level rack y-index))
+                          (rack-width (elt (get-item-dimensions rack-level) 1))
+                          (item-space (/ rack-width 4))
+                          (offset-h (- (+ (* (- 3 x-index) item-space)
                                           (* item-space 0.5))
                                        (/ rack-width 2)))
-                          (rack-x 0)
-                          (rack-y 0)
-                          (global-x (+ offset-h rack-x))
-                          (global-y rack-y)
-                          (global-z elevation))
-                     (let ((closest-object nil)
-                           (smallest-distance 1000.0))
-                       ;; This somehow doesn't get the right objects
-                       ;; yet. Must be related to the position being
-                       ;; translated wrong from the relative rack
-                       ;; poses to the map coordinates of the actual
-                       ;; objects. Remedy: Check and debug them with
-                       ;; RViz.
+                          (rel-pose (get-rack-level-relative-pose
+                                     rack-level
+                                     -0.2 offset-h 0.02)))
+                     rel-pose))
+                 (object-at-rack-position (x-index y-index)
+                   (let ((closest-object nil)
+                         (smallest-distance 1000.0))
+                     (let ((adv (roslisp:advertise "/hhhhhh" "geometry_msgs/PoseStamped")))
                        (loop for object in objects
-                             for global-pose = (get-rack-level-relative-pose
-                                                rack-level offset-h 0 elevation)
+                             for global-pose = (pose-on-rack x-index y-index)
+                             for testing = (roslisp:publish
+                                            adv (tf:pose-stamped->msg global-pose))
                              for distance = (tf:v-dist
                                              (tf:origin global-pose)
                                              (tf:origin (reference
@@ -227,25 +229,26 @@
                                                           (current-desig object) 'at))))
                              when (< distance smallest-distance)
                                do (setf smallest-distance distance)
-                                  (setf closest-object object))
-                       closest-object))))
+                                  (setf closest-object object)))
+                     closest-object)))
           (loop for step in sequence do
             (let ((command (first step))
                   (detail-1 (second step))
                   (detail-2 (third step)))
               (case command
                 (:move
-                 (roslisp:ros-info (shopping plans) "Moving from ~a to ~a: ~a"
-                                   detail-1 detail-2 (object-at-rack-position
-                                                      (first detail-1)
-                                                      (second detail-1))))))))))))
-        ;; (let ((object (first objects)))
-        ;;   (let ((detected-objects
-        ;;           (achieve `(objects-detected-in-rack ,rack ,object))))
-        ;;     (unless detected-objects
-        ;;       (cpl:fail 'cram-plan-failures:object-not-found))
-        ;;     (try-all-objects (detected-object detected-objects)
-        ;;       (when (desig-prop-value detected-object 'handle)
-        ;;         (achieve `(object-picked-from-rack ,rack ,detected-object))
-        ;;         (go-in-front-of-rack rack)
-        ;;         )))))))
+                 (let ((x-from (second detail-1))
+                       (y-from (first detail-1))
+                       (x-to (second detail-2))
+                       (y-to (first detail-2)))
+                   (let ((obj (object-at-rack-position x-from y-from)))
+                     (roslisp:ros-info (shopping plans) "Moving from ~a/~a to ~a/~a"
+                                       x-from y-from x-to y-to)
+                     (achieve `(object-picked-from-rack ,rack ,(current-desig obj)))
+                     (let ((elevation (get-rack-level-elevation
+                                       (get-rack-on-level rack (- 3 y-to))))
+                           (xy (relative-xy x-to (- 3 y-to))))
+                       (move-torso (/ elevation 5.0))
+                       (achieve `(object-placed-on-rack
+                                  ,obj ,(get-rack-on-level rack (- 3 y-to))
+                                  ,(first xy) ,(second xy)))))))))))))))

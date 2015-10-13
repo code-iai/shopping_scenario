@@ -32,7 +32,7 @@
 ;;  - Four boxes of the same type on one of the rack levels
 
 (defun make-target-arrangement ()
-  (let ((object-types `("Kelloggs" "Lion"));;(shopping-item-classes))
+  (let ((object-types `("PancakeMix" "Lion"));;(shopping-item-classes))
         (arrangement-types `(:lineup)))
     (let* ((this-arrangement (nth (random (length arrangement-types))
                                   arrangement-types))
@@ -53,7 +53,7 @@
                             `(,(nth first object-types) ,(nth second object-types)))))
                       (target-rows
                         (labels ((random-row ()
-                                   (random 4)))
+                                   (+ 1 (random 2))))
                           (let* ((first (random-row))
                                  (second
                                    (block generate-second
@@ -65,11 +65,12 @@
                   (loop for i from 0 below 4
                         collect (loop for j from 0 below 4
                                       collect
-                                      (cond ((= i (first target-rows))
+                                      (cond ((= j 0)
+                                             nil)
+                                            ((= i (first target-rows))
                                              (first selected-types))
                                             ((= i (second target-rows))
-                                             (second selected-types)))))
-                  )))))
+                                             (second selected-types))))))))))
       object-matrix)))
 
 (defun randomize-arrangement (arrangement)
@@ -84,12 +85,12 @@
     (labels ((free-place ()
                (block find
                  (loop do
-                   (let ((x (random 4))
-                         (y (random 4)))
-                     (unless (find `(,x ,y) reassigned-indices
+                   (let ((x (+ 0 (random 4)))
+                         (y (+ 1 (random 2))))
+                     (unless (find `(,y ,x) reassigned-indices
                                    :test (lambda (xy assigned)
                                            (equal xy (cadr assigned))))
-                       (return-from find `(,x ,y))))))))
+                       (return-from find `(,y ,x))))))))
       (loop for object in collected-objects
             for place = (free-place)
             do (push `(,object ,place) reassigned-indices)))
@@ -157,17 +158,21 @@
                    (eql (nth j (nth i state)) nil))
           (return-from found `(,i ,j)))))))
 
-(defun find-free-place (state target)
+(defun find-free-place (state target &optional obstruction-ok)
   (block find
-    (loop for i from 0 below 4 do
+    (loop for i from 1 below 3 do
       (loop for j from 0 below 4 do
         (when (and (not (nth j (nth i state)))
-                   (not (nth j (nth i target))))
+                   (or obstruction-ok
+                       (not (nth j (nth i target)))))
           (return-from find `(,i ,j)))))))
 
 (defun find-obstacle (object-type state target)
+  ;;(print-arrangement state)
+  ;;(format t "~%")
+  ;;(print-arrangement target)
   (block find
-    (loop for i from 0 below 4 do
+    (loop for i from 1 below 3 do
       (loop for j from 0 below 4 do
         (when (and (nth j (nth i target))
                    (string= object-type
@@ -194,7 +199,7 @@
       (let* ((current-discrepancies (discrepancies state target))
              (next-misplaced (find-next-misplaced
                               current-discrepancies state)))
-        ;;(format t "Next misplaced: ~a~%" next-misplaced)
+        (format t "Next misplaced: ~a~%" next-misplaced)
         (when next-misplaced
           ;; find place where it should go, that is free
           (let ((free-target (find-free-target
@@ -203,10 +208,11 @@
                                         state))
                               state
                               target)))
+            (format t "Free target = ~a~%" free-target)
             (if free-target
                 (progn
-                  (push `(:move ,next-misplaced ,free-target)
-                        sequence)
+                  (setf sequence (append sequence
+                                         `((:move ,next-misplaced ,free-target))))
                   (setf state
                         (update-state
                          state
@@ -226,8 +232,12 @@
                            (nth (second next-misplaced)
                                 (nth (first next-misplaced) state))
                            state target))
-                        (free-place (find-free-place state target)))
-                    (push `(:move ,obstacle ,free-place) sequence)
+                        (free-place (or (find-free-place state target)
+                                        (find-free-place state target t))))
+                    (format t "Free place = ~a~%" free-place)
+                    (format t "Obstacle = ~a~%" obstacle)
+                    (setf sequence (append sequence
+                                           `((:move ,obstacle ,free-place))))
                     (setf state
                         (update-state
                          state
@@ -241,11 +251,11 @@
                            (first obstacle)
                            (second obstacle)
                            nil)))))))
-        ;;(format t "~%")
-        ;;(print-arrangement state)
-        ;;(format t "~%Entropy = ~a%~%"
-        ;;        (* (/ (entropy (discrepancies state target)) 16.0)
-        ;;           100.0))
+        (format t "~%")
+        (print-arrangement state)
+        (format t "~%Entropy = ~a%~%"
+               (* (/ (entropy (discrepancies state target)) 16.0)
+                  100.0))
         (setf entropy (entropy (discrepancies state target)))))
     sequence))
 
@@ -300,5 +310,8 @@
          (target (first problem))
          (current (second problem))
          (sequence (third problem)))
+    (roslisp:ros-info (planning problem) "Target: ~a" target)
+    (roslisp:ros-info (planning problem) "Start: ~a" current)
+    (roslisp:ros-info (planning problem) "Sequence: ~a" sequence)
     (resolve-and-spawn-object-arrangement current)
     (list target sequence)))
