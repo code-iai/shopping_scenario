@@ -196,7 +196,7 @@
           (equate object
                   (first (achieve `(objects-detected-in-rack ,rack ,object)))))
         (labels ((relative-xy (x-index y-index)
-                   (let* ((rack-level (get-rack-on-level rack (- 3 y-index)))
+                   (let* ((rack-level (get-rack-on-level rack y-index))
                           (rack-width (elt (get-item-dimensions rack-level) 1))
                           (item-space (/ rack-width 4))
                           (offset-h (- (+ (* (- 3 x-index) item-space)
@@ -242,13 +242,15 @@
                        (x-to (second detail-2))
                        (y-to (first detail-2)))
                    (let ((obj (object-at-rack-position x-from y-from)))
+                     (equate obj (first (achieve `(objects-detected-in-rack
+                                                   ,rack ,obj))))
                      (roslisp:ros-info (shopping plans) "Moving from ~a/~a to ~a/~a"
                                        x-from y-from x-to y-to)
                      (achieve `(object-picked-from-rack ,rack ,(current-desig obj)))
                      (let ((elevation (get-rack-level-elevation
-                                       (get-rack-on-level rack (- 3 y-to))))
-                           (xy (relative-xy x-to (- 3 y-to))))
+                                       (get-rack-on-level rack y-to)))
+                           (xy (relative-xy x-to y-to)))
                        (move-torso (/ elevation 5.0))
                        (achieve `(object-placed-on-rack
-                                  ,obj ,(get-rack-on-level rack (- 3 y-to))
+                                  ,obj ,(get-rack-on-level rack y-to)
                                   ,(first xy) ,(second xy)))))))))))))))
