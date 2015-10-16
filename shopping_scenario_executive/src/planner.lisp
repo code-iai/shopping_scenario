@@ -67,6 +67,8 @@
                                       collect
                                       (cond ((= j 0)
                                              nil)
+                                            ((= j 3)
+                                             nil)
                                             ((= i (first target-rows))
                                              (first selected-types))
                                             ((= i (second target-rows))
@@ -85,7 +87,7 @@
     (labels ((free-place ()
                (block find
                  (loop do
-                   (let ((x (+ 0 (random 4)))
+                   (let ((x (+ 1 (random 2)))
                          (y (+ 1 (random 2))))
                      (unless (find `(,y ,x) reassigned-indices
                                    :test (lambda (xy assigned)
@@ -161,7 +163,7 @@
 (defun find-free-place (state target &optional obstruction-ok)
   (block find
     (loop for i from 1 below 3 do
-      (loop for j from 0 below 4 do
+      (loop for j from 1 below 4 do
         (when (and (not (nth j (nth i state)))
                    (or obstruction-ok
                        (not (nth j (nth i target)))))
@@ -266,13 +268,19 @@
   ;;(print-arrangement target-arrangement)
   ;;(format t "~%Discrepancies:~%")
   (let ((discrepancies (discrepancies current-arrangement
-                                      target-arrangement)))
+                                      target-arrangement))
     ;;(print-arrangement discrepancies)
     ;;(format t "~%Entropy = ~a%~%"
     ;;        (* (/ (entropy discrepancies) 16.0) 100.0))
-    )
-  (find-action-sequence current-arrangement target-arrangement))
+        (as (find-action-sequence current-arrangement target-arrangement)))
+    (upside-down as)))
 
+(defun upside-down (action-sequence)
+  (loop for (type . parameters) in action-sequence collect
+        (case type
+          (:move `(:move (,(- 3 (caar parameters)) ,(cadar parameters))
+                         (,(- 3 (caadr parameters)) ,(cadadr parameters)))))))
+        
 (defun test-arrangement-planner ()
   (let* ((target (make-target-arrangement))
          (current (randomize-arrangement target)))
@@ -283,8 +291,8 @@
     (loop for i from 0 below 4 do
       (loop for j from 0 below 4 do
         (if (nth j (nth i arrangement))
-            (setf (aref array-arrangement i j 0) `(,(nth j (nth i arrangement))))
-            (setf (aref array-arrangement i j 0) nil))))
+            (setf (aref array-arrangement (- 3 i) j 0) `(,(nth j (nth i arrangement))))
+            (setf (aref array-arrangement (- 3 i) j 0) nil))))
     array-arrangement))
 
 (defun repopulate-shopping-items (arrangement)
@@ -300,6 +308,10 @@
   (let* ((target (make-target-arrangement))
          (resolved-items-target (repopulate-shopping-items target))
          (current (randomize-arrangement resolved-items-target)))
+    (format t "Initial configuration:~%")
+    (print-arrangement current)
+    (format t "Target configuration:~%")
+    (print-arrangement resolved-items-target)
     (list (make-array-arrangement resolved-items-target)
           (make-array-arrangement current)
           (plan-arrangement-actions current resolved-items-target))))
