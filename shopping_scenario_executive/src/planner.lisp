@@ -31,8 +31,8 @@
 ;; Possible target arrangements:
 ;;  - Four boxes of the same type on one of the rack levels
 
-(defun make-target-arrangement ()
-  (let ((object-types `("PancakeMix" "Lion"));;(shopping-item-classes))
+(defun make-target-arrangement () ;; PancakeMix
+  (let ((object-types `("Kelloggs" "Lion"));;(shopping-item-classes))
         (arrangement-types `(:lineup)))
     (let* ((this-arrangement (nth (random (length arrangement-types))
                                   arrangement-types))
