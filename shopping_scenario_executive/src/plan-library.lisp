@@ -122,13 +122,18 @@
   (roslisp:ros-info (shopping plans) "OBJECT-PLACED-ON-RACK"))
 
 (def-goal (achieve (object-placed-on-rack ?object ?level ?x ?y))
-  (format t "Step 1~%")
   (let* ((elevation 0.0)
          (absolute-pose (get-rack-level-relative-pose
                          ?level ?x ?y elevation)))
-    (format t "Step 2~%")
     (with-designators ((loc (location `((desig-props:pose
                                          ,absolute-pose)))))
-      (format t "Step 3~%")
-      (place-object ?object loc)
-      (format t "Step 4~%"))))
+      (place-object ?object loc))))
+
+(declare-goal switched-holding-hand (object)
+  "Switches hands for the held object `object'."
+  (declare (ignore object))
+  (roslisp:ros-info (shopping plans) "SWITCHED-HOLDING-HANDS"))
+
+(def-goal (achieve (switched-holding-hand ?object))
+  (handover-object ?object)
+  (roslisp:ros-info (shopping plans) "Handover complete~%"))

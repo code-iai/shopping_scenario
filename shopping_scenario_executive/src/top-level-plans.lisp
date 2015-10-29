@@ -67,6 +67,12 @@
 ;;; Shortcuts
 ;;;
 
+(defun start-scenario-external ()
+  (roslisp:ros-info (shopping) "Connecting to ROS")
+  (roslisp-utilities:startup-ros)
+  (roslisp:ros-info (shopping) "Running Shopping Scenario (simulated, simplified)")
+  (run-simulated-simple))
+
 (defun run-simulated (&key hints)
   "Shortcut for running the rack arrangement scenario in simulation."
   (run-rack-arrangement-protected
@@ -77,9 +83,12 @@
   "Shortcut for running the rack arrangement scenario in simulation in a simplified version."
   (run-simulated :hints (update-hints
                          hints
-                         `((:items-scene-classes ("Lion"))
-                           (:items-scene-amount 1)
-                           (:allowed-rack-levels (2))))))
+                         `((:items-scene-classes ("Lion" "Kelloggs"))
+                           (:items-scene-amount 4)
+                           (:allowed-rack-levels (1 2))))))
+
+(defun run-simulated-problem (&key hints)
+  (run-simulated :hints (update-hints hints `((:version :problem)))))
 
 (defun run-reality (&key hints)
   "Shortcut for running the rack arrangement scenario in reality."
@@ -104,7 +113,10 @@
       (:simulation
        (with-simulation-process-modules
          (prepare-simulated-scene :hints hints)
-         (rack-arrangement :hints hints)))
+         (case (get-hint hints :version :normal)
+           (:normal (rack-arrangement :hints hints))
+           (:handover (rack-arrangement-handover :hints hints))
+           (:problem (solve-arrangement-problem :hints hints)))))
       (:reality
        (with-process-modules
          (rack-arrangement :hints hints))))))
@@ -115,8 +127,10 @@
     (move-torso)
     (move-arms-away)
     (achieve `(rack-scene-perceived ,rack ,hints))
-    (let ((objects (get-shopping-objects)))
-      (loop for i from 0 to 2 do
+    (loop for i from 0 to 2 do
+      (let* ((objects (get-shopping-objects)))
+        (dolist (object objects)
+          (achieve `(objects-detected-in-rack ,rack ,object)))
         (dolist (object objects)
           (let ((detected-objects
                   (achieve `(objects-detected-in-rack ,rack ,object))))
@@ -128,8 +142,115 @@
                 (unless (desig:desig-equal object detected-object)
                   (equate object detected-object))
                 (try-forever
-                  (let ((level (get-rack-on-level rack (+ (random 2) 1)))
-                        (x -0.15)
-                        (y (- (random 0.6) 0.3)))
-                    (achieve `(object-placed-on-rack
-                               ,object ,level ,x ,y))))))))))))
+                  (multiple-value-bind (rack-level x y)
+                      (get-free-position-on-rack rack :hints hints)
+                    (let ((elevation (get-rack-level-elevation
+                                      (get-rack-on-level rack rack-level))))
+                      (move-torso (/ elevation 5.0))
+                      (achieve `(object-placed-on-rack
+                                 ,object ,(get-rack-on-level rack rack-level)
+                                 ,x ,y)))))))))))))
+
+(def-cram-function rack-arrangement-handover (&key hints)
+  "Performs a rack-tidying up scenario by controlling a PR2 robot that rearranges objects, based on a given target arrangement."
+  (let ((rack (first (get-racks))))
+    (move-torso)
+    (move-arms-away)
+    (achieve `(rack-scene-perceived ,rack ,hints))
+      (let* ((objects (get-shopping-objects)))
+        (dolist (object objects)
+          (achieve `(objects-detected-in-rack ,rack ,object)))
+        (let ((object (first objects)))
+          (let ((detected-objects
+                  (achieve `(objects-detected-in-rack ,rack ,object))))
+            (unless detected-objects
+              (cpl:fail 'cram-plan-failures:object-not-found))
+            (try-all-objects (detected-object detected-objects)
+              (when (desig-prop-value detected-object 'handle)
+                (achieve `(object-picked-from-rack ,rack ,detected-object))
+                (go-in-front-of-rack rack)
+                (achieve `(switched-holding-hand ,detected-object))
+                )))))))
+                ;; (unless (desig:desig-equal object detected-object)
+                ;;   (equate object detected-object))
+                ;; (try-forever
+                ;;   (multiple-value-bind (rack-level x y)
+                ;;       (get-free-position-on-rack rack :hints hints)
+                ;;     (let ((elevation (get-rack-level-elevation
+                ;;                       (get-rack-on-level rack rack-level))))
+                ;;       (move-torso (/ elevation 5.0))
+                ;;       (achieve `(object-placed-on-rack
+                ;;                  ,object ,(get-rack-on-level rack rack-level)
+                ;;                  ,x ,y)))))))))))))
+
+(def-cram-function solve-arrangement-problem (&key hints)
+  (let* ((problem (assert-planning-problem))
+         (target (first problem))
+         (sequence (second problem)))
+    (let ((rack (first (get-racks))))
+      (move-torso)
+      (move-arms-away)
+      (achieve `(rack-scene-perceived ,rack ,hints))
+      (let* ((objects (get-shopping-objects)))
+        (dolist (object objects)
+          (equate object
+                  (first (achieve `(objects-detected-in-rack ,rack ,object)))))
+        (labels ((relative-xy (x-index y-index)
+                   (let* ((rack-level (get-rack-on-level rack y-index))
+                          (rack-width (elt (get-item-dimensions rack-level) 1))
+                          (item-space (/ rack-width 4))
+                          (offset-h (- (+ (* (- 3 x-index) item-space)
+                                          (* item-space 0.5))
+                                       (/ rack-width 2))))
+                     `(-0.2 ,offset-h)))
+                 (pose-on-rack (x-index y-index)
+                   (let* ((rack-level (get-rack-on-level rack y-index))
+                          (rack-width (elt (get-item-dimensions rack-level) 1))
+                          (item-space (/ rack-width 4))
+                          (offset-h (- (+ (* (- 3 x-index) item-space)
+                                          (* item-space 0.5))
+                                       (/ rack-width 2)))
+                          (rel-pose (get-rack-level-relative-pose
+                                     rack-level
+                                     -0.2 offset-h 0.02)))
+                     rel-pose))
+                 (object-at-rack-position (x-index y-index)
+                   (let ((closest-object nil)
+                         (smallest-distance 1000.0))
+                     (let ((adv (roslisp:advertise "/hhhhhh" "geometry_msgs/PoseStamped")))
+                       (loop for object in objects
+                             for global-pose = (pose-on-rack x-index y-index)
+                             for testing = (roslisp:publish
+                                            adv (tf:pose-stamped->msg global-pose))
+                             for distance = (tf:v-dist
+                                             (tf:origin global-pose)
+                                             (tf:origin (reference
+                                                         (desig-prop-value
+                                                          (current-desig object) 'at))))
+                             when (< distance smallest-distance)
+                               do (setf smallest-distance distance)
+                                  (setf closest-object object)))
+                     closest-object)))
+          (loop for step in sequence do
+            (let ((command (first step))
+                  (detail-1 (second step))
+                  (detail-2 (third step)))
+              (case command
+                (:move
+                 (let ((x-from (second detail-1))
+                       (y-from (first detail-1))
+                       (x-to (second detail-2))
+                       (y-to (first detail-2)))
+                   (let ((obj (object-at-rack-position x-from y-from)))
+                     (equate obj (first (achieve `(objects-detected-in-rack
+                                                   ,rack ,obj))))
+                     (roslisp:ros-info (shopping plans) "Moving from ~a/~a to ~a/~a"
+                                       x-from y-from x-to y-to)
+                     (achieve `(object-picked-from-rack ,rack ,(current-desig obj)))
+                     (let ((elevation (get-rack-level-elevation
+                                       (get-rack-on-level rack y-to)))
+                           (xy (relative-xy x-to y-to)))
+                       (move-torso (/ elevation 5.0))
+                       (achieve `(object-placed-on-rack
+                                  ,obj ,(get-rack-on-level rack y-to)
+                                  ,(first xy) ,(second xy)))))))))))))))

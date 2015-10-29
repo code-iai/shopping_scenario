@@ -67,13 +67,6 @@
 ;;; Infrastructure Utilities
 ;;;
 
-(defun start-scenario-external ()
-  (roslisp:ros-info (shopping) "Connecting to ROS")
-  (roslisp-utilities:startup-ros)
-  (roslisp:ros-info (shopping) "Initializing Environment")
-  (prepare-settings)
-  (roslisp:ros-info (shopping) "This starts the scenario for autonomous operation once everyting is in place."))
-
 (defun load-shopping-item-urdf (shopping-item)
   (let ((urdf-path (get-item-urdf-path shopping-item)))
     (unless (gethash urdf-path *shopping-item-urdfs*)
@@ -233,6 +226,14 @@
   (move-arms-up :side :left)
   (move-arms-up :side :right))
 
+(defun handover-object (object)
+  (with-designators ((handover-action
+                      (action
+                       `((to handover)
+                         (type trajectory)
+                         (obj ,object)))))
+    (perform handover-action)))
+
 (defun pick-object (object &key stationary)
   (let ((object (desig:current-desig object)))
     (cond (stationary
@@ -242,26 +243,24 @@
 
 (defun place-object (object location &key stationary)
   (let ((object (desig:current-desig object)))
-    (cpl:with-failure-handling
-        ((cram-plan-failures:manipulation-pose-unreachable (f)
-           (declare (ignore f))
-           (cram-plan-library::retry-with-updated-location
-            location (next-solution location)))
-         (cram-plan-failures:location-not-reached-failure (f)
-           (declare (ignore f))
-           (ros-warn (longterm) "Cannot reach location. Retrying.")
-           (cpl:retry)))
-      ;; (let ((side (var-value
-      ;;              '?side
-      ;;              (lazy-car (crs:prolog
-      ;;                         `(cram-plan-library:object-in-hand
-      ;;                           ,object ?side))))))
+    (cpl:with-retry-counters ((retry-counter 0))
+      (cpl:with-failure-handling
+          ((cram-plan-failures:manipulation-pose-unreachable (f)
+             (declare (ignore f))
+             (cpl:do-retry retry-counter
+               (cram-plan-library::retry-with-updated-location
+                location (next-solution location))))
+           (cram-plan-failures:location-not-reached-failure (f)
+             (declare (ignore f))
+             (cpl:do-retry retry-counter
+               (ros-warn (longterm) "Cannot reach location. Retrying.")
+               (cpl:retry))))
         (cond (stationary
                (achieve `(cram-plan-library::object-put
                           ,object ,location)))
               (t
                (achieve `(cram-plan-library::object-placed-at
-                          ,object ,location)))))));)
+                          ,object ,location))))))))
 
 (defun perceive-a (object &key stationary (move-head t))
   (cpl:with-failure-handling
@@ -292,9 +291,7 @@
            (let ((at (desig-prop-value object 'desig-props:at)))
              (when move-head
                (achieve `(cram-plan-library:looking-at ,(reference at))))
-             (first (perceive-object
-                     'cram-plan-library:currently-visible
-                     object))))
+             (perceive-object 'cram-plan-library:currently-visible object)))
           (t (cpl:with-failure-handling
                  ((cram-plan-failures:location-not-reached-failure (f)
                     (declare (ignore f))
@@ -667,6 +664,18 @@
               "Not enriching unnamed object.")
              object))))
 
+(defmethod cram-language::on-handover-transition (side-old side-new object-name)
+  (roslisp:ros-info (shopping utils) "Handover transition from side ~a to side ~a."
+                    side-old side-new)
+  (roslisp:call-service "/gazebo/detach"
+                        'attache_msgs-srv:Attachment
+                        :model1 "pr2"
+                        :link1 (case side-old
+                                 (:left "l_wrist_roll_link")
+                                 (:right "r_wrist_roll_link"))
+                        :model2 object-name
+                        :link2 "link"))
+
 (defmethod cram-language::on-grasp-object (object-name side)
   (roslisp:ros-info (shopping utils) "Grasp object ~a with side ~a." object-name side)
   (roslisp:call-service "/gazebo/attach"
@@ -688,3 +697,36 @@
                                  (:right "r_wrist_roll_link"))
                         :model2 object-name
                         :link2 "link"))
+
+(defun position-free? (rack-level x y &key (threshold 0.15))
+  (let* ((known-objects (get-shopping-items))
+         (present-object-poses
+           (force-ll
+            (lazy-mapcar
+             (lambda (bdgs)
+               (with-vars-bound (?p) bdgs
+                 ?p))
+             (crs:prolog `(and (btr:bullet-world ?w)
+                               (btr:object ?w ?o)
+                               (member ?o ,known-objects)
+                               (btr:object-pose ?w ?o ?p))))))
+         (elevation (get-rack-level-elevation rack-level)))
+    (loop for pose in present-object-poses do
+      (when (<= (tf:v-dist (tf:origin (get-rack-level-relative-pose
+                                       rack-level x y elevation))
+                           (tf:origin pose))
+                threshold)
+        (return nil))))
+  t)
+
+(defun get-free-position-on-rack (rack &key hints)
+  (loop while t do
+    (let ((rack-level
+            (let ((allowed-rack-levels
+                    (get-hint hints :allowed-rack-levels '(0 1 2 3))))
+              (nth (random (length allowed-rack-levels))
+                   allowed-rack-levels)))
+          (x -0.15)
+          (y (- (random 0.6) 0.3)))
+      (when (position-free? (get-rack-on-level rack rack-level) x y)
+        (return (values rack-level x y))))))

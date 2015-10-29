@@ -58,5 +58,5 @@
   (:export start-scenario-external)
   (:desig-properties :on :name :grasp-type :handle
                      :pose :shape :box :cylinder
-                     :type :navigation :pose :goal
-                     :perceive :obj :to :at :reach :see))
+                     :type :navigation :pose :goal :trajectory
+                     :perceive :obj :to :at :reach :see :handover))
