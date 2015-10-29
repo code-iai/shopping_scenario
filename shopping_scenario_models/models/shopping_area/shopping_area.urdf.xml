@@ -5,12 +5,12 @@
   <xacro:include filename="$(find shopping_scenario_models)/defs/utils.xml"/>
   
   <macro name="rack_floor" params="parent rack_size_x rack_size_y size_z">
-    <boxlink name="rack_level_0" size_x="${rack_size_x}" size_y="${rack_size_y}" size_z="${size_z}" />
+    <boxlink name="rack_level_0" size_x="${rack_size_x}" size_y="${rack_size_y}" size_z="${size_z}" mass="5" />
     <static_joint name="rack_level_0" parent="${parent}" xyz="0 0 ${size_z/2}" />
   </macro>
   
   <macro name="wall" params="name parent x y size_x size_y size_z">
-    <boxlink name="${name}" size_x="${size_x}" size_y="${size_y}" size_z="${size_z}" />
+    <boxlink name="${name}" size_x="${size_x}" size_y="${size_y}" size_z="${size_z}" mass="5" />
     <static_joint name="${name}" parent="${parent}" xyz="${x} ${y} ${size_z/2}" />
   </macro>
   
