@@ -6,11 +6,11 @@
   
   <xacro:include filename="$(find shopping_scenario_models)/defs/inertia.xml"/>
   
-  <macro name="boxlink" params="name size_x size_y size_z">
-    <boxlink_materialized name="${name}" size_x="${size_x}" size_y="${size_y}" size_z="${size_z}" material="PlainGrey"/>
+  <macro name="boxlink" params="name size_x size_y size_z mass">
+    <boxlink_materialized name="${name}" size_x="${size_x}" size_y="${size_y}" size_z="${size_z}" material="PlainGrey" mass="${mass}"/>
   </macro>
   
-  <macro name="boxlink_materialized" params="name size_x size_y size_z material">
+  <macro name="boxlink_materialized" params="name size_x size_y size_z material mass">
     <link name="${name}">
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0" />
@@ -21,19 +21,27 @@
 	<material name="${material}" />
       </visual>
       
-      <collision>
+    <collision>
         <origin rpy="0 0 0" xyz="0 0 0" />
-	<contact_coefficients mu="1.0" />
+        <contact_coefficients mu="1.0" />
         <geometry>
           <box size="${size_x} ${size_y} ${size_z}" />
         </geometry>
-      </collision>
+    <surface>
+        <friction>
+            <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+            </ode>
+        </friction>
+    </surface>
+    </collision>
       
-      <cuboid_inertia width="${size_x}" length="${size_z}" height="${size_y}" mass="0.1" />
+      <cuboid_inertia width="${size_x}" length="${size_z}" height="${size_y}" mass="${mass}" />
     </link>
   </macro>
   
-  <macro name="cylinderlink" params="name height radius">
+  <macro name="cylinderlink" params="name height radius mass">
     <link name="${name}">
       <visual>
 	<origin rpy="0 0 0" xyz="0 0 0" />
@@ -42,15 +50,23 @@
 	</geometry>
       </visual>
       
-      <collision>
+    <collision>
 	<origin rpy="0 0 0" xyz="0 0 0" />
 	<contact_coefficients mu="1.0" />
 	<geometry>
 	  <cylinder radius="${radius}" length="${height}" />
 	</geometry>
-      </collision>
+    <surface>
+        <friction>
+            <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+            </ode>
+        </friction>
+    </surface>
+    </collision>
       
-      <cylinder_inertia radius="${radius}" length="${height}" mass="1" />
+      <cylinder_inertia radius="${radius}" length="${height}" mass="${mass}" />
     </link>
   </macro>
   
