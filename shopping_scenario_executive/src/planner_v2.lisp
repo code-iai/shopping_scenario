@@ -30,6 +30,7 @@
 
 (defvar *markers* (make-hash-table :test 'equal))
 (defvar *rack-level-dimensions* (make-hash-table :test 'equal))
+(defvar *object-dimensions* (make-hash-table :test 'equal))
 
 (defun get-rack-level-dimensions (level)
   (or (gethash level *rack-level-dimensions*)
@@ -38,6 +39,11 @@
              (rack-level-dimensions (get-item-dimensions rack-level)))
         (setf (gethash level *rack-level-dimensions*)
               rack-level-dimensions))))
+
+(defun get-item-dimensions-cached (object)
+  (or (gethash object *object-dimensions*)
+      (setf (gethash object *object-dimensions*)
+            (get-item-dimensions object))))
 
 (defun pose->relative-pose (pose-stamped frame-id)
   (cl-tf2:ensure-pose-stamped-transformed
@@ -61,7 +67,8 @@
      (tf:make-3d-vector x y z)
      (tf:euler->quaternion :ax roll :ay pitch :az yaw))))
 
-(defun make-zone-pose (level zone x y)
+(defun make-zone-pose (level zone x y
+                       &key (orientation (tf:euler->quaternion)))
   (let* ((rack-level-dimensions (get-rack-level-dimensions level))
          (zones-per-level 4)
          (zone-width (/ (elt rack-level-dimensions 1) zones-per-level))
@@ -79,7 +86,7 @@
       "/rack_level_" (write-to-string level))
      0.0
      (tf:make-3d-vector c-x c-y c-z)
-     (tf:euler->quaternion))))
+     orientation)))
 
 (defun display-zones (&key highlight-zones)
   (let* ((rack-level-dimensions (get-rack-level-dimensions 1))
@@ -100,7 +107,7 @@
                                     ,zone-height))
                       (zone-alpha (cond ((highlight-zone level zone)
                                          0.6)
-                                        (t 0.3)))
+                                        (t 0.25)))
                       (color (cond ((evenp (+ level id))
                                     `(0.0 1.0 0.0 ,zone-alpha))
                                    (t `(0.0 1.0 1.0 ,zone-alpha))))
@@ -141,7 +148,7 @@
 
 (defun display-objects (objects &key highlighted-objects)
   (labels ((object->marker-message (object id)
-             (let ((dimensions (get-item-dimensions object))
+             (let ((dimensions (get-item-dimensions-cached object))
                    (color (cond ((find object highlighted-objects
                                        :test #'string=)
                                  `(0.0 1.0 0.0 1.0))
@@ -220,21 +227,29 @@
                                            0 zone 0 0)))
                               (zone-x (tf:x (tf:origin zone-pose)))
                               (zone-y (tf:y (tf:origin zone-pose)))
-                              (pose-x (+ (tf:x (tf:origin pose))
-                                         (/ zone-width 2)))
+                              (pose-x (tf:x (tf:origin pose)))
                               (pose-y (tf:y (tf:origin pose))))
                          (and (> pose-x
-                                 (- zone-x (/ zone-depth 2)))
+                                 (- zone-x (/ zone-width 2)))
                               (< pose-x
-                                 (+ zone-x (/ zone-depth 2)))
+                                 (+ zone-x (/ zone-width 2)))
                               (> pose-y
-                                 (- zone-y (/ zone-width 2)))
+                                 (- zone-y (/ zone-depth 2)))
                               (< pose-y
-                                 (+ zone-y (/ zone-width 2)))))))))
+                                 (+ zone-y (/ zone-depth 2)))))))))
+         (unless zone
+           (format t "~%~a ~a~%"
+                   zone-width
+                   pose)
+           (loop for zone from 0 below 4
+                 do (format t "~a~%" (pose->rack-relative-pose
+                                          (make-zone-pose
+                                           0 zone 0 0))))
+           )
          `(,level ,zone)))
      objects)))
 
-(defun toy-problem ()
+(defun toy-problem-state ()
   (display-zones)
   (let ((item-1 (add-shopping-item "Kelloggs"))
         (item-2 (add-shopping-item "Kelloggs")))
@@ -243,3 +258,92 @@
     (display-objects `(,item-1 ,item-2))
     (let ((object-zones (assess-object-zones `(,item-1 ,item-2))))
       (display-zones :highlight-zones object-zones))))
+
+(defun detected-type (object)
+  (let ((found (find "JIRAnnotatorObject"
+                     (desig-prop-values
+                      object 'desig-props::detection)
+                     :test (lambda (subject detail)
+                             (string= (cadr (assoc 'desig-props::source
+                                                   detail))
+                                      subject)))))
+    (when found
+      (convert-object-name
+       (cadr (assoc 'desig-props::type found))))))
+
+(defun convert-object-name (name)
+  (let ((new-name
+          (cond
+            ((string= name "pancake-mix") "PancakeMix")
+            ((string= name "can") "Corn")
+            ((string= name "tomato-sauce") "TomatoSauce")
+            ((string= name "jodsalz-salt-container") "SaltDispenser")
+            ((string= name "lion-cereals") "Lion")
+            ((string= name "cornflakes") "Kelloggs")
+            (t "SaltDispenser")))) ;; Default
+    (cond (new-name new-name)
+          (t name))))
+
+(defun get-current-state ()
+  (let ((objects (get-shopping-items)))
+    (mapcar (lambda (object)
+              `(,(first (assess-object-zones `(,object)))
+                ,(get-item-class object)))
+            objects)))
+
+(defun toy-problem-solve ()
+  ;; (let ((item-1 (add-shopping-item "Kelloggs"))
+  ;;       (item-2 (add-shopping-item "Kelloggs")))
+  ;;   (place-object-in-zone item-1 0 3 0.0 0.0)
+  ;;   (place-object-in-zone item-2 2 2 0.0 0.0)
+  ;;   (display-objects `(,item-1 ,item-2))))
+  (remove-all-shopping-items)
+  (let ((current-state (get-current-state))
+        (target-state
+          (make-planning-state
+           0 `(((1 0) "Kelloggs")
+               ((1 1) "Kelloggs"))))
+        (perceived-objects
+          (or *perceived-objects*
+              (setf *perceived-objects*
+                    (top-level
+                      (with-process-modules
+                        (robosherlock-pm::perceive-object-designator
+                         (make-designator 'object nil))))))))
+          ;;(top-level
+          ;;  (with-process-modules
+          ;;    (robosherlock-pm::perceive-object-designator
+          ;;     (make-designator 'object nil))))))
+    (format t "Found ~a object(s)~%" (length perceived-objects))
+    (let ((all-objects
+            (mapcar (lambda (object)
+                      (let ((pose (desig-prop-value
+                                   (desig-prop-value
+                                    object 'desig-props:at)
+                                   'desig-props:pose))
+                            (item (add-shopping-item
+                                   (or (detected-type object)
+                                       "Kelloggs"))))
+                        (set-item-pose item pose)
+                        item))
+                    perceived-objects)))
+      (display-objects all-objects)
+      (let ((object-zones (assess-object-zones all-objects)))
+        (display-zones :highlight-zones object-zones)
+        (format t "~a~%" object-zones)))))
+    ;;(modified-a-star current-state target-state)))
+
+(defun make-planning-state (robot-pose arrangement)
+  `((:robot-pose ,robot-pose)
+    ,@arrangement))
+
+(defun make-transitions (state)
+  )
+
+(defun transition-valid? (state transition)
+  )
+
+(defun modified-a-star (start-state target-state)
+  (let ((closed-set nil)
+        (open-set `(,start-state)))
+    ))
