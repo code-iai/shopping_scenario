@@ -71,13 +71,15 @@
      (:file "reasoning" :depends-on ("package"))
      (:file "utils" :depends-on ("package" "reasoning"))
      (:file "planner" :depends-on ("package" "reasoning"))
+     (:file "planner_v2" :depends-on ("package" "reasoning"))
      (:file "plan-library" :depends-on ("package"
                                         "utils"
                                         "reasoning"
                                         "costmap-metadata"
                                         "sem-map-config"
                                         "facts"
-                                        "planner"))
+                                        "planner"
+                                        "planner_v2"))
      (:file "top-level-plans" :depends-on ("package"
                                            "utils"
                                            "reasoning"
@@ -85,4 +87,5 @@
                                            "sem-map-config"
                                            "facts"
                                            "plan-library"
-                                           "planner"))))))
+                                           "planner"
+                                           "planner_v2"))))))

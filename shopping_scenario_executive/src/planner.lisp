@@ -267,7 +267,7 @@
   ;;(format t "~%Target arrangement:~%")
   ;;(print-arrangement target-arrangement)
   ;;(format t "~%Discrepancies:~%")
-  (let ((discrepancies (discrepancies current-arrangement
+   (let ((discrepancies (discrepancies current-arrangement
                                       target-arrangement))
     ;;(print-arrangement discrepancies)
     ;;(format t "~%Entropy = ~a%~%"

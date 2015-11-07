@@ -220,6 +220,38 @@
       `("add_shopping_item" ,(add-prolog-namespace class) ?instance)
     (strip-prolog-string ?instance)))
 
+(defun set-item-pose (item pose)
+  "Sets the `item's pose in the knowledge base. This affects planning."
+  (let* ((pose (cl-tf2:ensure-pose-stamped-transformed
+                *tf* pose "/map"))
+         (rotation-matrix (cl-transforms:pose->matrix pose))
+         (dimensions (array-dimensions rotation-matrix))
+         (linear-entry-list
+           (loop for i from 0 below (first dimensions)
+                 append
+                 (loop for j from 0 below (second dimensions) append
+                       `(,(aref rotation-matrix i j))))))
+    (json-prolog:prolog `("set_object_pose"
+                          ,(add-prolog-namespace item)
+                          ,@(loop for i from 0 below (length linear-entry-list) collect
+                                  (nth i linear-entry-list))))))
+
+(defun get-item-pose (item)
+  "Gets the `item's pose from the knowledge base."
+  (with-first-prolog-vars-bound (?pose)
+      `("get_object_pose" ,(add-prolog-namespace item) ?pose)
+    (let ((array
+            (make-array
+             `(4 4)
+             :initial-contents (loop for i from 0 below 4
+                                     collect
+                                     (loop for j from 0 below 4
+                                           collect
+                                           (nth (+ (* i 4) j) ?pose))))))
+      (tf:pose->pose-stamped
+       "map" 0.0
+       (tf:transform->pose (tf:matrix->transform array))))))
+
 (defun remove-shopping-item (item)
   "Removes the shopping item with the (namespace-less) OWL identifier `item'."
   (json-prolog:prolog `("remove_shopping_item"

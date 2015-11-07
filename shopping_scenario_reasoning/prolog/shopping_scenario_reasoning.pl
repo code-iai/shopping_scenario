@@ -53,7 +53,11 @@
       object_semantic_handle/2,
       grasp_type/2,
       handle_pose/2,
-      object_type/2
+      object_type/2,
+      set_object_pose/17,
+      get_object_pose/2,
+      list_to_rotmat/2,
+      rotmat_assert/3
     ]).
 
 
@@ -86,7 +90,11 @@
     object_semantic_handle(r, r),
     grasp_type(r, r),
     handle_pose(r, r),
-    object_type(r, r).
+    object_type(r, r),
+    set_object_pose(r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, r),
+    get_object_pose(r, r),
+    list_to_rotmat(r, r),
+    rotmat_assert(r, r, r).
 
 
 :- rdf_db:rdf_register_ns(rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', [keep(true)]).
@@ -366,3 +374,65 @@ add_shopping_item(Type, Item) :-
 %
 remove_shopping_item(Item) :-
     rdf_retractall(Item, _, _).
+
+
+%% set_object_pose(?Object, ?M00, ?M01, ?M02, ?M03, ?M10, ?M11, ?M12, ?M13, ?M20, ?M21, ?M22, ?M23, ?M30, ?M31, ?M32, ?M33)
+% 
+% Sets the Object's pose to a RotationMatrix3D instance represented by the Mnm.
+% 
+% @param Object             The object to set the rotation matrix for
+% @param M00                Entry M00 of the rotation matrix
+% @param M01                Entry M01 of the rotation matrix
+% @param M02                Entry M02 of the rotation matrix
+% @param M03                Entry M03 of the rotation matrix
+% @param M10                Entry M10 of the rotation matrix
+% @param M11                Entry M11 of the rotation matrix
+% @param M12                Entry M12 of the rotation matrix
+% @param M13                Entry M13 of the rotation matrix
+% @param M20                Entry M20 of the rotation matrix
+% @param M21                Entry M21 of the rotation matrix
+% @param M22                Entry M22 of the rotation matrix
+% @param M23                Entry M23 of the rotation matrix
+% @param M30                Entry M30 of the rotation matrix
+% @param M31                Entry M31 of the rotation matrix
+% @param M32                Entry M32 of the rotation matrix
+% @param M33                Entry M33 of the rotation matrix
+set_object_pose(Object, M00, M01, M02, M03, M10, M11, M12, M13, M20, M21, M22, M23, M30, M31, M32, M33) :-
+    rdf_instance_from_class('http://knowrob.org/kb/knowrob.owl#RotationMatrix3D', RotationMatrix),
+    rdf_assert(Object, knowrob:'eventOccursAt', RotationMatrix),
+    list_to_rotmat([M00, M01, M02, M03, M10, M11, M12, M13, M20, M21, M22, M23, M30, M31, M32, M33], RotationMatrix).
+
+
+%% list_to_rotmat(?PoseList, ?RotMat)
+% 
+% Asserts the contents of PoseList into the RotMat RotationMatrix3D instance.
+% 
+% @param PoseList           The pose list to set as rotation matrix
+% @param RotMat             The instance of RotationMatrix3D to assert the pose list into
+list_to_rotmat([M00, M01, M02, M03, M10, M11, M12, M13, M20, M21, M22, M23, M30, M31, M32, M33], RotMat) :-
+    rotmat_assert(RotMat, knowrob:'m00', M00), rotmat_assert(RotMat, knowrob:'m01', M01), rotmat_assert(RotMat, knowrob:'m02', M02), rotmat_assert(RotMat, knowrob:'m03', M03),
+    rotmat_assert(RotMat, knowrob:'m10', M10), rotmat_assert(RotMat, knowrob:'m11', M11), rotmat_assert(RotMat, knowrob:'m12', M12), rotmat_assert(RotMat, knowrob:'m13', M13),
+    rotmat_assert(RotMat, knowrob:'m20', M20), rotmat_assert(RotMat, knowrob:'m21', M21), rotmat_assert(RotMat, knowrob:'m22', M22), rotmat_assert(RotMat, knowrob:'m23', M23),
+    rotmat_assert(RotMat, knowrob:'m30', M30), rotmat_assert(RotMat, knowrob:'m31', M31), rotmat_assert(RotMat, knowrob:'m32', M32), rotmat_assert(RotMat, knowrob:'m33', M33).
+
+
+%% rotmat_assert(?RotationMatrix, ?MatrixEntry, ?Value)
+% 
+% Asserts the Value into the MatrixEntry of RotationMatrix.
+% 
+% @param RotationMatrix     The instance of RotationMatrix3D to assert the value into.
+% @param MatrixEntry        The entry in RotationMatrix to assert the value into.
+% @param Value              The value to assert into RotationMatrix.
+rotmat_assert(RotationMatrix, MatrixEntry, Value) :-
+    rdf_retractall(RotationMatrix, MatrixEntry, _),
+    term_to_atom(Value, ValueAtom),
+    rdf_assert(RotationMatrix, MatrixEntry, literal(type(double, ValueAtom))).
+
+
+%% get_object_pose(?Object, ?Pose)
+% 
+% @param Object   The object to get the pose for
+% @param Pose     The pose to return
+get_object_pose(Object, Pose) :-
+    rdf_has(Object, knowrob:'eventOccursAt', RotationMatrix),
+    rotmat_to_list(RotationMatrix, Pose).
