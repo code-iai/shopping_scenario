@@ -237,15 +237,6 @@
                                  (- zone-y (/ zone-depth 2)))
                               (< pose-y
                                  (+ zone-y (/ zone-depth 2)))))))))
-         (unless zone
-           (format t "~%~a ~a~%"
-                   zone-width
-                   pose)
-           (loop for zone from 0 below 4
-                 do (format t "~a~%" (pose->rack-relative-pose
-                                          (make-zone-pose
-                                           0 zone 0 0))))
-           )
          `(,level ,zone)))
      objects)))
 
@@ -279,41 +270,26 @@
             ((string= name "tomato-sauce") "TomatoSauce")
             ((string= name "jodsalz-salt-container") "SaltDispenser")
             ((string= name "lion-cereals") "Lion")
-            ((string= name "cornflakes") "Kelloggs")
-            (t "SaltDispenser")))) ;; Default
+            ((string= name "cornflakes") "Kelloggs"))))
     (cond (new-name new-name)
-          (t name))))
+          (t "SaltDispenser")))) ;; Default model
 
 (defun get-current-state ()
   (let ((objects (get-shopping-items)))
     (mapcar (lambda (object)
               `(,(first (assess-object-zones `(,object)))
-                ,(get-item-class object)))
+                ,object))
             objects)))
 
 (defun toy-problem-solve ()
-  ;; (let ((item-1 (add-shopping-item "Kelloggs"))
-  ;;       (item-2 (add-shopping-item "Kelloggs")))
-  ;;   (place-object-in-zone item-1 0 3 0.0 0.0)
-  ;;   (place-object-in-zone item-2 2 2 0.0 0.0)
-  ;;   (display-objects `(,item-1 ,item-2))))
   (remove-all-shopping-items)
-  (let ((current-state (get-current-state))
-        (target-state
-          (make-planning-state
-           0 `(((1 0) "Kelloggs")
-               ((1 1) "Kelloggs"))))
-        (perceived-objects
+  (let ((perceived-objects
           (or *perceived-objects*
               (setf *perceived-objects*
                     (top-level
                       (with-process-modules
                         (robosherlock-pm::perceive-object-designator
                          (make-designator 'object nil))))))))
-          ;;(top-level
-          ;;  (with-process-modules
-          ;;    (robosherlock-pm::perceive-object-designator
-          ;;     (make-designator 'object nil))))))
     (format t "Found ~a object(s)~%" (length perceived-objects))
     (let ((all-objects
             (mapcar (lambda (object)
@@ -327,11 +303,25 @@
                         (set-item-pose item pose)
                         item))
                     perceived-objects)))
-      (display-objects all-objects)
       (let ((object-zones (assess-object-zones all-objects)))
-        (display-zones :highlight-zones object-zones)
-        (format t "~a~%" object-zones)))))
-    ;;(modified-a-star current-state target-state)))
+        (display-zones :highlight-zones object-zones))
+      (let ((current-state (get-current-state)))
+        (modified-a-star
+         current-state
+         (make-target-state current-state))))))
+
+(defun make-target-state (start-state)
+  (let ((index 0))
+    (loop for level from 0 below 4
+          append
+          (loop for zone from 0 below 4
+                as it = (prog1
+                            (when (< index (length start-state))
+                              `((,level ,zone)
+                                ,(second (elt start-state index))))
+                          (incf index))
+                when it
+                  collect it))))
 
 (defun make-planning-state (robot-pose arrangement)
   `((:robot-pose ,robot-pose)
@@ -346,4 +336,4 @@
 (defun modified-a-star (start-state target-state)
   (let ((closed-set nil)
         (open-set `(,start-state)))
-    ))
+    open-set))
