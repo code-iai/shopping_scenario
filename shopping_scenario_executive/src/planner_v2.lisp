@@ -333,32 +333,34 @@
                         (set-item-pose item pose)
                         item))
                     perceived-objects)))
+      (display-objects all-objects)
       (let ((object-zones (assess-object-zones all-objects)))
         (display-zones :highlight-zones object-zones))
-      (let ((current-state (get-current-arrangement)))
+      (let ((current-state (make-planning-state 0 (get-current-arrangement))))
         (modified-a-star
          current-state
          (make-target-state current-state))))))
 
 (defun make-target-state (start-state)
-  (make-planning-state
-   0
-   (let ((index 0))
-     (loop for level from 0 below 4
-           append
-           (loop for zone from 0 below 4
-                 as it = (prog1
-                             (when (< index (length start-state))
-                               `((,level ,zone)
-                                 (0.0 0.0 0.0) ;; x, y, theta (az)
-                                 ,(second (elt start-state index))))
-                           (incf index))
-                 when it
-                   collect it)))))
+  (let* ((arrangement (cdr (assoc :arrangement start-state))))
+    (make-planning-state
+     0
+     (let ((index 0))
+       (loop for level from 0 below 4
+             append
+             (loop for zone from 0 below 4
+                   as it = (prog1
+                               (when (< index (length arrangement))
+                                 `(((,level ,zone)
+                                    (0.0 0.0 0.0)) ;; x, y, theta (az)
+                                   ,(second (elt arrangement index))))
+                             (incf index))
+                   when it
+                     collect it))))))
 
-(defun make-planning-state (robot-pose arrangement)
+(defun make-planning-state (robot-pose arrangement &key in-hand-left in-hand-right)
   `((:robot-pose ,robot-pose)
-    (:in-hand (:left nil) (:right nil))
+    (:in-hand ((:left ,in-hand-left) (:right ,in-hand-right)))
     (:arrangement ,@arrangement)))
 
 (defun level-zone-in-state (level zone state)
@@ -367,8 +369,7 @@
      (not
       (find `(,level ,zone) arrangement
             :test (lambda (subject list-item)
-                    (and (eql (car subject) (caaar list-item))
-                         (eql (cadr subject) (cadaar list-item)))))))))
+                    (equal subject (first (first list-item)))))))))
 
 (defun free-level-zones (state)
   (loop for level from 0 below 4
@@ -379,86 +380,202 @@
 
 (defun make-transitions (state)
   (let* ((robot-pose (cadr (assoc :robot-pose state)))
-         (in-hand (cdr (assoc :in-hand state)))
+         (in-hand (cadr (assoc :in-hand state)))
          (arrangement (cdr (assoc :arrangement state)))
          (transitions
            (append
             ;; Picking
-            `(,(loop for set in arrangement
-                     as level-zone-source = (first set)
-                     as object = (second set)
-                     append `((:pick ,object :left)
-                              (:pick ,object :right))))
+            (loop for set in arrangement
+                  as level-zone-source = (first set)
+                  as object = (second set)
+                  append `((:pick ,object :left)
+                           (:pick ,object :right)))
             ;; Placing
-            `(,(loop for set in in-hand
-                     when (second set)
-                       append
-                       (loop for free-level-zone in (free-level-zones state)
-                             collect `(:place ,(second set)
-                                              ,free-level-zone)))))))
+            (loop for set in in-hand
+                  when (second set)
+                    append
+                    (loop for free-level-zone in (free-level-zones state)
+                          collect `(:place ,(second set)
+                                           ,free-level-zone))))))
     (remove-if-not (lambda (transition)
                      (transition-valid? state transition))
                    transitions)))
 
 (defun transition-valid? (state transition)
-  (declare (ignore state transition))
-  ;; TODO: Define this for later use.
-  t)
+  (let* ((robot-pose (cadr (assoc :robot-pose state)))
+         (in-hand-left
+           (second (assoc :left (second
+                                 (assoc :in-hand state)))))
+         (in-hand-right
+           (second (assoc :right (second
+                                  (assoc :in-hand state)))))
+         (arrangement (cdr (assoc :arrangement state)))
+         (operation (first transition)))
+    (or (and (eql operation :pick)
+             (or (and (not in-hand-left)
+                      (eql (third transition) :left))
+                 (and (not in-hand-right)
+                      (eql (third transition) :right))))
+        (and (eql operation :place)))))
 
-(defun heuristic-cost-estimate (state-1 state-2)
-  )
+(defun state-entropy (current-state goal-state)
+  (let* ((goal-robot-pose (second (assoc :robot-pose goal-state)))
+         (current-robot-pose (second (assoc :robot-pose current-state)))
+         (goal-arrangement (cdr (assoc :arrangement goal-state)))
+         (current-arrangement (cdr (assoc :arrangement current-state))))
+    (loop for set in goal-arrangement
+          as goal-level-zone = (first set)
+          as goal-object = (second set)
+          as current-object = (second
+                               (find goal-level-zone current-arrangement
+                                     :test
+                                     (lambda (subject list-item)
+                                       (equal subject (first (first list-item))))))
+          when (not (string= current-object goal-object))
+            counting 1 into wrongly-placed
+          counting 1 into total
+          finally (return (/ (+ wrongly-placed
+                                (cond ((= current-robot-pose goal-robot-pose)
+                                       0)
+                                      (t 1)))
+                             (+ total 1))))))
 
 (defun distance-between (state-1 state-2)
-  )
+  (state-entropy state-1 state-2))
+
+(defun heuristic-cost-estimate (state-1 state-2)
+  (distance-between state-1 state-2))
 
 (defun apply-transition (state transition)
-  )
+  (let* ((robot-pose (second (assoc :robot-pose state)))
+         (in-hand-left
+           (second (assoc :left (second
+                                 (assoc :in-hand state)))))
+         (in-hand-right
+           (second (assoc :right (second
+                                  (assoc :in-hand state)))))
+         (arrangement (cdr (assoc :arrangement state)))
+         (operation (first transition)))
+    (case operation
+      (:pick
+       (let ((object (second transition))
+             (side (third transition)))
+         (make-planning-state
+          robot-pose
+          (remove-if (lambda (set)
+                       (string= (second set) object))
+                     arrangement)
+          :in-hand-left (cond ((eql side :left)
+                               object)
+                              (t in-hand-left))
+          :in-hand-right (cond ((eql side :right)
+                                object)
+                               (t in-hand-right)))))
+      (:place
+       (let* ((object (second transition))
+              (target (third transition)))
+         (make-planning-state
+          robot-pose
+          (append
+           arrangement
+           `((,target (0.0 0.0 0.0)) ,object))
+          :in-hand-left (cond ((string= in-hand-left object)
+                               nil)
+                              (t in-hand-left))
+          :in-hand-right (cond ((string= in-hand-right object)
+                                nil)
+                               (t in-hand-right))))))))
 
 (defun reconstruct-path (came-from state)
-  )
+  (let ((total-path `(,state))) 
+    (loop while (gethash state came-from)
+          do (setf state (gethash state came-from))
+             (push state total-path)
+             (setf (gethash state came-from) nil))
+    total-path))
+
+(defun lowest-score-hash (hash-table)
+  (let ((lowest-score 10000)
+        (lowest-hash nil))
+    (loop for key being the hash-keys of hash-table
+          when (< (gethash key hash-table) lowest-score)
+            do (setf lowest-score (gethash key hash-table))
+               (setf lowest-hash key))
+    lowest-hash))
+
+(defun states-equal? (state-1 state-2)
+  (let* ((robot-pose-1 (second (assoc :robot-pose state-1)))
+         (in-hand-left-1
+           (second (assoc :left (second
+                                 (assoc :in-hand state-1)))))
+         (in-hand-right-1
+           (second (assoc :right (second
+                                  (assoc :in-hand state-1)))))
+         (arrangement-1 (cdr (assoc :arrangement state-1)))
+         (robot-pose-2 (second (assoc :robot-pose state-2)))
+         (in-hand-left-2
+           (second (assoc :left (second
+                                 (assoc :in-hand state-2)))))
+         (in-hand-right-2
+           (second (assoc :right (second
+                                  (assoc :in-hand state-2)))))
+         (arrangement-2 (cdr (assoc :arrangement state-2))))
+  (and (= robot-pose-1 robot-pose-2)
+       (eql in-hand-left-1 in-hand-left-2)
+       (eql in-hand-right-1 in-hand-right-2)
+       (block check-arrangement
+         (loop for set in arrangement-1
+               when (not (find set arrangement-2 :test #'equal))
+                 do (return-from check-arrangement nil))
+         t))))
 
 (defun modified-a-star (start-state goal-state)
   (let ((closed-set nil)
         (open-set `(,start-state))
         (came-from (make-hash-table))
         (g-score (make-hash-table))
-        (f-score (make-hash-table))
-        (current nil))
+        (f-score (make-hash-table)))
     (setf (gethash start-state g-score) 0)
     (setf (gethash start-state f-score)
           (+ (gethash start-state g-score)
              (heuristic-cost-estimate start-state goal-state)))
     (block a-star-main
       (loop while open-set
-            as current-state = (gethash
-                                (loop for key being the hash-keys of f-score
-                                      minimizing key)
-                                f-score)
-            if (equal current-state goal-state)
+            as current-state = (lowest-score-hash f-score)
+            if (states-equal? current-state goal-state)
               do (return-from a-star-main (reconstruct-path came-from goal-state))
             else
-              do (setf open-set (remove-if (lambda (subject-state)
-                                             (equal subject-state current-state))
-                                           open-set))
-                 (push current closed-set)
+              do (setf open-set (remove-if
+                                 (lambda (subject-state)
+                                   (states-equal? subject-state current-state))
+                                 open-set))
+                 (push current-state closed-set)
                  (loop for transition in (make-transitions current-state)
                        as projected-state = (apply-transition current-state
                                                               transition)
-                       do (unless (find projected-state closed-set :test #'equal)
+                       do (unless (find projected-state closed-set
+                                        :test #'states-equal?)
                             (let ((tentative-g-score
-                                    (+ (gethash current g-score)
+                                    (+ (or (gethash current-state g-score)
+                                           1000000)
                                        (distance-between current-state
                                                          projected-state))))
-                              (if (find projected-state open-set)
-                                  (push projected-state open-set)
-                                  (unless (>= tentative-g-score
-                                              (gethash projected-state g-score))
-                                    (setf (gethash projected-state came-from)
-                                          current-state)
-                                    (setf (gethash projected-state g-score)
-                                          tentative-g-score)
-                                    (setf (gethash projected-state f-score)
-                                          (+ (gethash projected-state g-score)
-                                             (heuristic-cost-estimate
-                                              projected-state goal-state)))))))))
-      (format t "FAILURE~%"))))
+                              (block intermediate-check
+                                (if (not (find projected-state open-set
+                                               :test #'states-equal?))
+                                    (push projected-state open-set)
+                                    (when (>= tentative-g-score
+                                              (or (gethash projected-state g-score)
+                                                  1000000))
+                                      (return-from intermediate-check)))
+                                (setf (gethash projected-state came-from)
+                                      current-state)
+                                (setf (gethash projected-state g-score)
+                                      tentative-g-score)
+                                (setf (gethash projected-state f-score)
+                                      (+ (or (gethash projected-state g-score)
+                                             1000000)
+                                         (heuristic-cost-estimate
+                                          projected-state goal-state))))))))
+      (format t "FAILURE~%")
+      came-from)))
