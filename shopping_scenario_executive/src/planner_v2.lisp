@@ -99,8 +99,8 @@
                (find `(,level ,zone) highlight-zones
                      :test
                      (lambda (subject list-item)
-                       (and (eql (car subject) (car list-item))
-                            (eql (cadr subject) (cadr list-item))))))
+                       (and (eql (car subject) (caar list-item))
+                            (eql (cadr subject) (cadar list-item))))))
              (zone->marker (level zone id)
                (let* ((dimensions `(,zone-width
                                     ,zone-depth
@@ -236,9 +236,39 @@
                               (> pose-y
                                  (- zone-y (/ zone-depth 2)))
                               (< pose-y
-                                 (+ zone-y (/ zone-depth 2)))))))))
-         `(,level ,zone)))
+                                 (+ zone-y (/ zone-depth 2))))))))
+              (zone-offset
+                (let* ((zone-pose (pose->rack-relative-pose
+                                   (make-zone-pose
+                                    0 zone 0 0)))
+                       (zone-x (tf:x (tf:origin zone-pose)))
+                       (zone-y (tf:y (tf:origin zone-pose)))
+                       (pose-x (tf:x (tf:origin pose)))
+                       (pose-y (tf:y (tf:origin pose))))
+                  `(,(- pose-x zone-x) ,(- pose-y zone-y)
+                    ,(quaternion->yaw (tf:orientation pose))))))
+         `((,level ,zone) ,zone-offset)))
      objects)))
+
+(defun quaternion->yaw (q)
+  (let ((q0 (tf:x q))
+        (q1 (tf:y q))
+        (q2 (tf:z q))
+        (q3 (tf:w q)))
+    (atan2 (* 2 (+ (* q0 q1) (* q2 q3)))
+           (- 1 (* 2 (+ (* q1 q1) (* q2 q2)))))))
+
+(defun atan2 (y x)
+  (cond ((> x 0)
+         (atan (/ y x)))
+        ((and (< x 0) (>= y 0))
+         (+ (atan (/ y x)) pi))
+        ((and (< x 0) (< y 0))
+         (- (atan (/ y x)) pi))
+        ((and (= x 0) (> y 0))
+         (/ pi 2))
+        ((and (= x 0) (< y 0))
+         (/ pi -2))))
 
 (defun toy-problem-state ()
   (display-zones)
@@ -274,7 +304,7 @@
     (cond (new-name new-name)
           (t "SaltDispenser")))) ;; Default model
 
-(defun get-current-state ()
+(defun get-current-arrangement ()
   (let ((objects (get-shopping-items)))
     (mapcar (lambda (object)
               `(,(first (assess-object-zones `(,object)))
@@ -305,35 +335,130 @@
                     perceived-objects)))
       (let ((object-zones (assess-object-zones all-objects)))
         (display-zones :highlight-zones object-zones))
-      (let ((current-state (get-current-state)))
+      (let ((current-state (get-current-arrangement)))
         (modified-a-star
          current-state
          (make-target-state current-state))))))
 
 (defun make-target-state (start-state)
-  (let ((index 0))
-    (loop for level from 0 below 4
-          append
-          (loop for zone from 0 below 4
-                as it = (prog1
-                            (when (< index (length start-state))
-                              `((,level ,zone)
-                                ,(second (elt start-state index))))
-                          (incf index))
-                when it
-                  collect it))))
+  (make-planning-state
+   0
+   (let ((index 0))
+     (loop for level from 0 below 4
+           append
+           (loop for zone from 0 below 4
+                 as it = (prog1
+                             (when (< index (length start-state))
+                               `((,level ,zone)
+                                 (0.0 0.0 0.0) ;; x, y, theta (az)
+                                 ,(second (elt start-state index))))
+                           (incf index))
+                 when it
+                   collect it)))))
 
 (defun make-planning-state (robot-pose arrangement)
   `((:robot-pose ,robot-pose)
-    ,@arrangement))
+    (:in-hand (:left nil) (:right nil))
+    (:arrangement ,@arrangement)))
+
+(defun level-zone-in-state (level zone state)
+  (let ((arrangement (cdr (assoc :arrangement state))))
+    (not
+     (not
+      (find `(,level ,zone) arrangement
+            :test (lambda (subject list-item)
+                    (and (eql (car subject) (caaar list-item))
+                         (eql (cadr subject) (cadaar list-item)))))))))
+
+(defun free-level-zones (state)
+  (loop for level from 0 below 4
+        append
+        (loop for zone from 0 below 4
+              when (not (level-zone-in-state level zone state))
+                collect `(,level ,zone))))
 
 (defun make-transitions (state)
-  )
+  (let* ((robot-pose (cadr (assoc :robot-pose state)))
+         (in-hand (cdr (assoc :in-hand state)))
+         (arrangement (cdr (assoc :arrangement state)))
+         (transitions
+           (append
+            ;; Picking
+            `(,(loop for set in arrangement
+                     as level-zone-source = (first set)
+                     as object = (second set)
+                     append `((:pick ,object :left)
+                              (:pick ,object :right))))
+            ;; Placing
+            `(,(loop for set in in-hand
+                     when (second set)
+                       append
+                       (loop for free-level-zone in (free-level-zones state)
+                             collect `(:place ,(second set)
+                                              ,free-level-zone)))))))
+    (remove-if-not (lambda (transition)
+                     (transition-valid? state transition))
+                   transitions)))
 
 (defun transition-valid? (state transition)
+  (declare (ignore state transition))
+  ;; TODO: Define this for later use.
+  t)
+
+(defun heuristic-cost-estimate (state-1 state-2)
   )
 
-(defun modified-a-star (start-state target-state)
+(defun distance-between (state-1 state-2)
+  )
+
+(defun apply-transition (state transition)
+  )
+
+(defun reconstruct-path (came-from state)
+  )
+
+(defun modified-a-star (start-state goal-state)
   (let ((closed-set nil)
-        (open-set `(,start-state)))
-    open-set))
+        (open-set `(,start-state))
+        (came-from (make-hash-table))
+        (g-score (make-hash-table))
+        (f-score (make-hash-table))
+        (current nil))
+    (setf (gethash start-state g-score) 0)
+    (setf (gethash start-state f-score)
+          (+ (gethash start-state g-score)
+             (heuristic-cost-estimate start-state goal-state)))
+    (block a-star-main
+      (loop while open-set
+            as current-state = (gethash
+                                (loop for key being the hash-keys of f-score
+                                      minimizing key)
+                                f-score)
+            if (equal current-state goal-state)
+              do (return-from a-star-main (reconstruct-path came-from goal-state))
+            else
+              do (setf open-set (remove-if (lambda (subject-state)
+                                             (equal subject-state current-state))
+                                           open-set))
+                 (push current closed-set)
+                 (loop for transition in (make-transitions current-state)
+                       as projected-state = (apply-transition current-state
+                                                              transition)
+                       do (unless (find projected-state closed-set :test #'equal)
+                            (let ((tentative-g-score
+                                    (+ (gethash current g-score)
+                                       (distance-between current-state
+                                                         projected-state))))
+                              (if (find projected-state open-set)
+                                  (push projected-state open-set)
+                                  (unless (>= tentative-g-score
+                                              (gethash projected-state g-score))
+                                    (setf (gethash projected-state came-from)
+                                          current-state)
+                                    (setf (gethash projected-state g-score)
+                                          tentative-g-score)
+                                    (setf (gethash projected-state f-score)
+                                          (+ (gethash projected-state g-score)
+                                             (heuristic-cost-estimate
+                                              projected-state goal-state)))))))))
+      (format t "FAILURE~%"))))
