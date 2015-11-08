@@ -341,6 +341,19 @@
          current-state
          (make-target-state current-state))))))
 
+(defun toy-problem-small ()
+  (remove-all-shopping-items)
+  (let* ((item-1 (add-shopping-item "Kelloggs"))
+         (item-2 (add-shopping-item "Kelloggs"))
+         (item-3 (add-shopping-item "Kelloggs"))
+         (current-state
+           (make-planning-state
+            0 `((((2 2) (0.0 0.0 0.0)) ,item-1)
+                (((3 0) (0.0 0.0 0.0)) ,item-2)
+                (((3 1) (0.0 0.0 0.0)) ,item-3))))
+         (goal-state (make-target-state current-state)))
+    (modified-a-star current-state goal-state)))
+
 (defun make-target-state (start-state)
   (let* ((arrangement (cdr (assoc :arrangement start-state))))
     (make-planning-state
@@ -478,7 +491,7 @@
           robot-pose
           (append
            arrangement
-           `((,target (0.0 0.0 0.0)) ,object))
+           `(((,target (0.0 0.0 0.0)) ,object)))
           :in-hand-left (cond ((string= in-hand-left object)
                                nil)
                               (t in-hand-left))
@@ -488,20 +501,29 @@
 
 (defun reconstruct-path (came-from state)
   (let ((total-path `(,state))) 
-    (loop while (gethash state came-from)
-          do (setf state (gethash state came-from))
+    (loop while (getstate state came-from)
+          do (setf state (getstate state came-from))
              (push state total-path)
-             (setf (gethash state came-from) nil))
+             (setstate state came-from nil))
     total-path))
 
-(defun lowest-score-hash (hash-table)
+(defun lowest-score-key (state-map)
   (let ((lowest-score 10000)
-        (lowest-hash nil))
-    (loop for key being the hash-keys of hash-table
-          when (< (gethash key hash-table) lowest-score)
-            do (setf lowest-score (gethash key hash-table))
-               (setf lowest-hash key))
-    lowest-hash))
+        (lowest-key nil))
+    (loop for key in (statekeys state-map)
+          when (< (getstate key state-map) lowest-score)
+            do (setf lowest-score (getstate key state-map))
+               (setf lowest-key key))
+    lowest-key))
+
+(defun lowest-state-score (states scores)
+  (let ((lowest-score most-positive-fixnum)
+        (lowest-state nil))
+    (loop for state in states
+          when (< (getstate state scores) lowest-score)
+            do (setf lowest-score (getstate state scores))
+               (setf lowest-state state))
+    (values lowest-state lowest-score)))
 
 (defun states-equal? (state-1 state-2)
   (let* ((robot-pose-1 (second (assoc :robot-pose state-1)))
@@ -529,53 +551,106 @@
                  do (return-from check-arrangement nil))
          t))))
 
+(defun make-state-map ()
+  `())
+
+(defun statekeys (state-map)
+  (loop for state in state-map
+        collect (first state)))
+
+(defun getstate (key-state state-map &optional default)
+  (let ((value (second
+                (find key-state state-map
+                      :test (lambda (subject list-item)
+                              (states-equal? subject (first list-item)))))))
+    (or value default)))
+
+(defmacro setstate (key-state state-map value)
+  `(let ((new-state-map
+           (append
+            (remove-if (lambda (list-item)
+                         (states-equal? ,key-state (first list-item)))
+                       ,state-map)
+            `((,,key-state ,,value)))))
+     (setf ,state-map new-state-map)))
+
 (defun modified-a-star (start-state goal-state)
   (let ((closed-set nil)
         (open-set `(,start-state))
-        (came-from (make-hash-table))
-        (g-score (make-hash-table))
-        (f-score (make-hash-table)))
-    (setf (gethash start-state g-score) 0)
-    (setf (gethash start-state f-score)
-          (+ (gethash start-state g-score)
-             (heuristic-cost-estimate start-state goal-state)))
-    (block a-star-main
-      (loop while open-set
-            as current-state = (lowest-score-hash f-score)
-            if (states-equal? current-state goal-state)
-              do (return-from a-star-main (reconstruct-path came-from goal-state))
-            else
-              do (setf open-set (remove-if
-                                 (lambda (subject-state)
-                                   (states-equal? subject-state current-state))
-                                 open-set))
-                 (push current-state closed-set)
-                 (loop for transition in (make-transitions current-state)
-                       as projected-state = (apply-transition current-state
-                                                              transition)
-                       do (unless (find projected-state closed-set
-                                        :test #'states-equal?)
-                            (let ((tentative-g-score
-                                    (+ (gethash current-state g-score
-                                                most-positive-fixnum)
-                                       (distance-between current-state
-                                                         projected-state))))
-                              (block intermediate-check
-                                (if (not (find projected-state open-set
-                                               :test #'states-equal?))
-                                    (push projected-state open-set)
-                                    (when (>= tentative-g-score
-                                              (gethash projected-state g-score
-                                                       most-positive-fixnum))
-                                      (return-from intermediate-check)))
-                                (setf (gethash projected-state came-from)
-                                      current-state)
-                                (setf (gethash projected-state g-score)
-                                      tentative-g-score)
-                                (setf (gethash projected-state f-score)
-                                      (+ (gethash projected-state g-score
-                                                  most-positive-fixnum)
-                                         (heuristic-cost-estimate
-                                          projected-state goal-state))))))))
-      (format t "FAILURE~%")
-      came-from)))
+        (came-from (make-state-map));(make-hash-table :test #'states-equal?))
+        (g-score (make-state-map))
+        (f-score (make-state-map))
+        (transitions-map `()))
+    (setstate start-state g-score 0)
+    (setstate start-state f-score
+              (+ (getstate start-state g-score)
+                 (heuristic-cost-estimate start-state goal-state)))
+    (let ((result
+            (block a-star-main
+              (loop while open-set
+                    as current-state = (multiple-value-bind (state score)
+                                           (lowest-state-score open-set f-score)
+                                         (declare (ignore score))
+                                         state)
+                    if (states-equal? current-state goal-state)
+                      do (return-from
+                          a-star-main
+                           `(,(append
+                               `(,start-state)
+                               (reconstruct-path came-from goal-state))
+                             ,transitions-map))
+                    else
+                      do (setf open-set (remove-if
+                                         (lambda (subject-state)
+                                           (states-equal? subject-state current-state))
+                                         open-set))
+                         (push current-state closed-set)
+                         (loop for transition in (make-transitions current-state)
+                               as projected-state = (apply-transition current-state
+                                                                      transition)
+                               do (unless (find projected-state closed-set
+                                                :test #'states-equal?)
+                                    (push `(,current-state ,projected-state ,transition)
+                                          transitions-map)
+                                    (let ((tentative-g-score
+                                            (+ (getstate current-state g-score
+                                                         most-positive-fixnum)
+                                               (distance-between current-state
+                                                                 projected-state))))
+                                      (block intermediate-check
+                                        (if (not (find projected-state open-set
+                                                       :test #'states-equal?))
+                                            (push projected-state open-set)
+                                            (when (>= tentative-g-score
+                                                      (getstate projected-state g-score
+                                                                most-positive-fixnum))
+                                              (return-from intermediate-check)))
+                                        (setstate projected-state came-from
+                                                  current-state)
+                                        (setstate projected-state g-score
+                                                  tentative-g-score)
+                                        (setstate projected-state f-score
+                                                  (+ (getstate projected-state g-score
+                                                               most-positive-fixnum)
+                                                     (heuristic-cost-estimate
+                                                      projected-state goal-state))))))))
+              (format t "FAILURE~%"))))
+      (let ((steps (first result))
+            (transitions (second result)))
+        (append
+         (loop for i from 0 below (1- (length steps))
+               as step-current = (nth i steps)
+               as step-next = (nth (+ i 1) steps)
+               collect
+               `(,step-current
+                 ,(third
+                   (find `(,step-current ,step-next)
+                         transitions
+                         :test (lambda (subject list-item)
+                                 (and (states-equal?
+                                       (first subject)
+                                       (first list-item))
+                                      (states-equal?
+                                       (second subject)
+                                       (second list-item))))))))
+         (last steps))))))
