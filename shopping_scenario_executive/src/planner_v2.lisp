@@ -346,11 +346,13 @@
   (let* ((item-1 (add-shopping-item "Kelloggs"))
          (item-2 (add-shopping-item "Kelloggs"))
          (item-3 (add-shopping-item "Kelloggs"))
+         (item-4 (add-shopping-item "Kelloggs"))
          (current-state
            (make-planning-state
             0 `((((2 2) (0.0 0.0 0.0)) ,item-1)
                 (((3 0) (0.0 0.0 0.0)) ,item-2)
-                (((3 1) (0.0 0.0 0.0)) ,item-3))))
+                (((3 2) (0.0 0.0 0.0)) ,item-3)
+                (((3 1) (0.0 0.0 0.0)) ,item-4))))
          (goal-state (make-target-state current-state)))
     (modified-a-star current-state goal-state)))
 
@@ -391,7 +393,7 @@
               when (not (level-zone-in-state level zone state))
                 collect `(,level ,zone))))
 
-(defun make-transitions (state)
+(defun make-transitions (state goal-state)
   (let* ((robot-pose (cadr (assoc :robot-pose state)))
          (in-hand (cadr (assoc :in-hand state)))
          (arrangement (cdr (assoc :arrangement state)))
@@ -411,10 +413,10 @@
                           collect `(:place ,(second set)
                                            ,free-level-zone))))))
     (remove-if-not (lambda (transition)
-                     (transition-valid? state transition))
+                     (transition-valid? state transition goal-state))
                    transitions)))
 
-(defun transition-valid? (state transition)
+(defun transition-valid? (state transition goal-state)
   (let* ((robot-pose (cadr (assoc :robot-pose state)))
          (in-hand-left
            (second (assoc :left (second
@@ -423,13 +425,25 @@
            (second (assoc :right (second
                                   (assoc :in-hand state)))))
          (arrangement (cdr (assoc :arrangement state)))
-         (operation (first transition)))
+         (arrangement-goal (cdr (assoc :arrangement goal-state)))
+         (operation (first transition))
+         (free-level-zones (free-level-zones state)))
     (or (and (eql operation :pick)
              (or (and (not in-hand-left)
                       (eql (third transition) :left))
                  (and (not in-hand-right)
                       (eql (third transition) :right))))
-        (and (eql operation :place)))))
+        (and (eql operation :place)
+             (let* ((place-at (third transition))
+                    (object (second transition))
+                    (goal-place-at
+                      (find place-at arrangement-goal
+                            :test (lambda (subject list-item)
+                                    (equal subject (first (first list-item))))))
+                    (goal-object-at (second goal-place-at)))
+               (or (and (find place-at free-level-zones :test #'equal)
+                        (string= object goal-object-at))
+                   (not (find place-at free-level-zones :test #'equal))))))))
 
 (defun state-entropy (current-state goal-state)
   (let* ((goal-robot-pose (second (assoc :robot-pose goal-state)))
@@ -503,8 +517,7 @@
   (let ((total-path `(,state))) 
     (loop while (getstate state came-from)
           do (setf state (getstate state came-from))
-             (push state total-path)
-             (setstate state came-from nil))
+             (push state total-path))
     total-path))
 
 (defun lowest-score-key (state-map)
@@ -595,9 +608,7 @@
                     if (states-equal? current-state goal-state)
                       do (return-from
                           a-star-main
-                           `(,(append
-                               `(,start-state)
-                               (reconstruct-path came-from goal-state))
+                           `(,(reconstruct-path came-from goal-state)
                              ,transitions-map))
                     else
                       do (setf open-set (remove-if
@@ -605,7 +616,8 @@
                                            (states-equal? subject-state current-state))
                                          open-set))
                          (push current-state closed-set)
-                         (loop for transition in (make-transitions current-state)
+                         (loop for transition in (make-transitions
+                                                  current-state goal-state)
                                as projected-state = (apply-transition current-state
                                                                       transition)
                                do (unless (find projected-state closed-set
