@@ -556,8 +556,8 @@
                        do (unless (find projected-state closed-set
                                         :test #'states-equal?)
                             (let ((tentative-g-score
-                                    (+ (or (gethash current-state g-score)
-                                           1000000)
+                                    (+ (gethash current-state g-score
+                                                most-positive-fixnum)
                                        (distance-between current-state
                                                          projected-state))))
                               (block intermediate-check
@@ -565,16 +565,16 @@
                                                :test #'states-equal?))
                                     (push projected-state open-set)
                                     (when (>= tentative-g-score
-                                              (or (gethash projected-state g-score)
-                                                  1000000))
+                                              (gethash projected-state g-score
+                                                       most-positive-fixnum))
                                       (return-from intermediate-check)))
                                 (setf (gethash projected-state came-from)
                                       current-state)
                                 (setf (gethash projected-state g-score)
                                       tentative-g-score)
                                 (setf (gethash projected-state f-score)
-                                      (+ (or (gethash projected-state g-score)
-                                             1000000)
+                                      (+ (gethash projected-state g-score
+                                                  most-positive-fixnum)
                                          (heuristic-cost-estimate
                                           projected-state goal-state))))))))
       (format t "FAILURE~%")
