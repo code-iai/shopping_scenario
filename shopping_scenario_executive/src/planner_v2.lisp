@@ -411,7 +411,9 @@
                     append
                     (loop for free-level-zone in (free-level-zones state)
                           collect `(:place ,(second set)
-                                           ,free-level-zone))))))
+                                           ,free-level-zone)))
+            ;; Handover
+            `((:handover)))))
     (remove-if-not (lambda (transition)
                      (transition-valid? state transition goal-state))
                    transitions)))
@@ -443,7 +445,12 @@
                     (goal-object-at (second goal-place-at)))
                (or (and (find place-at free-level-zones :test #'equal)
                         (string= object goal-object-at))
-                   (not (find place-at free-level-zones :test #'equal))))))))
+                   (not (find place-at free-level-zones :test #'equal)))))
+        (and (eql operation :handover)
+             (or (and (not (not in-hand-left))
+                      (not in-hand-right))
+                 (and (not (not in-hand-right))
+                      (not in-hand-left)))))))
 
 (defun state-entropy (current-state goal-state)
   (let* ((goal-robot-pose (second (assoc :robot-pose goal-state)))
@@ -483,7 +490,7 @@
                                   (assoc :in-hand state)))))
          (arrangement (cdr (assoc :arrangement state)))
          (operation (first transition)))
-    (case operation
+    (ecase operation
       (:pick
        (let ((object (second transition))
              (side (third transition)))
@@ -511,7 +518,13 @@
                               (t in-hand-left))
           :in-hand-right (cond ((string= in-hand-right object)
                                 nil)
-                               (t in-hand-right))))))))
+                               (t in-hand-right)))))
+      (:handover
+       (make-planning-state
+        robot-pose
+        arrangement
+        :in-hand-left in-hand-right
+        :in-hand-right in-hand-left)))))
 
 (defun reconstruct-path (came-from state)
   (let ((total-path `(,state))) 
