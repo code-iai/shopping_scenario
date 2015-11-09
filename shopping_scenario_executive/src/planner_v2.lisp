@@ -31,6 +31,16 @@
 (defvar *markers* (make-hash-table :test 'equal))
 (defvar *rack-level-dimensions* (make-hash-table :test 'equal))
 (defvar *object-dimensions* (make-hash-table :test 'equal))
+(defvar *object-poses* (make-hash-table :test 'equal))
+(defvar *perceived-objects* nil)
+
+(defun get-item-pose-cached (item)
+  (or (gethash item *object-poses*)
+      (setf (gethash item *object-poses*) (get-item-pose item))))
+
+(defun set-item-pose-cached (item pose)
+  (set-item-pose item pose)
+  (setf (gethash item *object-poses*) pose))
 
 (defun get-rack-level-dimensions (level)
   (or (gethash level *rack-level-dimensions*)
@@ -162,7 +172,7 @@
                 type 1
                 action 0
                 (pose) (tf:pose->msg (pose->map-relative-pose
-                                      (get-item-pose object)))
+                                      (get-item-pose-cached object)))
                 (x scale) (elt dimensions 0)
                 (y scale) (elt dimensions 1)
                 (z scale) (elt dimensions 2)
@@ -187,7 +197,7 @@
 
 (defun place-object-on-rack (object level x y)
   (let ((dimensions (get-item-dimensions object)))
-    (set-item-pose
+    (set-item-pose-cached
      object
      (make-level-relative-pose level x y (/ (elt dimensions 2) 2)))))
 
@@ -207,7 +217,7 @@
     (mapcar
      (lambda (object)
        (let* ((pose (pose->rack-relative-pose
-                     (get-item-pose object)))
+                     (get-item-pose-cached object)))
               (pose-elevation (tf:z (tf:origin pose)))
               (level
                 (loop for level from 0 to (1- levels)
@@ -330,7 +340,7 @@
                             (item (add-shopping-item
                                    (or (detected-type object)
                                        "Kelloggs"))))
-                        (set-item-pose item pose)
+                        (set-item-pose-cached item pose)
                         item))
                     perceived-objects)))
       (display-objects all-objects)
@@ -678,4 +688,30 @@
                                       (states-equal?
                                        (second subject)
                                        (second list-item))))))))
-         (last steps))))))
+         `(,(last steps)))))))
+
+(defun display-state (state)
+  (let ((arrangement (cdr (assoc :arrangement state))))
+    (display-objects
+     (loop for object-data in arrangement
+           collect
+           (destructuring-bind (((level zone)
+                                 (x y theta))
+                                object)
+               object-data
+             (declare (ignore theta))
+             (format t "~a ~a ~a~%" level zone object)
+             (place-object-in-zone object level zone x y)
+             object)))
+    (format t "~%")))
+
+(defun display-solution (solution)
+  (loop for state-transition in solution
+        as state-transition-new = (cond ((= (length state-transition) 2)
+                                         state-transition)
+                                        (t `(,(first state-transition)
+                                             nil)))
+        do (destructuring-bind (state transition)
+               state-transition-new
+             (declare (ignore transition))
+             (display-state state))))
