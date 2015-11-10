@@ -321,7 +321,7 @@
                 ,object))
             objects)))
 
-(defun toy-problem-solve ()
+(Defun toy-problem-solve ()
   (remove-all-shopping-items)
   (let ((perceived-objects
           (or *perceived-objects*
@@ -351,25 +351,18 @@
          current-state
          (make-target-state current-state))))))
 
-(defun toy-problem-small ()
-  (remove-all-shopping-items)
-  (let* ((item-1 (add-shopping-item "Kelloggs"))
-         (item-2 (add-shopping-item "Kelloggs"))
-         (item-3 (add-shopping-item "Kelloggs"))
-         (item-4 (add-shopping-item "Kelloggs"))
-         (current-state
-           (make-planning-state
-            0 `((((2 2) (0.0 0.0 0.0)) ,item-1)
-                (((3 0) (0.0 0.0 0.0)) ,item-2)
-                (((3 2) (0.0 0.0 0.0)) ,item-3)
-                (((3 1) (0.0 0.0 0.0)) ,item-4))))
-         (goal-state (make-target-state current-state)))
-    (modified-a-star current-state goal-state)))
+(defun action-sequence (solution)
+  (loop for state-transition in solution
+        as transition = (second state-transition)
+        when transition
+          collect transition))
 
 (defun make-target-state (start-state)
-  (let* ((arrangement (cdr (assoc :arrangement start-state))))
+  (let* ((arrangement (cdr (assoc :arrangement start-state)))
+         (torso-height (second (assoc :torso-height start-state)))
+         (robot-pose (second (assoc :robot-pose start-state))))
     (make-planning-state
-     0
+     robot-pose
      (let ((index 0))
        (loop for level from 0 below 4
              append
@@ -381,10 +374,12 @@
                                    ,(second (elt arrangement index))))
                              (incf index))
                    when it
-                     collect it))))))
+                     collect it)))
+     :torso-height torso-height)))
 
-(defun make-planning-state (robot-pose arrangement &key in-hand-left in-hand-right)
+(defun make-planning-state (robot-pose arrangement &key (torso-height 2) in-hand-left in-hand-right)
   `((:robot-pose ,robot-pose)
+    (:torso-height ,torso-height)
     (:in-hand ((:left ,in-hand-left) (:right ,in-hand-right)))
     (:arrangement ,@arrangement)))
 
@@ -423,44 +418,77 @@
                           collect `(:place ,(second set)
                                            ,free-level-zone)))
             ;; Handover
-            `((:handover)))))
+            `((:handover))
+            ;; Move base
+            `((:move-base -1)
+              (:move-base 0)
+              (:move-base 1))
+            ;; Move torso
+            `((:move-torso 0)
+              (:move-torso 1)
+              (:move-torso 2)
+              (:move-torso 3)))))
     (remove-if-not (lambda (transition)
                      (transition-valid? state transition goal-state))
                    transitions)))
 
 (defun transition-valid? (state transition goal-state)
   (let* ((robot-pose (cadr (assoc :robot-pose state)))
+         (torso-height (cadr (assoc :torso-height state)))
          (in-hand-left
            (second (assoc :left (second
                                  (assoc :in-hand state)))))
          (in-hand-right
            (second (assoc :right (second
                                   (assoc :in-hand state)))))
-         (arrangement (cdr (assoc :arrangement state)))
+         ;;(arrangement (cdr (assoc :arrangement state)))
          (arrangement-goal (cdr (assoc :arrangement goal-state)))
          (operation (first transition))
          (free-level-zones (free-level-zones state)))
-    (or (and (eql operation :pick)
-             (or (and (not in-hand-left)
-                      (eql (third transition) :left))
-                 (and (not in-hand-right)
-                      (eql (third transition) :right))))
-        (and (eql operation :place)
-             (let* ((place-at (third transition))
-                    (object (second transition))
-                    (goal-place-at
-                      (find place-at arrangement-goal
-                            :test (lambda (subject list-item)
-                                    (equal subject (first (first list-item))))))
-                    (goal-object-at (second goal-place-at)))
-               (or (and (find place-at free-level-zones :test #'equal)
-                        (string= object goal-object-at))
-                   (not (find place-at free-level-zones :test #'equal)))))
-        (and (eql operation :handover)
-             (or (and (not (not in-hand-left))
-                      (not in-hand-right))
-                 (and (not (not in-hand-right))
-                      (not in-hand-left)))))))
+    (labels ((level-zone-for-object (object)
+               (first (first (assess-object-zones `(,object)))))
+             (level-zone-in-reach (robot-pose torso-height level-zone)
+               (let* ((base-distance (abs (- (second level-zone)
+                                             (+ robot-pose 1))))
+                      (torso-distance (abs (- (first level-zone)
+                                              torso-height))))
+                 (and (<= base-distance 1)
+                      )));(<= torso-distance 1))))
+             (object-in-reach (robot-pose torso-height object)
+               (let* ((object-level-zone (level-zone-for-object object)))
+                 (level-zone-in-reach robot-pose torso-height
+                                      object-level-zone))))
+      (or (and (eql operation :pick)
+               (or (and (not in-hand-left)
+                        (eql (third transition) :left))
+                   (and (not in-hand-right)
+                        (eql (third transition) :right)))
+               (object-in-reach robot-pose torso-height
+                                (second transition)))
+          (and (eql operation :place)
+               (let* ((place-at (third transition))
+                      (object (second transition))
+                      (goal-place-at
+                        (find place-at arrangement-goal
+                              :test
+                              (lambda (subject list-item)
+                                (equal subject
+                                       (first (first list-item))))))
+                      (goal-object-at (second goal-place-at)))
+                 (and (level-zone-in-reach robot-pose torso-height
+                                           place-at)
+                      (or (and (find place-at free-level-zones
+                                     :test #'equal)
+                               (string= object goal-object-at))
+                          (not (find place-at free-level-zones
+                                     :test #'equal))))))
+          (and (eql operation :handover)
+               (or (and (not (not in-hand-left))
+                        (not in-hand-right))
+                   (and (not (not in-hand-right))
+                        (not in-hand-left))))
+          (and (eql operation :move-base))
+          (and (eql operation :move-torso))))))
 
 (defun state-entropy (current-state goal-state)
   (let* ((goal-robot-pose (second (assoc :robot-pose goal-state)))
@@ -492,6 +520,7 @@
 
 (defun apply-transition (state transition)
   (let* ((robot-pose (second (assoc :robot-pose state)))
+         (torso-height (second (assoc :torso-height state)))
          (in-hand-left
            (second (assoc :left (second
                                  (assoc :in-hand state)))))
@@ -509,6 +538,7 @@
           (remove-if (lambda (set)
                        (string= (second set) object))
                      arrangement)
+          :torso-height torso-height
           :in-hand-left (cond ((eql side :left)
                                object)
                               (t in-hand-left))
@@ -523,6 +553,7 @@
           (append
            arrangement
            `(((,target (0.0 0.0 0.0)) ,object)))
+          :torso-height torso-height
           :in-hand-left (cond ((string= in-hand-left object)
                                nil)
                               (t in-hand-left))
@@ -533,8 +564,25 @@
        (make-planning-state
         robot-pose
         arrangement
+        :torso-height torso-height
         :in-hand-left in-hand-right
-        :in-hand-right in-hand-left)))))
+        :in-hand-right in-hand-left))
+      (:move-base
+       (let ((position (second transition)))
+         (make-planning-state
+          position
+          arrangement
+          :torso-height torso-height
+          :in-hand-left in-hand-left
+          :in-hand-right in-hand-right)))
+      (:move-torso
+       (let ((position (second transition)))
+         (make-planning-state
+          robot-pose
+          arrangement
+          :torso-height position
+          :in-hand-left in-hand-left
+          :in-hand-right in-hand-right))))))
 
 (defun reconstruct-path (came-from state)
   (let ((total-path `(,state))) 
@@ -688,7 +736,7 @@
                                       (states-equal?
                                        (second subject)
                                        (second list-item))))))))
-         `(,(last steps)))))))
+         `(,(last steps) nil))))))
 
 (defun display-state (state)
   (let ((arrangement (cdr (assoc :arrangement state))))
@@ -707,11 +755,7 @@
 
 (defun display-solution (solution)
   (loop for state-transition in solution
-        as state-transition-new = (cond ((= (length state-transition) 2)
-                                         state-transition)
-                                        (t `(,(first state-transition)
-                                             nil)))
         do (destructuring-bind (state transition)
-               state-transition-new
+               state-transition
              (declare (ignore transition))
              (display-state state))))
