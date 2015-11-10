@@ -440,23 +440,28 @@
          (in-hand-right
            (second (assoc :right (second
                                   (assoc :in-hand state)))))
-         ;;(arrangement (cdr (assoc :arrangement state)))
          (arrangement-goal (cdr (assoc :arrangement goal-state)))
          (operation (first transition))
          (free-level-zones (free-level-zones state)))
     (labels ((level-zone-for-object (object)
                (first (first (assess-object-zones `(,object)))))
-             (level-zone-in-reach (robot-pose torso level-zone)
+             (level-zone-in-reach (robot-pose torso level-zone hand)
                (let* ((base-distance (abs (- (second level-zone)
-                                             (+ robot-pose 1))))
+                                             (+ robot-pose
+                                                1
+                                                (ecase hand
+                                                  (:left -1)
+                                                  (:right 1))))))
                       (torso-distance (abs (- (first level-zone)
                                               torso))))
                  (and (<= base-distance 1)
                       (<= torso-distance 1))))
-             (object-in-reach (robot-pose torso-height object)
-               (let* ((object-level-zone (level-zone-for-object object)))
+             (object-in-reach (robot-pose torso-height object hand)
+               (let* ((object-level-zone (level-zone-for-object
+                                          object)))
                  (level-zone-in-reach robot-pose torso-height
-                                      object-level-zone))))
+                                      object-level-zone
+                                      hand))))
       (let ((is-valid
               (or (and (eql operation :pick)
                        (or (and (not in-hand-left)
@@ -464,10 +469,17 @@
                            (and (not in-hand-right)
                                 (eql (third transition) :right)))
                        (object-in-reach robot-pose torso-height
-                                        (second transition)))
+                                        (second transition)
+                                        (third transition)))
                   (and (eql operation :place)
                        (let* ((place-at (third transition))
                               (object (second transition))
+                              (hand (cond ((string= in-hand-left
+                                                    object)
+                                           :left)
+                                          ((string= in-hand-right
+                                                    object)
+                                           :right)))
                               (goal-place-at
                                 (find place-at arrangement-goal
                                       :test
@@ -476,8 +488,10 @@
                                          subject
                                          (first (first list-item))))))
                               (goal-object-at (second goal-place-at)))
-                         (and (level-zone-in-reach robot-pose torso-height
-                                                   place-at)
+                         (and (level-zone-in-reach robot-pose
+                                                   torso-height
+                                                   place-at
+                                                   hand)
                               (or (and (find place-at free-level-zones
                                              :test #'equal)
                                        (string= object goal-object-at))
