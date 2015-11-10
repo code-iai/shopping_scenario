@@ -399,8 +399,7 @@
                 collect `(,level ,zone))))
 
 (defun make-transitions (state goal-state)
-  (let* ((robot-pose (cadr (assoc :robot-pose state)))
-         (in-hand (cadr (assoc :in-hand state)))
+  (let* ((in-hand (cadr (assoc :in-hand state)))
          (arrangement (cdr (assoc :arrangement state)))
          (transitions
            (append
@@ -447,48 +446,51 @@
          (free-level-zones (free-level-zones state)))
     (labels ((level-zone-for-object (object)
                (first (first (assess-object-zones `(,object)))))
-             (level-zone-in-reach (robot-pose torso-height level-zone)
+             (level-zone-in-reach (robot-pose torso level-zone)
                (let* ((base-distance (abs (- (second level-zone)
                                              (+ robot-pose 1))))
                       (torso-distance (abs (- (first level-zone)
-                                              torso-height))))
+                                              torso))))
                  (and (<= base-distance 1)
-                      )));(<= torso-distance 1))))
+                      (<= torso-distance 1))))
              (object-in-reach (robot-pose torso-height object)
                (let* ((object-level-zone (level-zone-for-object object)))
                  (level-zone-in-reach robot-pose torso-height
                                       object-level-zone))))
-      (or (and (eql operation :pick)
-               (or (and (not in-hand-left)
-                        (eql (third transition) :left))
-                   (and (not in-hand-right)
-                        (eql (third transition) :right)))
-               (object-in-reach robot-pose torso-height
-                                (second transition)))
-          (and (eql operation :place)
-               (let* ((place-at (third transition))
-                      (object (second transition))
-                      (goal-place-at
-                        (find place-at arrangement-goal
-                              :test
-                              (lambda (subject list-item)
-                                (equal subject
-                                       (first (first list-item))))))
-                      (goal-object-at (second goal-place-at)))
-                 (and (level-zone-in-reach robot-pose torso-height
-                                           place-at)
-                      (or (and (find place-at free-level-zones
-                                     :test #'equal)
-                               (string= object goal-object-at))
-                          (not (find place-at free-level-zones
-                                     :test #'equal))))))
-          (and (eql operation :handover)
-               (or (and (not (not in-hand-left))
-                        (not in-hand-right))
-                   (and (not (not in-hand-right))
-                        (not in-hand-left))))
-          (and (eql operation :move-base))
-          (and (eql operation :move-torso))))))
+      (let ((is-valid
+              (or (and (eql operation :pick)
+                       (or (and (not in-hand-left)
+                                (eql (third transition) :left))
+                           (and (not in-hand-right)
+                                (eql (third transition) :right)))
+                       (object-in-reach robot-pose torso-height
+                                        (second transition)))
+                  (and (eql operation :place)
+                       (let* ((place-at (third transition))
+                              (object (second transition))
+                              (goal-place-at
+                                (find place-at arrangement-goal
+                                      :test
+                                      (lambda (subject list-item)
+                                        (equal
+                                         subject
+                                         (first (first list-item))))))
+                              (goal-object-at (second goal-place-at)))
+                         (and (level-zone-in-reach robot-pose torso-height
+                                                   place-at)
+                              (or (and (find place-at free-level-zones
+                                             :test #'equal)
+                                       (string= object goal-object-at))
+                                  (not (find place-at free-level-zones
+                                             :test #'equal))))))
+                  (and (eql operation :handover)
+                       (or (and (not (not in-hand-left))
+                                (not in-hand-right))
+                           (and (not (not in-hand-right))
+                                (not in-hand-left))))
+                  (eql operation :move-base)
+                  (eql operation :move-torso))))
+        is-valid))))
 
 (defun state-entropy (current-state goal-state)
   (let* ((goal-robot-pose (second (assoc :robot-pose goal-state)))
@@ -585,10 +587,12 @@
           :in-hand-right in-hand-right))))))
 
 (defun reconstruct-path (came-from state)
-  (let ((total-path `(,state))) 
-    (loop while (getstate state came-from)
-          do (setf state (getstate state came-from))
-             (push state total-path))
+  (let ((first t)
+        (total-path `(,state)))
+    (loop while (getstate state came-from nil first)
+          do (setf state (getstate state came-from nil first))
+             (push state total-path)
+             (setf first nil))
     total-path))
 
 (defun lowest-score-key (state-map)
@@ -609,8 +613,9 @@
                (setf lowest-state state))
     (values lowest-state lowest-score)))
 
-(defun states-equal? (state-1 state-2)
+(defun states-equal? (state-1 state-2 &key relaxed)
   (let* ((robot-pose-1 (second (assoc :robot-pose state-1)))
+         (torso-height-1 (second (assoc :torso-height state-1)))
          (in-hand-left-1
            (second (assoc :left (second
                                  (assoc :in-hand state-1)))))
@@ -619,6 +624,7 @@
                                   (assoc :in-hand state-1)))))
          (arrangement-1 (cdr (assoc :arrangement state-1)))
          (robot-pose-2 (second (assoc :robot-pose state-2)))
+         (torso-height-2 (second (assoc :torso-height state-2)))
          (in-hand-left-2
            (second (assoc :left (second
                                  (assoc :in-hand state-2)))))
@@ -626,7 +632,9 @@
            (second (assoc :right (second
                                   (assoc :in-hand state-2)))))
          (arrangement-2 (cdr (assoc :arrangement state-2))))
-  (and (= robot-pose-1 robot-pose-2)
+  (and (or nil;relaxed
+           (and (= robot-pose-1 robot-pose-2)
+                (= torso-height-1 torso-height-2)))
        (eql in-hand-left-1 in-hand-left-2)
        (eql in-hand-right-1 in-hand-right-2)
        (block check-arrangement
@@ -642,11 +650,12 @@
   (loop for state in state-map
         collect (first state)))
 
-(defun getstate (key-state state-map &optional default)
+(defun getstate (key-state state-map &optional default relaxed)
   (let ((value (second
                 (find key-state state-map
                       :test (lambda (subject list-item)
-                              (states-equal? subject (first list-item)))))))
+                              (states-equal? subject (first list-item)
+                                             :relaxed relaxed))))))
     (or value default)))
 
 (defmacro setstate (key-state state-map value)
@@ -676,7 +685,7 @@
                                            (lowest-state-score open-set f-score)
                                          (declare (ignore score))
                                          state)
-                    if (states-equal? current-state goal-state)
+                    if (states-equal? current-state goal-state :relaxed t)
                       do (return-from
                           a-star-main
                            `(,(reconstruct-path came-from goal-state)
