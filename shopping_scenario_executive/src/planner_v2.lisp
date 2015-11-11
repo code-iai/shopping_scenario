@@ -33,6 +33,17 @@
 (defvar *object-dimensions* (make-hash-table :test 'equal))
 (defvar *object-poses* (make-hash-table :test 'equal))
 (defvar *perceived-objects* nil)
+(defvar *tic* 0.0)
+(defvar *handover-forbidden* nil)
+
+(defmacro setstate (key-state state-map value)
+  `(let ((new-state-map
+           (append
+            (remove-if (lambda (list-item)
+                         (states-equal? ,key-state (first list-item)))
+                       ,state-map)
+            `((,,key-state ,,value)))))
+     (setf ,state-map new-state-map)))
 
 (defun get-item-pose-cached (item)
   (or (gethash item *object-poses*)
@@ -321,7 +332,7 @@
                 ,object))
             objects)))
 
-(defun toy-problem-solve (&key (number-of-solutions 1))
+(defun populate-knowledge-base ()
   (remove-all-shopping-items)
   (let ((perceived-objects
           (or *perceived-objects*
@@ -345,12 +356,16 @@
                     perceived-objects)))
       (display-objects all-objects)
       (let ((object-zones (assess-object-zones all-objects)))
-        (display-zones :highlight-zones object-zones))
-      (let ((current-state (make-planning-state 0 (get-current-arrangement))))
-        (modified-a-star
-         current-state
-         (make-target-state current-state)
-         :number-of-solutions number-of-solutions)))))
+        (display-zones :highlight-zones object-zones)))))
+
+
+(defun toy-problem-solve (&key (number-of-solutions 1))
+  (populate-knowledge-base)
+  (let ((current-state (make-planning-state 0 (get-current-arrangement))))
+    (modified-a-star
+     current-state
+     (make-target-state current-state)
+     :number-of-solutions number-of-solutions)))
 
 (defun action-sequence (solution)
   (loop for state-transition in solution
@@ -502,7 +517,8 @@
                        (or (and (not (not in-hand-left))
                                 (not in-hand-right))
                            (and (not (not in-hand-right))
-                                (not in-hand-left))))
+                                (not in-hand-left)))
+                       (not *handover-forbidden*))
                   (eql operation :move-base)
                   (eql operation :move-torso))))
         is-valid))))
@@ -613,8 +629,7 @@
     (loop while (getstate state came-from nil first)
           do (setf state (getstate state came-from nil first))
              (push state total-path)
-             (setf first nil)
-             (format t "Loop.~%"))
+             (setf first nil))
     total-path))
 
 (defun lowest-score-key (state-map)
@@ -629,10 +644,13 @@
 (defun lowest-state-score (states scores)
   (let ((lowest-score most-positive-fixnum)
         (lowest-state nil))
-    (loop for state in states
-          when (< (getstate state scores) lowest-score)
-            do (setf lowest-score (getstate state scores))
-               (setf lowest-state state))
+    (cond ((= (length states) 1)
+           (setf lowest-score (first scores))
+           (setf lowest-state (first states)))
+          (t (loop for state in states
+                   when (< (getstate state scores) lowest-score)
+                     do (setf lowest-score (getstate state scores))
+                        (setf lowest-state state))))
     (values lowest-state lowest-score)))
 
 (defun states-equal? (state-1 state-2 &key relaxed)
@@ -680,14 +698,11 @@
                                              :relaxed relaxed))))))
     (or value default)))
 
-(defmacro setstate (key-state state-map value)
-  `(let ((new-state-map
-           (append
-            (remove-if (lambda (list-item)
-                         (states-equal? ,key-state (first list-item)))
-                       ,state-map)
-            `((,,key-state ,,value)))))
-     (setf ,state-map new-state-map)))
+(defun tic ()
+  (setf *tic* (/ (get-internal-real-time) 1000.0)))
+
+(defun toc()
+  (- (/ (get-internal-real-time) 1000.0) *tic*))
 
 (defun modified-a-star (start-state goal-state &key (number-of-solutions 1))
   (let ((closed-set `())
@@ -696,21 +711,26 @@
         (g-score (make-state-map))
         (f-score (make-state-map))
         (transitions-map `())
-        (solutions `()))
+        (solutions `())
+        (solver-durations `()))
     (setstate start-state g-score 0)
     (setstate start-state f-score
               (+ (getstate start-state g-score)
                  (heuristic-cost-estimate start-state goal-state)))
     (block a-star-main
+      (tic)
       (loop while open-set
             as current-state = (multiple-value-bind (state score)
                                    (lowest-state-score open-set f-score)
                                  (declare (ignore score))
                                  state)
+            as testing = (unless current-state
+                           (format t "STATE: ~a~%" current-state))
             if (states-equal? current-state goal-state :relaxed t)
               do (push `(,(reconstruct-path came-from goal-state)
                          ,transitions-map)
                        solutions)
+                 (push (toc) solver-durations)
                  (return-from a-star-main)
             else
               do (setf open-set (remove-if
@@ -736,15 +756,18 @@
                                               (if (= number-of-solutions 1)
                                                   0
                                                   (progn
-                                                    (format t "~a more solution~a~%"
+                                                    (format t "~a more solution~a to generate~%"
                                                             number-of-solutions
-                                                            (cond ((= number-of-solutions 1) "" "s")))
+                                                            (cond ((= number-of-solutions 1) "")
+                                                                  (t "s")))
                                                     (decf number-of-solutions)
                                                     (push `(,(reconstruct-path
                                                               came-from goal-state
                                                               current-state)
                                                             ,transitions-map)
                                                           solutions)
+                                                    (push (toc) solver-durations)
+                                                    (tic)
                                                     most-positive-fixnum)))
                                              (t 0)))))
                               (block intermediate-check
@@ -765,10 +788,11 @@
                                              (heuristic-cost-estimate
                                               projected-state goal-state))))))))
       (format t "FAILURE~%"))
-    (mapcar (lambda (solution)
+    (mapcar (lambda (solution duration)
               (let ((steps (first solution))
                     (transitions (second solution)))
                 (append
+                 `(,duration)
                  (loop for i from 0 below (1- (length steps))
                        as step-current = (nth i steps)
                        as step-next = (nth (+ i 1) steps)
@@ -785,7 +809,7 @@
                                                (second subject)
                                      (second list-item))))))))
                  `(,(last steps) nil))))
-            solutions)))
+            (reverse solutions) (reverse solver-durations))))
 
 (defun display-state (state)
   (let ((arrangement (cdr (assoc :arrangement state))))
@@ -809,8 +833,21 @@
              (declare (ignore transition))
              (display-state state))))
 
-(defun calculate-metrics (solution)
-  (let* ((action-sequence (action-sequence solution))
+(defun calculate-all-metrics (solutions)
+  (let ((duration-offset 0.0))
+    (loop for solution in solutions
+          as metrics = (calculate-metrics solution)
+          collect
+          (prog1
+            (calculate-metrics
+             solution
+             :duration-offset duration-offset)
+            (incf duration-offset (first solution))))))
+
+(defun calculate-metrics (solution &key (duration-offset 0))
+  (let* ((duration (+ (first solution) duration-offset))
+         (solution (rest solution))
+         (action-sequence (action-sequence solution))
          (length (length action-sequence))
          (operation-counts
            (let ((operations
@@ -823,4 +860,21 @@
                             when (eql operation
                                       s-operation)
                               sum 1))))))
-    `(,length ,operation-counts)))
+    `(,duration ,length ,operation-counts)))
+
+(defun pretty-print-metrics (solutions)
+  (let ((all-metrics (calculate-all-metrics solutions)))
+    (mapcar (lambda (solution metrics)
+              (let ((duration (first metrics))
+                    (length (second metrics))
+                    (components (first metrics)))
+                ))
+            solutions all-metrics)
+    (loop for metrics in all-metrics
+          with duration-offset = 0
+          collect (prog1 (- (first metrics) duration-offset)
+                    (setf duration-offset (first metrics))))))
+
+(defun normalize-durations (durations)
+  (let ((largest (loop for i in durations maximizing i)))
+    (mapcar (lambda (r) (/ r largest)) durations)))
