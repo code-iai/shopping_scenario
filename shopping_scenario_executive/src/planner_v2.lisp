@@ -321,7 +321,7 @@
                 ,object))
             objects)))
 
-(Defun toy-problem-solve ()
+(defun toy-problem-solve (&key (number-of-solutions 1))
   (remove-all-shopping-items)
   (let ((perceived-objects
           (or *perceived-objects*
@@ -349,7 +349,8 @@
       (let ((current-state (make-planning-state 0 (get-current-arrangement))))
         (modified-a-star
          current-state
-         (make-target-state current-state))))))
+         (make-target-state current-state)
+         :number-of-solutions number-of-solutions)))))
 
 (defun action-sequence (solution)
   (loop for state-transition in solution
@@ -600,13 +601,20 @@
           :in-hand-left in-hand-left
           :in-hand-right in-hand-right))))))
 
-(defun reconstruct-path (came-from state)
+(defun reconstruct-path (came-from state &optional inject-into-came-from)
   (let ((first t)
-        (total-path `(,state)))
+        (total-path `(,state))
+        (came-from (cond (inject-into-came-from
+                          (let ((came-from-copy came-from))
+                            (setstate state came-from-copy
+                                      inject-into-came-from)
+                            came-from-copy))
+                         (t came-from))))
     (loop while (getstate state came-from nil first)
           do (setf state (getstate state came-from nil first))
              (push state total-path)
-             (setf first nil))
+             (setf first nil)
+             (format t "Loop.~%"))
     total-path))
 
 (defun lowest-score-key (state-map)
@@ -681,85 +689,103 @@
             `((,,key-state ,,value)))))
      (setf ,state-map new-state-map)))
 
-(defun modified-a-star (start-state goal-state)
-  (let ((closed-set nil)
+(defun modified-a-star (start-state goal-state &key (number-of-solutions 1))
+  (let ((closed-set `())
         (open-set `(,start-state))
         (came-from (make-state-map));(make-hash-table :test #'states-equal?))
         (g-score (make-state-map))
         (f-score (make-state-map))
-        (transitions-map `()))
+        (transitions-map `())
+        (solutions `()))
     (setstate start-state g-score 0)
     (setstate start-state f-score
               (+ (getstate start-state g-score)
                  (heuristic-cost-estimate start-state goal-state)))
-    (let ((result
-            (block a-star-main
-              (loop while open-set
-                    as current-state = (multiple-value-bind (state score)
-                                           (lowest-state-score open-set f-score)
-                                         (declare (ignore score))
-                                         state)
-                    if (states-equal? current-state goal-state :relaxed t)
-                      do (return-from
-                          a-star-main
-                           `(,(reconstruct-path came-from goal-state)
-                             ,transitions-map))
-                    else
-                      do (setf open-set (remove-if
-                                         (lambda (subject-state)
-                                           (states-equal? subject-state current-state))
-                                         open-set))
-                         (push current-state closed-set)
-                         (loop for transition in (make-transitions
-                                                  current-state goal-state)
-                               as projected-state = (apply-transition current-state
-                                                                      transition)
-                               do (unless (find projected-state closed-set
-                                                :test #'states-equal?)
-                                    (push `(,current-state ,projected-state ,transition)
-                                          transitions-map)
-                                    (let ((tentative-g-score
-                                            (+ (getstate current-state g-score
-                                                         most-positive-fixnum)
-                                               (distance-between current-state
-                                                                 projected-state))))
-                                      (block intermediate-check
-                                        (if (not (find projected-state open-set
-                                                       :test #'states-equal?))
-                                            (push projected-state open-set)
-                                            (when (>= tentative-g-score
-                                                      (getstate projected-state g-score
-                                                                most-positive-fixnum))
-                                              (return-from intermediate-check)))
-                                        (setstate projected-state came-from
-                                                  current-state)
-                                        (setstate projected-state g-score
-                                                  tentative-g-score)
-                                        (setstate projected-state f-score
-                                                  (+ (getstate projected-state g-score
-                                                               most-positive-fixnum)
-                                                     (heuristic-cost-estimate
-                                                      projected-state goal-state))))))))
-              (format t "FAILURE~%"))))
-      (let ((steps (first result))
-            (transitions (second result)))
-        (append
-         (loop for i from 0 below (1- (length steps))
-               as step-current = (nth i steps)
-               as step-next = (nth (+ i 1) steps)
-               collect
-               `(,step-current
-                 ,(third
-                   (find `(,step-current ,step-next)
-                         transitions
-                         :test (lambda (subject list-item)
-                                 (and (states-equal?
-                                       (first subject)
-                                       (first list-item))
-                                      (states-equal?
-                                       (second subject)
-                                       (second list-item))))))))
-         `(,(last steps) nil))))))
+    (block a-star-main
+      (loop while open-set
+            as current-state = (multiple-value-bind (state score)
+                                   (lowest-state-score open-set f-score)
+                                 (declare (ignore score))
+                                 state)
+            if (states-equal? current-state goal-state :relaxed t)
+              do (push `(,(reconstruct-path came-from goal-state)
+                         ,transitions-map)
+                       solutions)
+                 (return-from a-star-main)
+            else
+              do (setf open-set (remove-if
+                                 (lambda (subject-state)
+                                   (states-equal? subject-state current-state))
+                                 open-set))
+                 (push current-state closed-set)
+                 (loop for transition in (make-transitions
+                                          current-state goal-state)
+                       as projected-state = (apply-transition current-state
+                                                              transition)
+                       do (unless (find projected-state closed-set
+                                        :test #'states-equal?)
+                            (push `(,current-state ,projected-state ,transition)
+                                  transitions-map)
+                            (let ((tentative-g-score
+                                    (+ (getstate current-state g-score
+                                                 most-positive-fixnum)
+                                       (distance-between current-state
+                                                         projected-state)
+                                       (cond ((states-equal? projected-state goal-state
+                                                             :relaxed t)
+                                              (if (= number-of-solutions 1)
+                                                  0
+                                                  (progn
+                                                    (format t "~a more solution~a~%"
+                                                            number-of-solutions
+                                                            (cond ((= number-of-solutions 1) "" "s")))
+                                                    (decf number-of-solutions)
+                                                    (push `(,(reconstruct-path
+                                                              came-from goal-state
+                                                              current-state)
+                                                            ,transitions-map)
+                                                          solutions)
+                                                    most-positive-fixnum)))
+                                             (t 0)))))
+                              (block intermediate-check
+                                (if (not (find projected-state open-set
+                                               :test #'states-equal?))
+                                    (push projected-state open-set)
+                                    (when (>= tentative-g-score
+                                              (getstate projected-state g-score
+                                                        most-positive-fixnum))
+                                      (return-from intermediate-check)))
+                                (setstate projected-state came-from
+                                          current-state)
+                                (setstate projected-state g-score
+                                          tentative-g-score)
+                                (setstate projected-state f-score
+                                          (+ (getstate projected-state g-score
+                                                       most-positive-fixnum)
+                                             (heuristic-cost-estimate
+                                              projected-state goal-state))))))))
+      (format t "FAILURE~%"))
+    (mapcar (lambda (solution)
+              (let ((steps (first solution))
+                    (transitions (second solution)))
+                (append
+                 (loop for i from 0 below (1- (length steps))
+                       as step-current = (nth i steps)
+                       as step-next = (nth (+ i 1) steps)
+                       collect
+                       `(,step-current
+                         ,(third
+                           (find `(,step-current ,step-next)
+                                 transitions
+                                 :test (lambda (subject list-item)
+                                         (and (states-equal?
+                                               (first subject)
+                                               (first list-item))
+                                              (states-equal?
+                                               (second subject)
+                                     (second list-item))))))))
+                 `(,(last steps) nil))))
+            solutions)))
 
 (defun display-state (state)
   (let ((arrangement (cdr (assoc :arrangement state))))
@@ -782,3 +808,19 @@
                state-transition
              (declare (ignore transition))
              (display-state state))))
+
+(defun calculate-metrics (solution)
+  (let* ((action-sequence (action-sequence solution))
+         (length (length action-sequence))
+         (operation-counts
+           (let ((operations
+                   `(:pick :place :move-torso :move-base :handover)))
+             (loop for s-operation in operations
+                   collect
+                   `(,s-operation
+                     ,(loop for step in action-sequence
+                            as operation = (first step)
+                            when (eql operation
+                                      s-operation)
+                              sum 1))))))
+    `(,length ,operation-counts)))
