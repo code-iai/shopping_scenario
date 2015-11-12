@@ -36,6 +36,10 @@
 (defvar *perceived-objects* nil)
 (defvar *tic* 0.0)
 (defvar *handover-forbidden* nil)
+(defvar *min-level* 0)
+(defvar *max-level* 3)
+(defvar *min-zone* 0)
+(defvar *max-zone* 3)
 
 (defmacro setstate (key-state state-map value)
   `(let ((new-state-map
@@ -156,9 +160,9 @@
                   (a color) (fourth color)))))
       (let* ((markers
                (map 'vector #'identity
-                    (loop for level from 0 below levels
+                    (loop for level from *min-level* below levels
                           append
-                          (loop for zone from 0 below zones-per-level
+                          (loop for zone from *min-zone* below zones-per-level
                                 collect
                                 (zone->marker
                                  level zone
@@ -245,7 +249,8 @@
                       when (> pose-elevation level-elevation)
                         maximize level))
               (zone (find
-                     pose (loop for zone from 0 below 4 collect zone)
+                     pose (loop for zone from *min-zone* to *max-zone*
+                                collect zone)
                      :test
                      (lambda (pose zone)
                        (let* ((zone-pose (pose->rack-relative-pose
@@ -366,11 +371,10 @@
 
 (defun toy-problem-solve (&key (number-of-solutions 1) (mode :explicit))
   (populate-knowledge-base)
-  (let ((current-state (make-planning-state 0 (get-current-arrangement))))
-    (modified-a-star
-     current-state
-     (make-target-state current-state :mode mode)
-     :number-of-solutions number-of-solutions)))
+  (let* ((current-state (make-planning-state 0 (get-current-arrangement)))
+         (target-state (make-target-state current-state :mode mode)))
+    (modified-a-star current-state target-state
+                     :number-of-solutions number-of-solutions)))
 
 (defun action-sequence (solution)
   (loop for state-transition in solution
@@ -387,9 +391,9 @@
      (ecase mode
        (:explicit
         (let ((index 0))
-          (loop for level from 0 below 4
+          (loop for level from *min-level* to *max-level*
                 append
-                (loop for zone from 0 below 4
+                (loop for zone from *min-zone* to *max-zone*
                       as it = (prog1
                                   (when (< index (length arrangement))
                                     `(((,level ,zone)
@@ -412,8 +416,8 @@
                               `(,class ,(loop for instance in classes-mult
                                               when (string= instance class)
                                                 sum 1)))))
-                 (let ((level 0)
-                       (zone 0))
+                 (let ((level *min-level*)
+                       (zone *min-zone*))
                    (loop for class-inst in classes-inst
                          append
                          (loop for i from 0 below (second class-inst)
@@ -422,8 +426,8 @@
                                    `(((,level ,zone) (0.0 0.0 0.0))
                                      ,(first class-inst))
                                  (incf zone)
-                                 (when (> zone 3)
-                                   (setf zone 0)
+                                 (when (> zone *max-zone*)
+                                   (setf zone *min-zone*)
                                    (incf level))))))))
               (t (loop for level-zone-object in arrangement
                        collect
@@ -449,9 +453,9 @@
                     (equal subject (first (first list-item)))))))))
 
 (defun free-level-zones (state)
-  (loop for level from 0 below 4
+  (loop for level from *min-level* to *max-level*
         append
-        (loop for zone from 0 below 4
+        (loop for zone from *min-zone* to *max-zone*
               when (not (level-zone-in-state level zone state))
                 collect `(,level ,zone))))
 
@@ -501,7 +505,14 @@
          (arrangement-goal (cdr (assoc :arrangement goal-state)))
          (operation (first transition))
          (free-level-zones (free-level-zones state)))
-    (labels ((level-zone-for-object (object)
+    (labels ((level-zone-valid (level-zone)
+               (let ((level (first level-zone))
+                     (zone (second level-zone)))
+                 (and (>= level *min-level*)
+                      (<= level *max-level*)
+                      (>= zone *min-zone*)
+                      (<= zone *max-zone*))))
+             (level-zone-for-object (object)
                (first (first (assess-object-zones `(,object)))))
              (level-zone-in-reach (robot-pose torso level-zone hand)
                (let* ((base-distance (abs (- (second level-zone)
@@ -546,7 +557,8 @@
                                          subject
                                          (first (first list-item))))))
                               (goal-object-at (second goal-place-at)))
-                         (and (level-zone-in-reach robot-pose
+                         (and (level-zone-valid place-at)
+                              (level-zone-in-reach robot-pose
                                                    torso-height
                                                    place-at
                                                    hand)
@@ -618,8 +630,16 @@
 (defun distance-between (state-1 state-2)
   (state-entropy state-1 state-2))
 
-(defun heuristic-cost-estimate (state-1 state-2)
-  (distance-between state-1 state-2))
+(defun heuristic-cost-estimate (state-1 state-2 &optional transition)
+  (+ (distance-between state-1 state-2)
+     (cond (transition
+            (ecase (first transition)
+              (:pick 1)
+              (:place 1)
+              (:handover 0.5)
+              (:move-base 0.25)
+              (:move-torso 0.25)))
+           (t 0))))
 
 (defun apply-transition (state transition)
   (let* ((robot-pose (second (assoc :robot-pose state)))
@@ -723,6 +743,14 @@
                         (setf lowest-state state))))
     (values lowest-state lowest-score)))
 
+(defun arrangement-sets-equal? (arrangement-set-1 arrangement-set-2)
+  (let ((level-zone-1 (first (first arrangement-set-1)))
+        (level-zone-2 (first (first arrangement-set-2)))
+        (object-1 (second arrangement-set-1))
+        (object-2 (second arrangement-set-2)))
+    (and (equal level-zone-1 level-zone-2)
+         (string= object-1 object-2))))
+
 (defun states-equal? (state-1 state-2 &key relaxed)
   (let* ((robot-pose-1 (second (assoc :robot-pose state-1)))
          (torso-height-1 (second (assoc :torso-height state-1)))
@@ -755,18 +783,18 @@
                                     (eql mode-arrangement :explicit))
                                (and (eql mode-set :generic)
                                     (eql mode-arrangement :generic)))
-                           (find set arrangement :test #'equal))
+                           (find set arrangement :test #'arrangement-sets-equal?))
                           ((and (eql mode-set :explicit)
                                 (eql mode-arrangement :generic))
                            (find `(,(first set) ,(get-item-class-cached
                                                   (second set)))
-                                 arrangement :test #'equal))
+                                 arrangement :test #'arrangement-sets-equal?))
                           ((and (eql mode-set :generic)
                                 (eql mode-arrangement :explicit))
                            (find set arrangement
                                  :test
                                  (lambda (subject list-item)
-                                   (and (equal (first subject) (first list-item))
+                                   (and (equal (first (first subject)) (first (first list-item)))
                                         (string= (second subject)
                                                  (get-item-class-cached
                                                   (second list-item))))))))))
@@ -877,7 +905,8 @@
                                           (+ (getstate projected-state g-score
                                                        most-positive-fixnum)
                                              (heuristic-cost-estimate
-                                              projected-state goal-state))))))))
+                                              projected-state goal-state
+                                              transition))))))))
       (format t "FAILURE~%"))
     (mapcar (lambda (solution duration)
               (let ((steps (first solution))
@@ -998,3 +1027,21 @@
     (:move-torso
      (let ((position (second step)))
        (move-torso (* (/ 30.0 4) position))))))
+
+(defun experiment ()
+  (let ((current-state (make-planning-state
+                        0 (get-current-arrangement)))
+        (target-state (make-planning-state
+                       0
+                       ;; `((((2 0) (0.0 0.0 0.0)) "Lion")
+                       ;;   (((2 1) (0.0 0.0 0.0)) "PancakeMix")
+                       ;;   (((2 2) (0.0 0.0 0.0)) "TomatoSauce")
+                       ;;   (((2 3) (0.0 0.0 0.0)) "PancakeMix")
+                       ;;   (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
+                       `((((2 1) (0.0 0.0 0.0)) "TomatoSauce")
+                         (((2 2) (0.0 0.0 0.0)) "PancakeMix")
+                         (((2 3) (0.0 0.0 0.0)) "PancakeMix")
+                         (((1 2) (0.0 0.0 0.0)) "Lion")
+                         (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
+                       :mode :generic)))
+    (modified-a-star current-state target-state)))
