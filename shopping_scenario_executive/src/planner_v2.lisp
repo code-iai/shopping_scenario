@@ -32,6 +32,7 @@
 (defvar *rack-level-dimensions* (make-hash-table :test 'equal))
 (defvar *object-dimensions* (make-hash-table :test 'equal))
 (defvar *object-poses* (make-hash-table :test 'equal))
+(defvar *object-classes* (make-hash-table :test 'equal))
 (defvar *perceived-objects* nil)
 (defvar *tic* 0.0)
 (defvar *handover-forbidden* nil)
@@ -44,6 +45,10 @@
                        ,state-map)
             `((,,key-state ,,value)))))
      (setf ,state-map new-state-map)))
+
+(defun get-item-class-cached (item)
+  (or (gethash item *object-classes*)
+      (setf (gethash item *object-classes*) (get-item-class item))))
 
 (defun get-item-pose-cached (item)
   (or (gethash item *object-poses*)
@@ -359,12 +364,12 @@
         (display-zones :highlight-zones object-zones)))))
 
 
-(defun toy-problem-solve (&key (number-of-solutions 1))
+(defun toy-problem-solve (&key (number-of-solutions 1) (mode :explicit))
   (populate-knowledge-base)
   (let ((current-state (make-planning-state 0 (get-current-arrangement))))
     (modified-a-star
      current-state
-     (make-target-state current-state)
+     (make-target-state current-state :mode mode)
      :number-of-solutions number-of-solutions)))
 
 (defun action-sequence (solution)
@@ -373,31 +378,67 @@
         when transition
           collect transition))
 
-(defun make-target-state (start-state)
+(defun make-target-state (start-state &key (mode :explicit) (arrange t))
   (let* ((arrangement (cdr (assoc :arrangement start-state)))
          (torso-height (second (assoc :torso-height start-state)))
          (robot-pose (second (assoc :robot-pose start-state))))
     (make-planning-state
      robot-pose
-     (let ((index 0))
-       (loop for level from 0 below 4
-             append
-             (loop for zone from 0 below 4
-                   as it = (prog1
-                               (when (< index (length arrangement))
-                                 `(((,level ,zone)
-                                    (0.0 0.0 0.0)) ;; x, y, theta (az)
-                                   ,(second (elt arrangement index))))
-                             (incf index))
-                   when it
-                     collect it)))
-     :torso-height torso-height)))
+     (ecase mode
+       (:explicit
+        (let ((index 0))
+          (loop for level from 0 below 4
+                append
+                (loop for zone from 0 below 4
+                      as it = (prog1
+                                  (when (< index (length arrangement))
+                                    `(((,level ,zone)
+                                       (0.0 0.0 0.0)) ;; x, y, theta (az)
+                                      ,(second (elt arrangement index))))
+                                (incf index))
+                      when it
+                        collect it))))
+       (:generic
+        (cond (arrange
+               (let* ((classes-mult
+                        (loop for level-zone-object in arrangement
+                              collect (get-item-class-cached
+                                       (second level-zone-object))))
+                      (classes (remove-duplicates classes-mult
+                                                  :test #'string=))
+                      (classes-inst
+                        (loop for class in classes
+                              collect
+                              `(,class ,(loop for instance in classes-mult
+                                              when (string= instance class)
+                                                sum 1)))))
+                 (let ((level 0)
+                       (zone 0))
+                   (loop for class-inst in classes-inst
+                         append
+                         (loop for i from 0 below (second class-inst)
+                               collect
+                               (prog1
+                                   `(((,level ,zone) (0.0 0.0 0.0))
+                                     ,(first class-inst))
+                                 (incf zone)
+                                 (when (> zone 3)
+                                   (setf zone 0)
+                                   (incf level))))))))
+              (t (loop for level-zone-object in arrangement
+                       collect
+                       `(,(first level-zone-object)
+                         ,(get-item-class-cached
+                           (second level-zone-object))))))))
+     :torso-height torso-height
+     :mode mode)))
 
-(defun make-planning-state (robot-pose arrangement &key (torso-height 2) in-hand-left in-hand-right)
+(defun make-planning-state (robot-pose arrangement &key (torso-height 2) in-hand-left in-hand-right (mode :explicit))
   `((:robot-pose ,robot-pose)
     (:torso-height ,torso-height)
     (:in-hand ((:left ,in-hand-left) (:right ,in-hand-right)))
-    (:arrangement ,@arrangement)))
+    (:arrangement ,@arrangement)
+    (:mode ,mode)))
 
 (defun level-zone-in-state (level zone state)
   (let ((arrangement (cdr (assoc :arrangement state))))
@@ -450,6 +491,7 @@
 (defun transition-valid? (state transition goal-state)
   (let* ((robot-pose (cadr (assoc :robot-pose state)))
          (torso-height (cadr (assoc :torso-height state)))
+         (mode-goal (second (assoc :mode goal-state)))
          (in-hand-left
            (second (assoc :left (second
                                  (assoc :in-hand state)))))
@@ -510,7 +552,7 @@
                                                    hand)
                               (or (and (find place-at free-level-zones
                                              :test #'equal)
-                                       (string= object goal-object-at))
+                                       (string= (get-item-class-cached object) goal-object-at))
                                   (not (find place-at free-level-zones
                                              :test #'equal))))))
                   (and (eql operation :handover)
@@ -527,23 +569,51 @@
   (let* ((goal-robot-pose (second (assoc :robot-pose goal-state)))
          (current-robot-pose (second (assoc :robot-pose current-state)))
          (goal-arrangement (cdr (assoc :arrangement goal-state)))
-         (current-arrangement (cdr (assoc :arrangement current-state))))
-    (loop for set in goal-arrangement
-          as goal-level-zone = (first set)
-          as goal-object = (second set)
-          as current-object = (second
-                               (find goal-level-zone current-arrangement
-                                     :test
-                                     (lambda (subject list-item)
-                                       (equal subject (first (first list-item))))))
-          when (not (string= current-object goal-object))
-            counting 1 into wrongly-placed
-          counting 1 into total
-          finally (return (/ (+ wrongly-placed
-                                (cond ((= current-robot-pose goal-robot-pose)
-                                       0)
-                                      (t 1)))
-                             (+ total 1))))))
+         (current-arrangement (cdr (assoc :arrangement current-state)))
+         (goal-mode (second (assoc :mode goal-state)))
+         (current-mode (second (assoc :mode current-state))))
+    (cond ((eql goal-mode current-mode)
+           (loop for set in goal-arrangement
+                 as goal-level-zone = (first set)
+                 as goal-object = (second set)
+                 as current-object = (second
+                                      (find goal-level-zone current-arrangement
+                                            :test
+                                            (lambda (subject list-item)
+                                              (equal (first subject)
+                                                     (first (first list-item))))))
+                 when (not (string= current-object goal-object))
+                   counting 1 into wrongly-placed
+                 counting 1 into total
+                 finally (return (/ (+ wrongly-placed
+                                       (cond ((= current-robot-pose goal-robot-pose)
+                                              0)
+                                             (t 1)))
+                                    (+ total 1)))))
+          ((and (eql goal-mode :generic)
+                (eql current-mode :explicit))
+           (loop for set in goal-arrangement
+                 as goal-level-zone = (first set)
+                 as goal-class = (second set)
+                 as current-class = (let ((item
+                                            (second
+                                             (find goal-level-zone current-arrangement
+                                                   :test
+                                                   (lambda (subject list-item)
+                                                     (equal (first subject)
+                                                            (first (first list-item))))))))
+                                      (cond (item
+                                             (get-item-class-cached item))
+                                            (t "")))
+                 when (not (string= current-class goal-class))
+                   counting 1 into wrongly-placed
+                 counting 1 into total
+                 finally (return (/ (+ wrongly-placed
+                                       (cond ((= current-robot-pose goal-robot-pose)
+                                              0)
+                                             (t 1)))
+                                    (+ total 1)))))
+          (t (assert nil)))))
 
 (defun distance-between (state-1 state-2)
   (state-entropy state-1 state-2))
@@ -663,6 +733,7 @@
            (second (assoc :right (second
                                   (assoc :in-hand state-1)))))
          (arrangement-1 (cdr (assoc :arrangement state-1)))
+         (mode-1 (or (second (assoc :mode state-1)) :explicit))
          (robot-pose-2 (second (assoc :robot-pose state-2)))
          (torso-height-2 (second (assoc :torso-height state-2)))
          (in-hand-left-2
@@ -671,16 +742,37 @@
          (in-hand-right-2
            (second (assoc :right (second
                                   (assoc :in-hand state-2)))))
-         (arrangement-2 (cdr (assoc :arrangement state-2))))
+         (arrangement-2 (cdr (assoc :arrangement state-2)))
+         (mode-2 (or (second (assoc :mode state-2)) :explicit)))
   (and (or nil;relaxed
            (and (= robot-pose-1 robot-pose-2)
                 (= torso-height-1 torso-height-2)))
        (eql in-hand-left-1 in-hand-left-2)
        (eql in-hand-right-1 in-hand-right-2)
        (block check-arrangement
-         (loop for set in arrangement-1
-               when (not (find set arrangement-2 :test #'equal))
-                 do (return-from check-arrangement nil))
+         (labels ((set-present (set arrangement mode-set mode-arrangement)
+                    (cond ((or (and (eql mode-set :explicit)
+                                    (eql mode-arrangement :explicit))
+                               (and (eql mode-set :generic)
+                                    (eql mode-arrangement :generic)))
+                           (find set arrangement :test #'equal))
+                          ((and (eql mode-set :explicit)
+                                (eql mode-arrangement :generic))
+                           (find `(,(first set) ,(get-item-class-cached
+                                                  (second set)))
+                                 arrangement :test #'equal))
+                          ((and (eql mode-set :generic)
+                                (eql mode-arrangement :explicit))
+                           (find set arrangement
+                                 :test
+                                 (lambda (subject list-item)
+                                   (and (equal (first subject) (first list-item))
+                                        (string= (second subject)
+                                                 (get-item-class-cached
+                                                  (second list-item))))))))))
+           (loop for set in arrangement-1
+                 when (not (set-present set arrangement-2 mode-1 mode-2))
+                 do (return-from check-arrangement nil)))
          t))))
 
 (defun make-state-map ()
@@ -707,7 +799,7 @@
 (defun modified-a-star (start-state goal-state &key (number-of-solutions 1))
   (let ((closed-set `())
         (open-set `(,start-state))
-        (came-from (make-state-map));(make-hash-table :test #'states-equal?))
+        (came-from (make-state-map))
         (g-score (make-state-map))
         (f-score (make-state-map))
         (transitions-map `())
@@ -724,9 +816,8 @@
                                    (lowest-state-score open-set f-score)
                                  (declare (ignore score))
                                  state)
-            as testing = (unless current-state
-                           (format t "STATE: ~a~%" current-state))
-            if (states-equal? current-state goal-state :relaxed t)
+            if (progn
+                 (states-equal? current-state goal-state :relaxed t))
               do (push `(,(reconstruct-path came-from goal-state)
                          ,transitions-map)
                        solutions)
@@ -878,3 +969,32 @@
 (defun normalize-durations (durations)
   (let ((largest (loop for i in durations maximizing i)))
     (mapcar (lambda (r) (/ r largest)) durations)))
+
+(defun execute-action-sequence (sequence)
+  (loop for step in sequence
+        do (execute-action-step step)))
+
+(defun execute-action-step (step)
+  (ecase (first step)
+    (:pick
+     (let ((object-name (second step))
+           (side (third step)))
+       ))
+    (:place
+     (let ((object-name (second step)))
+       ))
+    (:handover
+     ;;(let ((object 
+     ;;(achieve `(switched-holding-hand ,object)))
+     )
+    (:move-base
+     (let* ((position (second step))
+            (shelf-pose
+              (tf:make-pose-stamped
+               "/shopping_rack" 0.0
+               (tf:make-3d-vector -1.0 (* position -0.3) 0.0)
+               (tf:euler->quaternion))))
+       (go-to-pose shelf-pose)))
+    (:move-torso
+     (let ((position (second step)))
+       (move-torso (* (/ 30.0 4) position))))))
