@@ -1087,6 +1087,7 @@
     (move-arms-away)
     (remove-all-shopping-items)
     (setf *perceived-objects* nil)
+    (setf *item-designators* nil)
     (setf *object-poses* nil)
     (setf *handover-forbidden* nil)
     (setf *min-level* 1)
