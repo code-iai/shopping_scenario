@@ -40,6 +40,13 @@
 (defvar *max-level* 3)
 (defvar *min-zone* 0)
 (defvar *max-zone* 3)
+(defvar *item-designators* (make-hash-table :test 'equal))
+
+(defun set-item-designator (item designator)
+  (setf (gethash item *item-designators*) designator))
+
+(defun get-item-designator (item)
+  (gethash item *item-designators*))
 
 (defmacro setstate (key-state state-map value)
   `(let ((new-state-map
@@ -362,6 +369,7 @@
                                    (or (detected-type object)
                                        "Kelloggs"))))
                         (set-item-pose-cached item pose)
+                        (set-item-designator item object)
                         item))
                     perceived-objects)))
       (display-objects all-objects)
@@ -1044,17 +1052,23 @@
 (defun execute-action-step (step)
   (ecase (first step)
     (:pick
-     (let ((object-name (second step))
-           (side (third step)))
-       ;; TODO: Picking
-       ))
+     (let* ((object-name (second step))
+            (side (third step))
+            (object (get-item-designator object-name)))
+       (let ((allowed-arms pr2-manip-pm::*allowed-arms*))
+         (setf pr2-manip-pm::*allowed-arms* `(,side))
+         (pick-object object :stationary t)
+         (setf pr2-manip-pm::*allowed-arms* allowed-arms))))
     (:place
-     (let ((object-name (second step))
-           (level-zone (third step)))
+     (let* ((object-name (second step))
+            (level-zone (third step))
+            (zone-pose (make-zone-pose (first level-zone)
+                                       (second level-zone)
+                                       0.0 0.0))
+            (object (get-item-designator object-name)))
        (look-at-level-zone
         (first level-zone) (second level-zone))
-       ;; TODO: Placing
-       ))
+       (place-object object zone-pose :stationary t)))
     (:handover
      ;; TODO: Handover (probably not for the robot experiment)
      )
