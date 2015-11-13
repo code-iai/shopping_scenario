@@ -1087,14 +1087,15 @@
     (move-arms-away)
     (remove-all-shopping-items)
     (setf *perceived-objects* nil)
-    (setf *item-designators* nil)
-    (setf *object-poses* nil)
-    (setf *handover-forbidden* nil)
+    (setf *item-designators* (make-hash-table :test 'equal))
+    (setf *object-poses* (make-hash-table :test 'equal))
+    (setf *handover-forbidden* t)
     (setf *min-level* 1)
     (setf *max-level* 2)
     (setf *min-zone* 0)
     (setf *max-zone* 3)
     (perceive-rack-full)
+    (populate-knowledge-base)
     (let* ((current-state (make-planning-state
                            0 (get-current-arrangement)))
            (target-state (make-planning-state
