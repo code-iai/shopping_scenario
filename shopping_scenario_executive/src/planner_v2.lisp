@@ -1046,40 +1046,77 @@
     (:pick
      (let ((object-name (second step))
            (side (third step)))
+       ;; TODO: Picking
        ))
     (:place
-     (let ((object-name (second step)))
+     (let ((object-name (second step))
+           (level-zone (third step)))
+       (look-at-level-zone
+        (first level-zone) (second level-zone))
+       ;; TODO: Placing
        ))
     (:handover
-     ;;(let ((object 
-     ;;(achieve `(switched-holding-hand ,object)))
+     ;; TODO: Handover (probably not for the robot experiment)
      )
     (:move-base
-     (let* ((position (second step))
-            (shelf-pose
-              (tf:make-pose-stamped
-               "/shopping_rack" 0.0
-               (tf:make-3d-vector -1.0 (* position -0.3) 0.0)
-               (tf:euler->quaternion))))
-       (go-to-pose shelf-pose)))
+     (let* ((position (second step)))
+       (go-to-rack-relativ-pose (* position -0.3))))
     (:move-torso
-     (let ((position (second step)))
-       (move-torso (* (/ 30.0 4) position))))))
+     (let* ((position (second step))
+            (rack (first (get-racks)))
+            (level (get-rack-on-level rack position))
+            (elevation (get-rack-level-elevation level)))
+       (move-torso (/ elevation 5.0))))))
 
-(defun experiment ()
-  (let ((current-state (make-planning-state
-                        0 (get-current-arrangement)))
-        (target-state (make-planning-state
-                       0
-                       ;; `((((2 0) (0.0 0.0 0.0)) "Lion")
-                       ;;   (((2 1) (0.0 0.0 0.0)) "PancakeMix")
-                       ;;   (((2 2) (0.0 0.0 0.0)) "TomatoSauce")
-                       ;;   (((2 3) (0.0 0.0 0.0)) "PancakeMix")
-                       ;;   (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
-                       `((((2 1) (0.0 0.0 0.0)) "TomatoSauce")
-                         (((2 2) (0.0 0.0 0.0)) "PancakeMix")
-                         (((2 3) (0.0 0.0 0.0)) "PancakeMix")
-                         (((1 2) (0.0 0.0 0.0)) "Lion")
-                         (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
-                       :mode :generic)))
-    (modified-a-star current-state target-state)))
+(def-top-level-cram-function experiment ()
+  (with-process-modules
+    (move-arms-away)
+    (remove-all-shopping-items)
+    (setf *perceived-objects* nil)
+    (setf *object-poses* nil)
+    (setf *handover-forbidden* nil)
+    (setf *min-level* 1)
+    (setf *max-level* 2)
+    (setf *min-zone* 0)
+    (setf *max-zone* 3)
+    (perceive-rack-full)
+    (let ((current-state (make-planning-state
+                          0 (get-current-arrangement)))
+          (target-state (make-planning-state
+                         0
+                         `((((2 1) (0.0 0.0 0.0)) "TomatoSauce")
+                           (((2 2) (0.0 0.0 0.0)) "PancakeMix")
+                           (((2 3) (0.0 0.0 0.0)) "PancakeMix")
+                           (((1 2) (0.0 0.0 0.0)) "Lion")
+                           (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
+                         :mode :generic)))
+      (modified-a-star current-state target-state))))
+
+(defun look-at (pose)
+  (with-designators ((look-at-action
+                      (action
+                       `((desig-props:type desig-props:trajectory)
+                         (desig-props:to desig-props:see)
+                         (desig-props:pose ,pose)))))
+    (perform look-at-action)))
+
+(defun look-at-level-zone (level zone)
+  (let ((zone-pose (make-zone-pose level zone 0 0)))
+    (look-at zone-pose)))
+
+(defun go-to-rack-relativ-pose (y &key (x -0.85))
+  (let ((pose (tf:make-pose-stamped
+               "/shopping_rack" 0.0
+               (tf:make-3d-vector y x 0.0)
+               (tf:euler->quaternion :az (/ pi 2)))))
+    (go-to-pose pose)))
+
+(defun back-off ()
+  (go-to-rack-relativ-pose 0 :x -1.4))
+
+(defun perceive-rack-full ()
+  (back-off)
+  (look-at-level-zone 1 2)
+  (setf *perceived-objects*
+        (robosherlock-pm::perceive-object-designator
+         (make-designator 'object nil))))
