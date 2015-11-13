@@ -219,7 +219,10 @@
                  position position)))
     (actionlib:wait-for-server action-client)
     (setf *action-client-torso* action-client)
-    (actionlib:send-goal-and-wait action-client goal)))
+    (actionlib:send-goal-and-wait
+     action-client goal
+     :result-timeout 30.0
+     :exec-timeout 30.0)))
 
 (defun move-arms-away ()
   "Moves the left, and then the right robot arm up into a safe pose."
