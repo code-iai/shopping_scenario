@@ -368,8 +368,7 @@
       (let ((object-zones (assess-object-zones all-objects)))
         (display-zones :highlight-zones object-zones)))))
 
-
-(defun toy-problem-solve (&key (number-of-solutions 1) (mode :explicit))
+(defun toy-problem-solve (&key (number-of-solutions 1) (mode :generic))
   (populate-knowledge-base)
   (let* ((current-state (make-planning-state 0 (get-current-arrangement)))
          (target-state (make-target-state current-state :mode mode)))
@@ -495,7 +494,7 @@
 (defun transition-valid? (state transition goal-state)
   (let* ((robot-pose (cadr (assoc :robot-pose state)))
          (torso-height (cadr (assoc :torso-height state)))
-         (mode-goal (second (assoc :mode goal-state)))
+         (mode-goal (cadr (assoc :mode goal-state)))
          (in-hand-left
            (second (assoc :left (second
                                  (assoc :in-hand state)))))
@@ -530,7 +529,40 @@
                                           object)))
                  (level-zone-in-reach robot-pose torso-height
                                       object-level-zone
-                                      hand))))
+                                      hand)))
+             (entry-for-object-in-state (object state)
+               (let ((arrangement (cdr (assoc :arrangement state))))
+                 (find object arrangement
+                       :test (lambda (subject list-item)
+                               (string= subject
+                                        (second list-item))))))
+             (entries-in-level-zone-in-state (level zone state)
+               (let ((arrangement (cdr (assoc :arrangement state))))
+                 (loop for entry in arrangement
+                       as level-zone = (first (first entry))
+                       when (equal level-zone `(,level ,zone))
+                         collect entry)))
+             (object-occluded (object state)
+               (let* ((entry (entry-for-object-in-state
+                              object state))
+                      (level-zone (first (first entry)))
+                      (coordinates (second (first entry)))
+                      (entries-in-level-zone
+                        (remove-if
+                         (lambda (entry)
+                           (string= object (second entry)))
+                         (entries-in-level-zone-in-state
+                          (first level-zone) (second level-zone)
+                          state)))
+                      (occlusion
+                        (find coordinates entries-in-level-zone
+                              :test
+                              (lambda (subject list-item)
+                                (let ((s-x (first subject))
+                                      (l-x (first (second
+                                                   (first list-item)))))
+                                  (< l-x s-x))))))
+                 (not (not occlusion)))))
       (let ((is-valid
               (or (and (eql operation :pick)
                        (or (and (not in-hand-left)
@@ -539,7 +571,9 @@
                                 (eql (third transition) :right)))
                        (object-in-reach robot-pose torso-height
                                         (second transition)
-                                        (third transition)))
+                                        (third transition))
+                       (not (object-occluded (second transition)
+                                             state)))
                   (and (eql operation :place)
                        (let* ((place-at (third transition))
                               (object (second transition))
@@ -564,7 +598,11 @@
                                                    hand)
                               (or (and (find place-at free-level-zones
                                              :test #'equal)
-                                       (string= (get-item-class-cached object) goal-object-at))
+                                       (string=
+                                        (ecase mode-goal
+                                          (:explicit object)
+                                          (:generic (get-item-class-cached object)))
+                                        goal-object-at))
                                   (not (find place-at free-level-zones
                                              :test #'equal))))))
                   (and (eql operation :handover)
@@ -772,36 +810,33 @@
                                   (assoc :in-hand state-2)))))
          (arrangement-2 (cdr (assoc :arrangement state-2)))
          (mode-2 (or (second (assoc :mode state-2)) :explicit)))
-  (and (or nil;relaxed
-           (and (= robot-pose-1 robot-pose-2)
-                (= torso-height-1 torso-height-2)))
-       (eql in-hand-left-1 in-hand-left-2)
-       (eql in-hand-right-1 in-hand-right-2)
-       (block check-arrangement
-         (labels ((set-present (set arrangement mode-set mode-arrangement)
-                    (cond ((or (and (eql mode-set :explicit)
-                                    (eql mode-arrangement :explicit))
-                               (and (eql mode-set :generic)
-                                    (eql mode-arrangement :generic)))
-                           (find set arrangement :test #'arrangement-sets-equal?))
-                          ((and (eql mode-set :explicit)
-                                (eql mode-arrangement :generic))
-                           (find `(,(first set) ,(get-item-class-cached
-                                                  (second set)))
-                                 arrangement :test #'arrangement-sets-equal?))
-                          ((and (eql mode-set :generic)
-                                (eql mode-arrangement :explicit))
-                           (find set arrangement
-                                 :test
-                                 (lambda (subject list-item)
-                                   (and (equal (first (first subject)) (first (first list-item)))
-                                        (string= (second subject)
-                                                 (get-item-class-cached
-                                                  (second list-item))))))))))
-           (loop for set in arrangement-1
-                 when (not (set-present set arrangement-2 mode-1 mode-2))
-                 do (return-from check-arrangement nil)))
-         t))))
+    (and (or nil;relaxed
+             (and (= robot-pose-1 robot-pose-2)
+                  (= torso-height-1 torso-height-2)))
+         (equal in-hand-left-1 in-hand-left-2)
+         (equal in-hand-right-1 in-hand-right-2)
+         (block check-arrangement
+           (labels ((set-present (set arrangement mode-set mode-arrangement)
+                      (cond ((eql mode-set mode-arrangement)
+                             (find set arrangement :test #'arrangement-sets-equal?))
+                            ((and (eql mode-set :explicit)
+                                  (eql mode-arrangement :generic))
+                             (find `(,(first set) ,(get-item-class-cached
+                                                    (second set)))
+                                   arrangement :test #'arrangement-sets-equal?))
+                            ((and (eql mode-set :generic)
+                                  (eql mode-arrangement :explicit))
+                             (find set arrangement
+                                   :test
+                                   (lambda (subject list-item)
+                                     (and (equal (first (first subject)) (first (first list-item)))
+                                          (string= (second subject)
+                                                   (get-item-class-cached
+                                                    (second list-item))))))))))
+             (loop for set in arrangement-1
+                   when (not (set-present set arrangement-2 mode-1 mode-2))
+                     do (return-from check-arrangement nil)))
+           t))))
 
 (defun make-state-map ()
   `())
@@ -846,7 +881,9 @@
                                  state)
             if (progn
                  (states-equal? current-state goal-state :relaxed t))
-              do (push `(,(reconstruct-path came-from goal-state)
+              do (push `(,(reconstruct-path
+                           came-from
+                           current-state)
                          ,transitions-map)
                        solutions)
                  (push (toc) solver-durations)
@@ -881,7 +918,8 @@
                                                                   (t "s")))
                                                     (decf number-of-solutions)
                                                     (push `(,(reconstruct-path
-                                                              came-from goal-state
+                                                              came-from
+                                                              projected-state
                                                               current-state)
                                                             ,transitions-map)
                                                           solutions)
