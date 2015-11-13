@@ -1082,7 +1082,7 @@
             (elevation (get-rack-level-elevation level)))
        (move-torso (/ elevation 5.0))))))
 
-(def-top-level-cram-function experiment ()
+(def-top-level-cram-function experiment (&key evaluate-solutions)
   (with-process-modules
     (move-arms-away)
     (remove-all-shopping-items)
@@ -1095,17 +1095,28 @@
     (setf *min-zone* 0)
     (setf *max-zone* 3)
     (perceive-rack-full)
-    (let ((current-state (make-planning-state
-                          0 (get-current-arrangement)))
-          (target-state (make-planning-state
-                         0
-                         `((((2 1) (0.0 0.0 0.0)) "TomatoSauce")
-                           (((2 2) (0.0 0.0 0.0)) "PancakeMix")
-                           (((2 3) (0.0 0.0 0.0)) "PancakeMix")
-                           (((1 2) (0.0 0.0 0.0)) "Lion")
-                           (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
-                         :mode :generic)))
-      (modified-a-star current-state target-state))))
+    (let* ((current-state (make-planning-state
+                           0 (get-current-arrangement)))
+           (target-state (make-planning-state
+                          0
+                          `((((2 1) (0.0 0.0 0.0)) "TomatoSauce")
+                            (((2 2) (0.0 0.0 0.0)) "PancakeMix")
+                            (((2 3) (0.0 0.0 0.0)) "PancakeMix")
+                            (((1 2) (0.0 0.0 0.0)) "Lion")
+                            (((1 3) (0.0 0.0 0.0)) "Kelloggs"))
+                          :mode :generic))
+           (solutions (modified-a-star current-state target-state))
+           (action-sequences
+             (mapcar (lambda (solution)
+                       (action-sequence (rest solution)))
+                     solutions)))
+      (cond (evaluate-solutions
+             solutions)
+            (t (cond (action-sequences
+                      (execute-action-sequence
+                       (first action-sequences)))
+                     (t (format
+                         t "No valid action sequence found."))))))))
 
 (defun look-at (pose)
   (with-designators ((look-at-action
