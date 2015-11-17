@@ -74,6 +74,13 @@
     ((name (common-lisp:eql 'scenario-rackposition-restriction-distribution)))
   101)
 
+(defun is-detection-source-object (detection)
+  (string= (second (assoc 'desig-props::source detection))
+           "JIRAnnotatorObject"))
+
+(defun get-type-from-detection (detection)
+  (second (assoc 'desig-props::type detection)))
+
 (def-fact-group scenario-costmap-area-restriction (desig-costmap)
   
   (<- (desig-costmap ?desig ?cm)
@@ -101,14 +108,21 @@
 
 (def-fact-group inference-facts (infer-object-property object-handle)
   
-  (<- (infer-object-property ?object desig-props:dimensions ?value)
-    (desig-prop ?object (desig-props:name ?name))
-    (lisp-fun get-item-dimensions ?name ?value)
-    (not (equal ?value nil)))
+  (<- (infer-object-property ?object desig-props:type ?value)
+    (desig-prop ?object (desig-props::detection ?detection))
+    (crs:lisp-pred is-detection-source-object ?detection)
+    (crs:lisp-fun get-type-from-detection ?detection ?type)
+    (crs:lisp-fun convert-object-name ?type ?value))
   
-  (<- (infer-object-property ?object desig-props:shape ?value)
-    (desig-prop ?object (desig-props:name ?name))
-    (lisp-fun get-item-primitive-shape-symbol ?name ?value)))
+  ;; (<- (infer-object-property ?object desig-props:dimensions ?value)
+  ;;   (desig-prop ?object (desig-props:type ?type))
+  ;;   (crs:lisp-fun get-item-type-dimensions ?type ?value)
+  ;;   (not (equal ?value nil)))
+  
+  ;; (<- (infer-object-property ?object desig-props:shape ?value)
+  ;;   (desig-prop ?object (desig-props:type ?type))
+  ;;   (crs:lisp-fun get-item-type-primitive-shape-symbol ?type ?value)))
+  )
 
 (def-fact-group occassions (holds)
 

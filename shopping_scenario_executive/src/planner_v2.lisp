@@ -105,7 +105,8 @@
      (tf:euler->quaternion :ax roll :ay pitch :az yaw))))
 
 (defun make-zone-pose (level zone x y
-                       &key (orientation (tf:euler->quaternion)))
+                       &key (z 0 z-p)
+                         (orientation (tf:euler->quaternion)))
   (let* ((rack-level-dimensions (get-rack-level-dimensions level))
          (zones-per-level 4)
          (zone-width (/ (elt rack-level-dimensions 1) zones-per-level))
@@ -115,7 +116,8 @@
                     )
                  y))
          (c-y x)
-         (c-z (+ (/ zone-height 2)
+         (c-z (+ (cond (z-p z)
+                       (t (/ zone-height 2)))
                  (/ (elt rack-level-dimensions 2) 2))))
     (tf:make-pose-stamped
      (concatenate
@@ -206,7 +208,34 @@
                 (r color) (first color)
                 (g color) (second color)
                 (b color) (third color)
-                (a color) (fourth color)))))
+                (a color) (fourth color))))
+           (object->marker-message-text (object id)
+             (let ((dimensions (get-item-dimensions-cached object))
+                   (color `(1.0 1.0 1.0 1.0)))
+               (roslisp:make-message
+                "visualization_msgs/Marker"
+                (stamp header) (roslisp:ros-time)
+                (frame_id header) "/map"
+                ns "labels"
+                id id
+                type 9
+                action 0
+                (pose) (tf:pose->msg (let* ((pose (pose->map-relative-pose
+                                                   (get-item-pose-cached object)))
+                                            (origin (tf:origin pose)))
+                                       (tf:make-pose (tf:make-3d-vector
+                                                      (tf:x origin) (tf:y origin)
+                                                      (+ (tf:z origin) (/ (elt dimensions 2) 2)
+                                                         0.02))
+                                                     (tf:orientation pose))))
+                (x scale) 0.02
+                (y scale) 0.02
+                (z scale) 0.02
+                (r color) (first color)
+                (g color) (second color)
+                (b color) (third color)
+                (a color) (fourth color)
+                (text) object))))
     (let* ((markers
              (map 'vector #'identity
                   (loop for i from 0 below (length objects)
@@ -214,7 +243,9 @@
                         collect
                         (progn
                           (setf (gethash object *markers*) i)
-                          (object->marker-message object i)))))
+                          (object->marker-message object i))
+                        collect (object->marker-message-text
+                                 object i))))
            (markers-message
              (roslisp:make-message "visualization_msgs/MarkerArray"
                                    markers markers))
@@ -318,6 +349,18 @@
     (let ((object-zones (assess-object-zones `(,item-1 ,item-2))))
       (display-zones :highlight-zones object-zones))))
 
+(defun solve (&key allow-handover)
+  (populate-knowledge-base)
+  (let* ((handover-forbidden *handover-forbidden*))
+    (setf *handover-forbidden* (not allow-handover))
+    (let* ((current-arrangement (get-current-arrangement))
+           (current-state (make-planning-state 0 current-arrangement))
+           (goal-state (make-target-state current-state :mode :generic))
+           (solutions (modified-a-star current-state goal-state))
+           (action-sequence (action-sequence (rest (first solutions)))))
+      (setf *handover-forbidden* handover-forbidden)
+      action-sequence)))
+
 (defun detected-type (object)
   (let ((found (find "JIRAnnotatorObject"
                      (desig-prop-values
@@ -361,15 +404,45 @@
     (format t "Found ~a object(s)~%" (length perceived-objects))
     (let ((all-objects
             (mapcar (lambda (object)
-                      (let ((pose (desig-prop-value
-                                   (desig-prop-value
-                                    object 'desig-props:at)
-                                   'desig-props:pose))
+                      (let ((pose
+                              (let ((pose-stamped
+                                      (desig-prop-value
+                                       (desig-prop-value
+                                        object 'desig-props:at)
+                                       'desig-props:pose)))
+                                (tf:pose->pose-stamped
+                                 (tf:frame-id pose-stamped)
+                                 (tf:stamp pose-stamped)
+                                 (cl-transforms:transform-pose
+                                  (tf:pose->transform pose-stamped)
+                                  (tf:make-pose
+                                   (tf:make-3d-vector 0 0 0)
+                                   (tf:euler->quaternion
+                                    :az (/ pi 2)))))))
                             (item (add-shopping-item
                                    (or (detected-type object)
                                        "Kelloggs"))))
                         (set-item-pose-cached item pose)
-                        (set-item-designator item object)
+                        (let ((new-designator
+                                (make-effective-designator
+                                 object
+                                 :new-properties
+                                 (append
+                                  (remove-if
+                                   (lambda (property)
+                                     (eql (first property)
+                                          'desig-props:handle))
+                                   (description object))
+                                  (mapcar
+                                   (lambda (handle)
+                                     `(desig-props:handle ,handle))
+                                   (get-item-semantic-handles item)))
+                                 :data-object (slot-value
+                                               object
+                                               'desig:data))))
+                          (set-item-designator item (equate
+                                                     object
+                                                     new-designator)))
                         item))
                     perceived-objects)))
       (display-objects all-objects)
@@ -1050,6 +1123,7 @@
         do (execute-action-step step)))
 
 (defun execute-action-step (step)
+  (format t "Performing step: ~a~%" step)
   (ecase (first step)
     (:pick
      (let* ((object-name (second step))
@@ -1057,18 +1131,27 @@
             (object (get-item-designator object-name)))
        (let ((allowed-arms pr2-manip-pm::*allowed-arms*))
          (setf pr2-manip-pm::*allowed-arms* `(,side))
-         (pick-object object :stationary t)
+         (try-forever
+           (pick-object object :stationary t))
          (setf pr2-manip-pm::*allowed-arms* allowed-arms))))
     (:place
      (let* ((object-name (second step))
             (level-zone (third step))
-            (zone-pose (make-zone-pose (first level-zone)
-                                       (second level-zone)
-                                       0.0 0.0))
+            (zone-pose
+              (make-zone-pose (first level-zone)
+                              (second level-zone)
+                              -0.2 0.0
+                              :z 0.02
+                              :orientation
+                              (tf:euler->quaternion :az (/ pi 2))))
             (object (get-item-designator object-name)))
        (look-at-level-zone
         (first level-zone) (second level-zone))
-       (place-object object zone-pose :stationary t)))
+       (try-forever
+         (place-object
+          object
+          (make-designator 'location `((desig-props:pose ,zone-pose)))
+          :stationary t))))
     (:handover
      ;; TODO: Handover (probably not for the robot experiment)
      )
@@ -1084,11 +1167,14 @@
 
 (def-top-level-cram-function experiment (&key evaluate-solutions)
   (with-process-modules
+    (prepare-settings)
     (move-arms-away)
+    ;;(execute-action-step `(:move-torso 1))
     (remove-all-shopping-items)
     (setf *perceived-objects* nil)
     (setf *item-designators* (make-hash-table :test 'equal))
     (setf *object-poses* (make-hash-table :test 'equal))
+    (setf *object-dimensions* (make-hash-table :test 'equal))
     (setf *handover-forbidden* t)
     (setf *min-level* 1)
     (setf *max-level* 2)
@@ -1096,6 +1182,7 @@
     (setf *max-zone* 3)
     (perceive-rack-full)
     (populate-knowledge-base)
+    (execute-action-step `(:move-base 0))
     (let* ((current-state (make-planning-state
                            0 (get-current-arrangement)))
            (target-state (make-planning-state
@@ -1142,8 +1229,83 @@
   (go-to-rack-relativ-pose 0 :x -1.4))
 
 (defun perceive-rack-full ()
-  (back-off)
+  ;(back-off)
   (look-at-level-zone 1 2)
   (setf *perceived-objects*
         (robosherlock-pm::perceive-object-designator
          (make-designator 'object nil))))
+
+;;
+;; The following functions are made for analysing data sets based on a
+;; given ground truth
+;;
+
+(defvar *data-ground-truth* nil)
+
+(defun read-dataset (&key ground-truth)
+  (let ((data (top-level
+                (with-process-modules
+                  (robosherlock-pm::perceive-object-designator
+                   (make-designator 'object nil))))))
+    (when ground-truth
+      (setf *data-ground-truth* data))
+    data))
+
+(defun generate-action-sequence (dataset)
+  (setf *perceived-objects* dataset)
+  (solve))
+
+(defun yes-no (yes-no)
+  (cond (yes-no "yes")
+        (t "no")))
+
+(defun print-metric (metric value)
+  (format t " - ~a: ~a~%" metric value))
+
+(defun compare-data (datasets)
+  (labels ((structurally-equivalent? (as-1 as-2)
+             (block compare
+               (when (= (length as-1) (length as-2))
+                 (loop for subj1 in as-1
+                       for subj2 in as-2
+                       unless (eql (first subj1) (first subj2))
+                         do (return-from compare))
+                 t)))
+           (dataset-metrics (dataset &key structural-equivalency-partner)
+             (let* ((length-dataset (length dataset))
+                    (as-dataset (generate-action-sequence dataset))
+                    (length-as-dataset (length as-dataset)))
+               (append
+                `((:length ,length-dataset)
+                  (:action-sequence ,as-dataset)
+                  (:length-as-dataset ,length-as-dataset))
+                (when structural-equivalency-partner
+                  `((:structurally-equivalent
+                     ,(structurally-equivalent?
+                       as-dataset structural-equivalency-partner)))))))
+           (get-detail (symbol dataset)
+             (second (assoc symbol dataset)))
+           (detail-present (symbol dataset)
+             (not (not (find symbol dataset
+                             :test (lambda (subject list-item)
+                                     (eql subject (first list-item)))))))
+           (print-metrics (dataset)
+             (print-metric "Objects" (get-detail :length dataset))
+             (print-metric "Actions" (get-detail :length-as-dataset dataset))
+             (when (detail-present :structurally-equivalent dataset)
+               (print-metric "Structurally equivalent to ground truth"
+                             (yes-no (get-detail :structurally-equivalent
+                                                 dataset))))))
+    (let* ((ground-truth-metrics (dataset-metrics (first datasets)))
+           (dataset-metrics
+             (mapcar (lambda (dataset)
+                       (dataset-metrics
+                        dataset :structural-equivalency-partner
+                        (get-detail :action-sequence ground-truth-metrics)))
+                     (rest datasets))))
+      (format t "Ground truth~%")
+      (print-metrics ground-truth-metrics)
+      (loop for i from 0 below (length dataset-metrics)
+            as dataset-metric = (nth i dataset-metrics)
+            do (format t "Dataset ~a~%" i)
+               (print-metrics dataset-metric)))))

@@ -43,8 +43,9 @@
                 action-desig?
                 desig-prop
                 action-desig)
+  (:import-from #:cram-task-knowledge
+                infer-object-property)
   (:import-from :robosherlock-process-module
-                infer-object-property
                 perceived-object-invalid
                 object-handle)
   (:import-from :pr2-manipulation-process-module

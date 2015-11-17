@@ -183,10 +183,20 @@
                                ?grasptype)
               (json-symbol->string ?grasptype)))
           (handle-pose
-            (with-first-prolog-vars-bound (?pose)
-                `("handle_pose" ,(json-symbol->string ?semantichandle)
-                                ?pose)
-              (rotmat->pose ?pose))))
+            (let ((orig-pose
+                    (with-first-prolog-vars-bound (?pose)
+                        `("handle_pose" ,(json-symbol->string
+                                          ?semantichandle)
+                                        ?pose)
+                      (rotmat->pose ?pose))))
+              (cl-transforms:transform-pose
+               (tf:make-transform (tf:make-3d-vector 0 0 0)
+                                  (tf:euler->quaternion))
+               orig-pose))))
+              ;; (cl-transforms:transform-pose
+              ;;  (tf:pose->transform orig-pose)
+              ;;  (tf:make-pose (tf:make-3d-vector 0 0 0)
+              ;;                (tf:euler->quaternion :ay (/ pi 2)))))))
       (make-designator
        'object
        `((desig-props:type desig-props:handle)
