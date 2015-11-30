@@ -349,8 +349,8 @@
                 ,object))
             objects)))
 
-(defun populate-knowledge-base ()
-  (remove-all-shopping-items)
+(defun populate-knowledge-base (&key (remove-all t))
+  (when remove-all (remove-all-shopping-items))
   (let ((perceived-objects
           (or *perceived-objects*
               (setf *perceived-objects*
@@ -1050,6 +1050,7 @@
         do (execute-action-step step)))
 
 (defun execute-action-step (step)
+  (format t "Executing step: ~a~%" step)
   (ecase (first step)
     (:pick
      (let* ((object-name (second step))
@@ -1141,9 +1142,33 @@
 (defun back-off ()
   (go-to-rack-relativ-pose 0 :x -1.4))
 
-(defun perceive-rack-full ()
-  (back-off)
+(defun perceive-rack-full (&key (back-off t))
+  (when back-off (back-off))
   (look-at-level-zone 1 2)
-  (setf *perceived-objects*
-        (robosherlock-pm::perceive-object-designator
-         (make-designator 'object nil))))
+  (with-designators ((generic-obj (object nil))
+                     (perceive (action `((desig-props:to desig-props:perceive)
+                                         (desig-props:obj ,generic-obj)))))
+    (let ((ignorable-objects `("pr2" "ground_plane" "shopping_area" "shopping_rack")))
+      (setf *perceived-objects*
+            (remove-if (lambda (subject)
+                         (find subject ignorable-objects
+                               :test (lambda (subject list-item)
+                                       (string= (desig-prop-value
+                                                 subject 'desig-props:name)
+                                                list-item))))
+                       (perform perceive))))))
+
+(defun class-of-item (item &key (delimiter "_"))
+  (let ((delim-pos (position delimiter item :test #'string=)))
+    (cond (delim-pos
+           (subseq item 0 delim-pos))
+          (t item))))
+
+(defun perceive-all-objects ()
+  ;;(remove-all-shopping-items)
+  (let ((objects (perceive-rack-full)))
+    (dolist (object objects)
+      (assert-shopping-item object (class-of-item object))
+      (set-item-pose-cached (desig-prop-value object 'desig-props:name)
+                            (desig-prop-value (desig-prop-value object 'desig-props:at)
+                                              'desig-props:pose)))))

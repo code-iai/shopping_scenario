@@ -116,7 +116,8 @@
          (case (get-hint hints :version :normal)
            (:normal (rack-arrangement :hints hints))
            (:handover (rack-arrangement-handover :hints hints))
-           (:problem (solve-arrangement-problem :hints hints)))))
+           (:problem (solve-arrangement-problem :hints hints))
+           (:problem-2 (solve-arrangement-problem-2 :hints hints)))))
       (:reality
        (with-process-modules
          (rack-arrangement :hints hints))))))
@@ -254,3 +255,112 @@
                        (achieve `(object-placed-on-rack
                                   ,obj ,(get-rack-on-level rack y-to)
                                   ,(first xy) ,(second xy)))))))))))))))
+
+(defun spawn-sim-objs ()
+  (remove-all-shopping-items)
+  (labels ((set-arrangement-slot (arrangement i j)
+             ))
+    (let ((arrangement (make-empty-object-arrangement)))
+      (setf (aref arrangement 1 1 0) (add-shopping-item "Kelloggs"))
+      arrangement)))
+
+(defun perceive-sim-objs ()
+  (let* ((ignorable-objects `("pr2" "ground_plane" "shopping_area" "shopping_rack"))
+         (perceived-objects
+           (with-designators ((obj (object nil))
+                              (perceive (action `((desig-props:to desig-props:perceive)
+                                                  (desig-props:obj ,obj)))))
+             (perform perceive)))
+         (filtered-objects
+           (remove-if (lambda (subject)
+                        (find subject ignorable-objects
+                              :test (lambda (subject list-item)
+                                      (string= (desig-prop-value
+                                                subject 'desig-props:name)
+                                               list-item))))
+                      perceived-objects)))
+    (setf *object-poses* (make-hash-table :test 'equal))
+    (setf *perceived-objects* filtered-objects)
+    (setf *item-designators* (make-hash-table :test 'equal))
+    (dolist (object filtered-objects)
+      (let* ((at (desig-prop-value object 'desig-props:at))
+             (pose (desig-prop-value at 'desig-props:pose))
+             (name (desig-prop-value object 'desig-props:name)))
+        (set-item-pose-cached name pose)
+        (setf (gethash name *item-designators*) object)))
+    filtered-objects))
+
+(def-cram-function solve-arrangement-problem-2 (&key hints)
+  (get-shopping-items))
+
+(defun plan-sim-test ()
+  (delete-shopping-items-from-gazebo)
+  (remove-all-shopping-items)
+  (setf *min-level* 1)
+  (setf *max-level* 2)
+  (setf *min-zone* 0)
+  (setf *max-zone* 3)
+  (setf *perceived-objects* nil)
+  (setf *item-designators* (make-hash-table :test 'equal))
+  (setf *object-poses* (make-hash-table :test 'equal))
+  (setf *handover-forbidden* t)
+  (labels ((set-arrangement-slot (arrangement level zone x y theta content)
+             (append (remove-if
+                      (lambda (subject)
+                        (equal (first (first subject)) `(,level ,zone)))
+                      arrangement)
+                     `((((,level ,zone) (,x ,y ,theta)) ,content))))
+           (set-arrangement-slot (arrangement level zone content)
+             (set-arrangement-slot arrangement level zone -0.15 0 (/ pi 2) content))
+           (instantiate-arrangement (arrangement)
+             (mapcar (lambda (entry)
+                       (let* ((content (second entry))
+                              (instance (add-shopping-item content)))
+                         `(,(first entry) ,instance)))
+                     arrangement))
+           (spawn-arrangement (arrangement)
+             (dolist (entry arrangement)
+               (let* ((level (first (first (first entry))))
+                      (zone (second (first (first entry))))
+                      (x (first (second (first entry))))
+                      (y (second (second (first entry))))
+                      (theta (third (second (first entry))))
+                      (content (second entry))
+                      (zone-pose
+                        (cl-tf2:ensure-pose-stamped-transformed
+                         *tf*
+                         (make-zone-pose
+                          level zone x y
+                          :orientation (tf:euler->quaternion :az theta))
+                         "map")))
+                 (spawn-shopping-item-at-pose content zone-pose)))))
+    (macrolet ((setf-arrangement-slot-ex (arrangement level zone x y theta content)
+                 `(setf ,arrangement
+                        (set-arrangement-slot ,arrangement ,level ,zone ,x ,y ,theta ,content)))
+               (setf-arrangement-slot (arrangement level zone content)
+                 `(setf ,arrangement
+                        (set-arrangement-slot ,arrangement ,level ,zone ,content))))
+      (let ((arrangement nil))
+        (setf-arrangement-slot arrangement 1 2 "Kelloggs")
+        (setf-arrangement-slot arrangement 1 3 "Kelloggs")
+        (let ((instantiated-arrangement (instantiate-arrangement arrangement)))
+          (spawn-arrangement instantiated-arrangement)
+          (perceive-rack-full :back-off nil)
+          (dolist (object *perceived-objects*)
+            (let ((pose (desig-prop-value
+                         (desig-prop-value
+                          object 'desig-props:at)
+                         'desig-props:pose))
+                  (item (desig-prop-value
+                         object 'desig-props:name)))
+              (set-item-pose-cached item pose)
+              (set-item-designator item object)))
+          (let* ((current-state (make-planning-state 0 instantiated-arrangement))
+                 (target-state (make-target-state current-state :mode :generic))
+                 (solutions (modified-a-star current-state target-state))
+                 (action-sequences
+                   (mapcar (lambda (solution)
+                             (action-sequence (rest solution)))
+                           solutions)))
+            (move-arms-away)
+            (execute-action-sequence (first action-sequences))))))))

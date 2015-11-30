@@ -220,6 +220,14 @@
       `("add_shopping_item" ,(add-prolog-namespace class) ?instance)
     (strip-prolog-string ?instance)))
 
+(defun assert-shopping-item (item class)
+  (assert (shopping-item-class-p class)
+          ()
+          "Class `~a' is not a subclass of `ShoppingItem'." class)
+  (json-prolog:prolog `("assert_shopping_item"
+                        ,(add-prolog-namespace item)
+                        ,(add-prolog-namespace class))))
+
 (defun set-item-pose (item pose)
   "Sets the `item's pose in the knowledge base. This affects planning."
   (let* ((pose (cl-tf2:ensure-pose-stamped-transformed

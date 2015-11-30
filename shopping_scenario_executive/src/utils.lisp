@@ -217,8 +217,11 @@
          (goal (actionlib:make-action-goal
                    action-client
                  position position)))
-    (actionlib:wait-for-server action-client)
+    (format t "Test 1~%")
+    ;(actionlib:wait-for-server action-client)
+    (format t "Test 2~%")
     (setf *action-client-torso* action-client)
+    (format t "Test 3~%")
     (actionlib:send-goal-and-wait
      action-client goal
      :result-timeout 30.0
@@ -377,6 +380,10 @@
          (pose (get-rack-level-relative-pose
                 racklevel x y elevation rotation)))
     (cram-gazebo-utilities:spawn-gazebo-model model pose urdf)))
+
+(defun spawn-shopping-item-at-pose (item pose)
+  (let ((urdf (get-item-urdf-path item)))
+    (cram-gazebo-utilities:spawn-gazebo-model item pose urdf)))
 
 (defun spawn-shopping-item (item level x y &optional (rotation (tf:euler->quaternion)))
   "Spawns the object `item' on the indexed rack level `level' at lower-left relative coordinates `x', `y'. Optionally, the object's `rotation' can be set. This defaults to a zero-rotation."
