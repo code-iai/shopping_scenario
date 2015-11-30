@@ -1069,7 +1069,8 @@
             (object (get-item-designator object-name)))
        (look-at-level-zone
         (first level-zone) (second level-zone))
-       (place-object object zone-pose :stationary t)))
+       (place-object object (make-designator 'location `((desig-props:pose ,zone-pose)))
+                     :stationary t)))
     (:handover
      ;; TODO: Handover (probably not for the robot experiment)
      )

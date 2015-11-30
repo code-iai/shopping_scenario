@@ -294,6 +294,7 @@
   (get-shopping-items))
 
 (defun plan-sim-test ()
+  (prepare-settings)
   (delete-shopping-items-from-gazebo)
   (remove-all-shopping-items)
   (setf *min-level* 1)
@@ -347,12 +348,13 @@
           (spawn-arrangement instantiated-arrangement)
           (perceive-rack-full :back-off nil)
           (dolist (object *perceived-objects*)
-            (let ((pose (desig-prop-value
-                         (desig-prop-value
-                          object 'desig-props:at)
-                         'desig-props:pose))
-                  (item (desig-prop-value
-                         object 'desig-props:name)))
+            (let* ((object (enrich-object-description object))
+                   (pose (desig-prop-value
+                          (desig-prop-value
+                           object 'desig-props:at)
+                          'desig-props:pose))
+                   (item (desig-prop-value
+                          object 'desig-props:name)))
               (set-item-pose-cached item pose)
               (set-item-designator item object)))
           (let* ((current-state (make-planning-state 0 instantiated-arrangement))
@@ -363,4 +365,11 @@
                              (action-sequence (rest solution)))
                            solutions)))
             (move-arms-away)
+            (execute-action-step `(:move-base 0))
+            (execute-action-step `(:move-torso 2))
+            (pr2-manip-pm::open-gripper :left)
+            (pr2-manip-pm::open-gripper :right)
+            (loop while (or (< (pr2-manip-pm::get-gripper-state :left) 0.07)
+                            (< (pr2-manip-pm::get-gripper-state :right) 0.07))
+                  do (sleep 0.25))
             (execute-action-sequence (first action-sequences))))))))
