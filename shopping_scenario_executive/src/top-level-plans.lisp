@@ -305,6 +305,7 @@
   (setf *item-designators* (make-hash-table :test 'equal))
   (setf *object-poses* (make-hash-table :test 'equal))
   (setf *handover-forbidden* t)
+  (setf *gazebo* t)
   (labels ((set-arrangement-slot (arrangement level zone x y theta content)
              (append (remove-if
                       (lambda (subject)
@@ -348,13 +349,19 @@
           (spawn-arrangement instantiated-arrangement)
           (perceive-rack-full :back-off nil)
           (dolist (object *perceived-objects*)
-            (let* ((object (enrich-object-description object))
+            (let* ((object (desig:newest-effective-designator
+                            (enrich-object-description object)))
                    (pose (desig-prop-value
                           (desig-prop-value
                            object 'desig-props:at)
                           'desig-props:pose))
                    (item (desig-prop-value
                           object 'desig-props:name)))
+              (moveit:set-collision-object-pose
+               (desig-prop-value object 'desig-props:name)
+               (desig-prop-value
+                (desig-prop-value object 'desig-props:at)
+                'desig-props:pose))
               (set-item-pose-cached item pose)
               (set-item-designator item object)))
           (let* ((current-state (make-planning-state 0 instantiated-arrangement))

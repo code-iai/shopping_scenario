@@ -41,6 +41,7 @@
 (defvar *min-zone* 0)
 (defvar *max-zone* 3)
 (defvar *item-designators* (make-hash-table :test 'equal))
+(defvar *gazebo* nil)
 
 (defun set-item-designator (item designator)
   (setf (gethash item *item-designators*) designator))
@@ -105,7 +106,7 @@
      (tf:euler->quaternion :ax roll :ay pitch :az yaw))))
 
 (defun make-zone-pose (level zone x y
-                       &key (orientation (tf:euler->quaternion)))
+                       &key (orientation (tf:euler->quaternion)) (elevation 0.0))
   (let* ((rack-level-dimensions (get-rack-level-dimensions level))
          (zones-per-level 4)
          (zone-width (/ (elt rack-level-dimensions 1) zones-per-level))
@@ -116,7 +117,8 @@
                  y))
          (c-y x)
          (c-z (+ (/ zone-height 2)
-                 (/ (elt rack-level-dimensions 2) 2))))
+                 (/ (elt rack-level-dimensions 2) 2)
+                 elevation)))
     (tf:make-pose-stamped
      (concatenate
       'string
@@ -1062,11 +1064,19 @@
          (setf pr2-manip-pm::*allowed-arms* allowed-arms))))
     (:place
      (let* ((object-name (second step))
+            (object (get-item-designator object-name))
             (level-zone (third step))
-            (zone-pose (make-zone-pose (first level-zone)
-                                       (second level-zone)
-                                       0.0 0.0))
-            (object (get-item-designator object-name)))
+            (zone-pose
+              (make-zone-pose
+               (first level-zone)
+               (second level-zone)
+               0.0 0.0
+               :elevation
+               (cond (*gazebo*
+                      (let ((dimensions
+                              (desig-prop-value object 'desig-props::dimensions)))
+                        (- (/ (elt dimensions 2) 2))))
+                     (t 0.0)))))
        (look-at-level-zone
         (first level-zone) (second level-zone))
        (place-object object (make-designator 'location `((desig-props:pose ,zone-pose)))
@@ -1151,13 +1161,44 @@
                                          (desig-props:obj ,generic-obj)))))
     (let ((ignorable-objects `("pr2" "ground_plane" "shopping_area" "shopping_rack")))
       (setf *perceived-objects*
-            (remove-if (lambda (subject)
-                         (find subject ignorable-objects
-                               :test (lambda (subject list-item)
-                                       (string= (desig-prop-value
-                                                 subject 'desig-props:name)
-                                                list-item))))
-                       (perform perceive))))))
+            (mapcar #'rotate-if-necessary
+                    (remove-if (lambda (subject)
+                                 (find subject ignorable-objects
+                                       :test (lambda (subject list-item)
+                                               (string= (desig-prop-value
+                                                         subject 'desig-props:name)
+                                                        list-item))))
+                               (perform perceive)))))))
+
+(defun rotate-if-necessary (object)
+  (cond (*gazebo*
+         (let* ((pose (desig-prop-value
+                       (desig-prop-value
+                        object
+                        'desig-props:at)
+                       'desig-props:pose))
+                (transformed-pose
+                  (tf:make-pose-stamped
+                   (tf:frame-id pose)
+                   (tf:stamp pose)
+                   (tf:origin pose)
+                   (tf:orientation
+                    (cl-transforms:transform-pose
+                     (cl-transforms:pose->transform
+                      (cl-transforms:make-pose (tf:make-identity-vector)
+                                               (tf:orientation pose)))
+                     (tf:make-pose (tf:make-identity-vector)
+                                   (cl-transforms:euler->quaternion :az (/ pi 2))))))))
+           (make-effective-designator
+            object
+            :new-properties
+            (update-designator-properties `((desig-props:at
+                                             ,(make-designator
+                                               'location
+                                               `((desig-props:pose ,transformed-pose)))))
+                                          (description object))
+            :data-object (slot-value object 'desig:data))))
+        (t object)))
 
 (defun class-of-item (item &key (delimiter "_"))
   (let ((delim-pos (position delimiter item :test #'string=)))
