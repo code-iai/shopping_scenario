@@ -119,13 +119,16 @@
          (c-z (+ (cond (z-p z)
                        (t (/ zone-height 2)))
                  (/ (elt rack-level-dimensions 2) 2))))
-    (tf:make-pose-stamped
+    (tf:pose->pose-stamped
      (concatenate
       'string
       "/rack_level_" (write-to-string level))
      0.0
-     (tf:make-3d-vector c-x c-y c-z)
-     orientation)))
+     (cl-transforms:transform-pose
+     (tf:make-transform (tf:make-3d-vector c-x c-y c-z)
+                        (tf:euler->quaternion))
+     (tf:make-pose (tf:make-identity-vector)
+                   orientation)))))
 
 (defun display-zones (&key highlight-zones)
   (let* ((rack-level-dimensions (get-rack-level-dimensions 1))
@@ -185,13 +188,13 @@
                    "visualization_msgs/MarkerArray")))
         (roslisp:publish pub markers-message)))))
 
-(defun display-objects (objects &key highlighted-objects)
+(defun display-objects (objects &key highlighted-objects object-poses)
   (labels ((object->marker-message (object id)
              (let ((dimensions (get-item-dimensions-cached object))
                    (color (cond ((find object highlighted-objects
                                        :test #'string=)
-                                 `(0.0 1.0 0.0 1.0))
-                                (t `(1.0 1.0 0.0 1.0)))))
+                                 `(1.0 1.0 1.0 1.0))
+                                (t `(0.5 0.5 0.0 1.0)))))
                (roslisp:make-message
                 "visualization_msgs/Marker"
                 (stamp header) (roslisp:ros-time)
@@ -200,8 +203,11 @@
                 id id
                 type 1
                 action 0
-                (pose) (tf:pose->msg (pose->map-relative-pose
-                                      (get-item-pose-cached object)))
+                (pose) (tf:pose->msg
+                        (pose->map-relative-pose
+                         (or (when object-poses
+                               (gethash object object-poses))
+                             (get-item-pose-cached object))))
                 (x scale) (elt dimensions 0)
                 (y scale) (elt dimensions 1)
                 (z scale) (elt dimensions 2)
@@ -221,7 +227,9 @@
                 type 9
                 action 0
                 (pose) (tf:pose->msg (let* ((pose (pose->map-relative-pose
-                                                   (get-item-pose-cached object)))
+                                                   (or (when object-poses
+                                                         (gethash object object-poses))
+                                                       (get-item-pose-cached object))))
                                             (origin (tf:origin pose)))
                                        (tf:make-pose (tf:make-3d-vector
                                                       (tf:x origin) (tf:y origin)
@@ -259,12 +267,15 @@
      object
      (make-level-relative-pose level x y (/ (elt dimensions 2) 2)))))
 
-(defun place-object-in-zone (object level zone x y)
-  (let* ((zone-pose (make-zone-pose level zone x (- y)))
+(defun place-object-in-zone (object level zone x y &optional (theta 0.0))
+  (let* ((object-dimensions (get-item-dimensions object))
+         (object-height (elt object-dimensions 2))
+         (zone-pose (make-zone-pose level zone x (- y)
+                                    :z (+ (- (/ object-height 2)) 0.02) :orientation (tf:euler->quaternion :az theta)))
          (origin (tf:origin zone-pose)))
     (place-object-on-rack object level (tf:x origin) (tf:y origin))))
 
-(defun assess-object-zones (objects)
+(defun assess-object-zones (objects &key object-poses)
   (let* ((levels 4)
          (zones-per-level 4)
          (rack-level-dimensions (get-rack-level-dimensions 1))
@@ -275,7 +286,9 @@
     (mapcar
      (lambda (object)
        (let* ((pose (pose->rack-relative-pose
-                     (get-item-pose-cached object)))
+                     (or (when object-poses
+                           (gethash object object-poses))
+                         (get-item-pose-cached object))))
               (pose-elevation (tf:z (tf:origin pose)))
               (level
                 (loop for level from 0 to (1- levels)
@@ -314,7 +327,7 @@
                        (zone-y (tf:y (tf:origin zone-pose)))
                        (pose-x (tf:x (tf:origin pose)))
                        (pose-y (tf:y (tf:origin pose))))
-                  `(,(- pose-x zone-x) ,(- pose-y zone-y)
+                  `(,(- pose-y zone-y) ,(- pose-x zone-x)
                     ,(quaternion->yaw (tf:orientation pose))))))
          `((,level ,zone) ,zone-offset)))
      objects)))
@@ -379,11 +392,11 @@
             ((string= name "pancake-mix") "PancakeMix")
             ((string= name "can") "Corn")
             ((string= name "tomato-sauce") "TomatoSauce")
-            ((string= name "jodsalz-salt-container") "SaltDispenser")
+            ((string= name "jodsalz-salt-container") "Salt")
             ((string= name "lion-cereals") "Lion")
             ((string= name "cornflakes") "Kelloggs"))))
     (cond (new-name new-name)
-          (t "SaltDispenser")))) ;; Default model
+          (t "Salt")))) ;; Default model
 
 (defun get-current-arrangement ()
   (let ((objects (get-shopping-items)))
@@ -402,52 +415,55 @@
                         (robosherlock-pm::perceive-object-designator
                          (make-designator 'object nil))))))))
     (format t "Found ~a object(s)~%" (length perceived-objects))
-    (let ((all-objects
-            (mapcar (lambda (object)
-                      (let ((pose
-                              (let ((pose-stamped
-                                      (desig-prop-value
-                                       (desig-prop-value
-                                        object 'desig-props:at)
-                                       'desig-props:pose)))
-                                (tf:pose->pose-stamped
-                                 (tf:frame-id pose-stamped)
-                                 (tf:stamp pose-stamped)
-                                 (cl-transforms:transform-pose
-                                  (tf:pose->transform pose-stamped)
-                                  (tf:make-pose
-                                   (tf:make-3d-vector 0 0 0)
-                                   (tf:euler->quaternion
-                                    :az (/ pi 2)))))))
-                            (item (add-shopping-item
-                                   (or (detected-type object)
-                                       "Kelloggs"))))
-                        (set-item-pose-cached item pose)
-                        (let ((new-designator
-                                (make-effective-designator
-                                 object
-                                 :new-properties
-                                 (append
-                                  (remove-if
-                                   (lambda (property)
-                                     (eql (first property)
-                                          'desig-props:handle))
-                                   (description object))
-                                  (mapcar
-                                   (lambda (handle)
-                                     `(desig-props:handle ,handle))
-                                   (get-item-semantic-handles item)))
-                                 :data-object (slot-value
-                                               object
-                                               'desig:data))))
-                          (set-item-designator item (equate
-                                                     object
-                                                     new-designator)))
-                        item))
-                    perceived-objects)))
-      (display-objects all-objects)
-      (let ((object-zones (assess-object-zones all-objects)))
-        (display-zones :highlight-zones object-zones)))))
+    (assert-perceived-objects perceived-objects)))
+
+(defun assert-perceived-objects (perceived-objects)
+  (let ((all-objects
+          (mapcar (lambda (object)
+                    (let ((pose
+                            (let ((pose-stamped
+                                    (desig-prop-value
+                                     (desig-prop-value
+                                      object 'desig-props:at)
+                                     'desig-props:pose)))
+                              (tf:pose->pose-stamped
+                               (tf:frame-id pose-stamped)
+                               (tf:stamp pose-stamped)
+                               (cl-transforms:transform-pose
+                                (tf:pose->transform pose-stamped)
+                                (tf:make-pose
+                                 (tf:make-3d-vector 0 0 0)
+                                 (tf:euler->quaternion
+                                  :az (/ pi 2)))))))
+                          (item (add-shopping-item
+                                 (or (detected-type object)
+                                     "Kelloggs"))))
+                      (set-item-pose-cached item pose)
+                      (let ((new-designator
+                              (make-effective-designator
+                               object
+                               :new-properties
+                               (append
+                                (remove-if
+                                 (lambda (property)
+                                   (eql (first property)
+                                        'desig-props:handle))
+                                 (description object))
+                                (mapcar
+                                 (lambda (handle)
+                                   `(desig-props:handle ,handle))
+                                 (get-item-semantic-handles item)))
+                               :data-object (slot-value
+                                             object
+                                             'desig:data))))
+                        (set-item-designator item (equate
+                                                   object
+                                                   new-designator)))
+                      item))
+                  perceived-objects)))
+    (display-objects all-objects)
+    (let ((object-zones (assess-object-zones all-objects)))
+      (display-zones :highlight-zones object-zones))))
 
 (defun toy-problem-solve (&key (number-of-solutions 1) (mode :generic))
   (populate-knowledge-base)
@@ -477,7 +493,7 @@
                       as it = (prog1
                                   (when (< index (length arrangement))
                                     `(((,level ,zone)
-                                       (0.0 0.0 0.0)) ;; x, y, theta (az)
+                                       (-0.15 0.0 0.0)) ;; x, y, theta (az)
                                       ,(second (elt arrangement index))))
                                 (incf index))
                       when it
@@ -755,9 +771,9 @@
             (ecase (first transition)
               (:pick 1)
               (:place 1)
-              (:handover 0.5)
-              (:move-base 0.25)
-              (:move-torso 0.25)))
+              (:handover 1.5)
+              (:move-base 1.25)
+              (:move-torso 2)))
            (t 0))))
 
 (defun apply-transition (state transition)
@@ -1050,20 +1066,27 @@
                  `(,(last steps) nil))))
             (reverse solutions) (reverse solver-durations))))
 
-(defun display-state (state)
-  (let ((arrangement (cdr (assoc :arrangement state))))
-    (display-objects
-     (loop for object-data in arrangement
-           collect
-           (destructuring-bind (((level zone)
-                                 (x y theta))
-                                object)
-               object-data
-             (declare (ignore theta))
-             (format t "~a ~a ~a~%" level zone object)
-             (place-object-in-zone object level zone x y)
-             object)))
-    (format t "~%")))
+(defun display-state (state &key highlighted-objects)
+  (let* ((arrangement (cdr (assoc :arrangement state)))
+         (object-poses (make-hash-table :test 'equal))
+         (objects (loop for object-data in arrangement
+                        collect
+                        (destructuring-bind (((level zone)
+                                              (x y theta))
+                                             object)
+                            object-data
+                          (let ((dimensions (get-item-dimensions-cached object)))
+                            (setf (gethash object object-poses)
+                                  (make-zone-pose
+                                   level zone x y
+                                   :z (/ (elt dimensions 2) 2)
+                                   :orientation (tf:euler->quaternion
+                                                 :az theta))))
+                          object))))
+    (display-objects objects :object-poses object-poses :highlighted-objects highlighted-objects)
+    (let ((object-zones (assess-object-zones
+                         objects :object-poses object-poses)))
+      (display-zones :highlight-zones object-zones))))
 
 (defun display-solution (solution)
   (loop for state-transition in solution
@@ -1157,7 +1180,7 @@
      )
     (:move-base
      (let* ((position (second step)))
-       (go-to-rack-relativ-pose (* position -0.3))))
+       (go-to-rack-relativ-pose (* position -0.5))))
     (:move-torso
      (let* ((position (second step))
             (rack (first (get-racks)))
@@ -1241,6 +1264,7 @@
 ;;
 
 (defvar *data-ground-truth* nil)
+(defvar *data-sets* (make-hash-table :test 'equal))
 
 (defun read-dataset (&key ground-truth)
   (let ((data (top-level
@@ -1309,3 +1333,127 @@
             as dataset-metric = (nth i dataset-metrics)
             do (format t "Dataset ~a~%" i)
                (print-metrics dataset-metric)))))
+
+(defun displace-middle-objects (id-left id-right)
+  (let ((action-sequence `((:move-base 0)
+                           (:move-torso 2)
+                           (:pick ,id-left :left)
+                           (:pick ,id-right :right)
+                           (:place ,id-left (2 2))
+                           (:place ,id-right (2 1)))))
+    (top-level
+      (with-process-modules
+        (setf *min-level* 1)
+        (setf *max-level* 2)
+        (move-arms-away)
+        (execute-action-sequence action-sequence)))))
+
+(defun take-object-from-behind (front back)
+  (let ((action-sequence `(;(:move-base 0)
+                           (:move-torso 2)
+                           (:pick ,front :left)
+                           (:pick ,back :right)
+                           (:place ,front (2 3)))))
+    (top-level
+      (with-process-modules
+        (setf *min-level* 1)
+        (setf *max-level* 2)
+        (move-arms-away)
+        (execute-action-sequence action-sequence)))))
+
+(defun moveit-clear-hands ()
+  (let ((planning-scene
+          (roslisp:call-service
+           "/get_planning_scene"
+           "moveit_msgs/GetPlanningScene"
+           :components
+           (roslisp:make-message
+            "moveit_msgs/PlanningSceneComponents"
+            :components 4))))
+    (with-fields (scene) planning-scene
+      (with-fields (robot_state) scene
+        (with-fields (attached_collision_objects) robot_state
+          (loop for i from 0 below (length attached_collision_objects)
+                as attached-object = (elt attached_collision_objects i)
+                do (with-fields (link_name object) attached-object
+                     (with-fields (id) object
+                       (moveit:detach-collision-object-from-link
+                        (intern id) link_name)))))))))
+
+(defun go-for-it-clean (&key skip-and-go)
+  (unless skip-and-go
+    (moveit-clear-hands)
+    (moveit:clear-collision-environment)
+    (prepare-settings)
+    (setf *perceived-objects* nil)
+    (setf *item-designators* (make-hash-table :test 'equal))
+    (populate-knowledge-base))
+  (format t "Got these objects:~%")
+  (let ((pre-front nil)
+        (pre-back nil))
+    (loop for h being the hash-keys in *item-designators*
+          do (cond ((string= (subseq h 0 4) "Lion")
+                    (setf pre-back h))
+                   ((string= (subseq h 0 4) "Salt")
+                    (setf pre-front h)))
+             (format t " - ~a~%" h))
+    (format t "Front object~a: " (cond (pre-front
+                                        (concatenate
+                                         'string
+                                         " (\"" pre-front "\")"))
+                                       (t "")))
+    (let ((front (read-line)))
+      (format t "Back object~a: " (cond (pre-back
+                                         (concatenate
+                                          'string
+                                          " (\"" pre-back "\")"))
+                                        (t "")))
+      (let ((back (read-line)))
+        (let ((front (cond ((and (string= front "") pre-front)
+                            pre-front)
+                           (t front)))
+              (back (cond ((and (string= back "") pre-back)
+                            pre-back)
+                           (t back))))
+          (format t "'~a' and '~a'~%" front back)
+          (take-object-from-behind front back))))))
+
+(defun solution-states (solution)
+  (loop for entry in solution
+        collect (first entry)))
+
+(def-top-level-cram-function perception-driven-plan ()
+  (with-process-modules
+    (setf *handover-forbidden* t)
+    (setf *min-level* 1)
+    (setf *max-level* 2)
+    (let ((perceived-objects
+            (setf *perceived-objects*
+                  (robosherlock-pm::perceive-object-designator
+                   (make-designator 'object nil)))))
+      (assert-perceived-objects perceived-objects)
+      (populate-knowledge-base)
+      (let* ((current-state
+               (make-planning-state 0 (get-current-arrangement)))
+             (target-state (make-target-state current-state :mode :explicit))
+             (solutions (modified-a-star current-state target-state))
+             (solution (rest (first solutions)))
+             (states (solution-states solution))
+             (action-sequence (action-sequence solution)))
+        (loop for state in states
+              for action in `(,@action-sequence nil)
+              when state
+                do (format t "~a~%" action)
+                   (when (or (eql (first action) :pick)
+                             (eql (first action) :place)
+                             (not action))
+                     (display-state
+                      former-state
+                      :highlighted-objects (when action `(,(second action))))
+                     (sleep 0.5)
+                     (display-state
+                      state
+                      :highlighted-objects (when action `(,(second action))))
+                     (sleep 0.5))
+                   (setf former-state state)
+              with former-state = state)))))

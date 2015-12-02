@@ -150,7 +150,10 @@
   (with-first-prolog-vars-bound (?width ?depth ?height)
       `("object_dimensions_restricted"
         ,(add-prolog-namespace item) ?width ?depth ?height)
-    (vector ?width ?depth ?height)))
+    (cond (*gazebo*
+           (vector ?depth ?width ?height))
+          (t
+           (vector ?width ?depth ?height)))))
 
 (defun get-items-by-class-type (class-type)
   "Returns all item instances that are of class type `class-type'."
@@ -191,12 +194,10 @@
                       (rotmat->pose ?pose))))
               (cl-transforms:transform-pose
                (tf:make-transform (tf:make-3d-vector 0 0 0)
-                                  (tf:euler->quaternion))
+                                  (tf:euler->quaternion
+                                   :az (cond (*gazebo* 0.0)
+                                             (t (/ pi 2)))))
                orig-pose))))
-              ;; (cl-transforms:transform-pose
-              ;;  (tf:pose->transform orig-pose)
-              ;;  (tf:make-pose (tf:make-3d-vector 0 0 0)
-              ;;                (tf:euler->quaternion :ay (/ pi 2)))))))
       (make-designator
        'object
        `((desig-props:type desig-props:handle)
