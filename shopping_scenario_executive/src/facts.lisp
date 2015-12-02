@@ -114,10 +114,9 @@
     (crs:lisp-fun get-type-from-detection ?detection ?type)
     (crs:lisp-fun convert-object-name ?type ?value))
   
-  ;; (<- (infer-object-property ?object desig-props:dimensions ?value)
-  ;;   (desig-prop ?object (desig-props:type ?type))
-  ;;   (crs:lisp-fun get-item-type-dimensions ?type ?value)
-  ;;   (not (equal ?value nil)))
+  (<- (infer-object-property ?object desig-props:dimensions ?value)
+    (desig-prop ?object (desig-props:type "Lion"))
+    (crs:lisp-fun vector 0.045 0.195 0.26 ?value))
   
   ;; (<- (infer-object-property ?object desig-props:shape ?value)
   ;;   (desig-prop ?object (desig-props:type ?type))
