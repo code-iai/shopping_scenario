@@ -34,6 +34,7 @@
     [
       shopping_item/1,
       add_shopping_item/2,
+      assert_shopping_item/2,
       remove_shopping_item/1,
       is_stackable/1,
       rack/1,
@@ -71,6 +72,7 @@
 :-  rdf_meta
     shopping_item(r),
     add_shopping_item(r, r),
+    assert_shopping_item(r, r),
     remove_shopping_item(r),
     is_stackable(r, r),
     rack(r),
@@ -366,6 +368,15 @@ handle_pose(SemanticHandle, Matrix) :-
 %
 add_shopping_item(Type, Item) :-
     rdf_instance_from_class(Type, Item).
+
+
+%% assert_shopping_item(?Item, ?Type) is nondet.
+%
+% @param Item     The item instance to add
+% @param Type     The type of the item instance to add
+%
+assert_shopping_item(Item, Type) :-
+    rdf_assert(Item, rdf:type, Type).
 
 
 %% remove_shopping_item(?Item) is nondet.

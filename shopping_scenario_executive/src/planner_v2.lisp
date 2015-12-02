@@ -41,6 +41,7 @@
 (defvar *min-zone* 0)
 (defvar *max-zone* 3)
 (defvar *item-designators* (make-hash-table :test 'equal))
+(defvar *gazebo* nil)
 
 (defun set-item-designator (item designator)
   (setf (gethash item *item-designators*) designator))
@@ -105,8 +106,7 @@
      (tf:euler->quaternion :ax roll :ay pitch :az yaw))))
 
 (defun make-zone-pose (level zone x y
-                       &key (z 0 z-p)
-                         (orientation (tf:euler->quaternion)))
+                       &key (z 0 z-p) (orientation (tf:euler->quaternion)) (elevation 0.0))
   (let* ((rack-level-dimensions (get-rack-level-dimensions level))
          (zones-per-level 4)
          (zone-width (/ (elt rack-level-dimensions 1) zones-per-level))
@@ -118,8 +118,10 @@
          (c-y x)
          (c-z (+ (cond (z-p z)
                        (t (/ zone-height 2)))
-                 (/ (elt rack-level-dimensions 2) 2))))
-    (tf:pose->pose-stamped
+                 (/ zone-height 2)
+                 (/ (elt rack-level-dimensions 2) 2)
+                 elevation)))
+    (tf:make-pose-stamped
      (concatenate
       'string
       "/rack_level_" (write-to-string level))
@@ -405,8 +407,8 @@
                 ,object))
             objects)))
 
-(defun populate-knowledge-base ()
-  (remove-all-shopping-items)
+(defun populate-knowledge-base (&key (remove-all t))
+  (when remove-all (remove-all-shopping-items))
   (let ((perceived-objects
           (or *perceived-objects*
               (setf *perceived-objects*
@@ -1146,7 +1148,7 @@
         do (execute-action-step step)))
 
 (defun execute-action-step (step)
-  (format t "Performing step: ~a~%" step)
+  (format t "Executing step: ~a~%" step)
   (ecase (first step)
     (:pick
      (let* ((object-name (second step))
@@ -1159,22 +1161,27 @@
          (setf pr2-manip-pm::*allowed-arms* allowed-arms))))
     (:place
      (let* ((object-name (second step))
+            (object (get-item-designator object-name))
             (level-zone (third step))
             (zone-pose
-              (make-zone-pose (first level-zone)
-                              (second level-zone)
-                              -0.2 0.0
-                              :z 0.02
-                              :orientation
-                              (tf:euler->quaternion :az (/ pi 2))))
-            (object (get-item-designator object-name)))
+	     (make-zone-pose
+	      (first level-zone)
+	      (second level-zone)
+	      -0.2 0.0
+	      :z 0.02
+	      :orientation
+	      (tf:euler->quaternion :az (/ pi 2))
+	      :elevation
+	      (cond (*gazebo*
+		     (let ((dimensions
+			    (desig-prop-value object 'desig-props::dimensions)))
+		       (- (/ (elt dimensions 2) 2))))
+		    (t 0.0)))))
        (look-at-level-zone
         (first level-zone) (second level-zone))
        (try-forever
-         (place-object
-          object
-          (make-designator 'location `((desig-props:pose ,zone-pose)))
-          :stationary t))))
+	(place-object object (make-designator 'location `((desig-props:pose ,zone-pose)))
+		      :stationary t))))
     (:handover
      ;; TODO: Handover (probably not for the robot experiment)
      )
@@ -1457,3 +1464,65 @@
                      (sleep 0.5))
                    (setf former-state state)
               with former-state = state)))))
+
+;; (defun perceive-rack-full (&key (back-off t))
+;;   (when back-off (back-off))
+;;   (look-at-level-zone 1 2)
+;;   (with-designators ((generic-obj (object nil))
+;;                      (perceive (action `((desig-props:to desig-props:perceive)
+;;                                          (desig-props:obj ,generic-obj)))))
+;;     (let ((ignorable-objects `("pr2" "ground_plane" "shopping_area" "shopping_rack")))
+;;       (setf *perceived-objects*
+;;             (mapcar #'rotate-if-necessary
+;;                     (remove-if (lambda (subject)
+;;                                  (find subject ignorable-objects
+;;                                        :test (lambda (subject list-item)
+;;                                                (string= (desig-prop-value
+;;                                                          subject 'desig-props:name)
+;;                                                         list-item))))
+;;                                (perform perceive)))))))
+
+;; (defun rotate-if-necessary (object)
+;;   (cond (*gazebo*
+;;          (let* ((pose (desig-prop-value
+;;                        (desig-prop-value
+;;                         object
+;;                         'desig-props:at)
+;;                        'desig-props:pose))
+;;                 (transformed-pose
+;;                   (tf:make-pose-stamped
+;;                    (tf:frame-id pose)
+;;                    (tf:stamp pose)
+;;                    (tf:origin pose)
+;;                    (tf:orientation
+;;                     (cl-transforms:transform-pose
+;;                      (cl-transforms:pose->transform
+;;                       (cl-transforms:make-pose (tf:make-identity-vector)
+;;                                                (tf:orientation pose)))
+;;                      (tf:make-pose (tf:make-identity-vector)
+;;                                    (cl-transforms:euler->quaternion :az (/ pi 2))))))))
+;;            (make-effective-designator
+;;             object
+;;             :new-properties
+;;             (update-designator-properties `((desig-props:at
+;;                                              ,(make-designator
+;;                                                'location
+;;                                                `((desig-props:pose ,transformed-pose)))))
+;;                                           (description object))
+;;             :data-object (slot-value object 'desig:data))))
+;;         (t object)))
+
+;; (defun class-of-item (item &key (delimiter "_"))
+;;   (let ((delim-pos (position delimiter item :test #'string=)))
+;;     (cond (delim-pos
+;;            (subseq item 0 delim-pos))
+;;           (t item))))
+
+;; (defun perceive-all-objects ()
+;;   ;;(remove-all-shopping-items)
+;;   (let ((objects (perceive-rack-full)))
+;;     (dolist (object objects)
+;;       (assert-shopping-item object (class-of-item object))
+;;       (set-item-pose-cached (desig-prop-value object 'desig-props:name)
+;;                             (desig-prop-value (desig-prop-value object 'desig-props:at)
+;;                                               'desig-props:pose)))))
